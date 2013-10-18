@@ -1,0 +1,17 @@
+Pod::Spec.new do |s|
+
+  s.name         = "ISCache"
+  s.version      = "0.0.1"
+  s.summary      = "Pluggable Objective-C cache framework"
+  s.homepage     = "https://github.com/jbmorley/ISCache"
+  s.license      = { :type => 'MIT', :file => 'LICENSE.md' }
+  s.author       = { "Jason Barrie Morley" => "jason.morley@inseven.co.uk" }
+  s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "48d2e0554299f4c9b19609f67c239f2638201263" }
+
+  s.source_files = 'Classes/*.{h,m}'
+
+  s.requires_arc = true
+
+  s.platform = :ios, "6.0", :osx, "10.8"
+
+end

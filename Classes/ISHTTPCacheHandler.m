@@ -7,7 +7,6 @@
 //
 
 #import "ISHTTPCacheHandler.h"
-#import <AFNetworking/AFNetworking.h>
 
 @interface ISHTTPCacheHandler ()
 
@@ -40,15 +39,6 @@
   self.connection = [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:info.item]] delegate:self];
   [self.connection start];
   
-  
-//  NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:info.item]];
-//  AFURLConnectionOperation *operation = [[AFURLConnectionOperation alloc] initWithRequest:request];
-//  [operation setDownloadProgressBlock:^(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead) {
-//    info.totalBytesRead = totalBytesRead;
-//    info.totalBytesExpectedToRead = totalBytesExpectedToRead;
-//    [self.delegate itemDidUpdate:info];
-//  }];
-//  [operation start];
 }
 
 

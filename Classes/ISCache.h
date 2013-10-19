@@ -12,6 +12,7 @@
 #import "ISCacheObserver.h"
 #import "ISCacheBlock.h"
 #import "ISCacheHandlerDelegate.h"
+#import "ISHTTPCacheHandler.h"
 
 typedef enum {
   ISCachePolicyStrong, // Install duration
@@ -19,6 +20,8 @@ typedef enum {
   ISCachePolicySession, // During a single running application session
   ISCachePolicyNone // Never cache
 } ISCachePolicy;
+
+static NSString *kCacheContextURL = @"URL";
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 

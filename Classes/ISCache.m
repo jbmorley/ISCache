@@ -75,6 +75,11 @@ static ISCache *sCache;
     = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                            NSUserDomainMask,
                                            YES) objectAtIndex:0];
+    
+    // Register the default handlers.
+    [self registerClass:[ISHTTPCacheHandler class]
+             forContext:kCacheContextURL];
+
   }
   return self;
 }

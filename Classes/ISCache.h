@@ -13,6 +13,7 @@
 #import "ISCacheBlock.h"
 #import "ISCacheHandlerDelegate.h"
 #import "ISHTTPCacheHandler.h"
+#import "UIImageView+Cache.h"
 
 typedef enum {
   ISCachePolicyStrong, // Install duration

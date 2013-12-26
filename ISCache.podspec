@@ -6,14 +6,12 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/jbmorley/ISCache"
   s.license      = { :type => 'MIT', :file => 'LICENSE.md' }
   s.author       = { "Jason Barrie Morley" => "jason.morley@inseven.co.uk" }
-  s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "416eb7273b13bee81d5319b6c7241450b21d8c75" }
+  s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "48d2e0554299f4c9b19609f67c239f2638201263" }
 
   s.source_files = 'Classes/*.{h,m}'
 
   s.requires_arc = true
 
   s.platform = :ios, "6.0", :osx, "10.8"
-
-  s.dependency 'ISUtilities'
 
 end

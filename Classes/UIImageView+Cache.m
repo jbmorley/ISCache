@@ -36,11 +36,7 @@
   [defaultCache item:url
              context:kCacheContextURL
                block:^(ISCacheItemInfo *info) {
-                 NSLog(@"%lld %lld",
-                       info.totalBytesRead,
-                       info.totalBytesExpectedToRead);
                  if (info.state == ISCacheItemStateFound) {
-                   NSLog(@"Cache item complete.");
                    self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
                    completionBlock();
                  }

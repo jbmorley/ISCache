@@ -133,7 +133,6 @@ static ISCache *sCache;
   NSString *hash = [[self identifierForItem:item
                                     context:context] MD5];
   info.path = [self.documentsPath stringByAppendingPathComponent:hash];
-  NSLog(@"info.path %@", info.path);
   [self.info setObject:info
                 forKey:identifier];
   
@@ -174,16 +173,8 @@ static ISCache *sCache;
      context:(NSString *)context
        block:(ISCacheBlock)completionBlock
 {
-  // Check there is a handler registered for the context.
-  Class handlerClass = [self.handlers objectForKey:context];
-  if (handlerClass == nil) {
-    @throw [NSException exceptionWithName:@"MissingHandler"
-                                   reason:@"No cache handler has been registered for the specified protocol."
-                                 userInfo:nil];
-  }
-  
-  // Get the identifier for the item.
-  
+  // Get the relevant details for the item.
+  Class handlerClass = [self handlerForContext:context];
   NSString *identifier = [self identifierForItem:item
                                          context:context];
   ISCacheItemInfo *info = [self cacheItemInfoForItem:item
@@ -192,19 +183,23 @@ static ISCache *sCache;
   if (info.state == ISCacheItemStateFound) {
     
     // If the item exists, call back with the result.
-    NSLog(@"Item exists in cache");
-    completionBlock(info);
+    if (completionBlock) {
+      completionBlock(info);
+    }
     
   } else if (info.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, attach a block observer.
-    NSLog(@"Observing pending fetch...");
-    ISCacheObserverBlock *observer
-    = [ISCacheObserverBlock observerWithItem:item
-                                     context:context
-                                       block:completionBlock];
-    [self.observers addObject:observer];
-    [self addObserver:observer];
+    // TODO Consider sharing this code with the
+    // other clauses.
+    if (completionBlock) {
+      ISCacheObserverBlock *observer
+      = [ISCacheObserverBlock observerWithItem:item
+                                       context:context
+                                         block:completionBlock];
+      [self.observers addObject:observer];
+      [self addObserver:observer];
+    }
     
   } else {
     
@@ -213,12 +208,16 @@ static ISCache *sCache;
     id<ISCacheHandler> handler = [[handlerClass alloc] init];
     [self.active setObject:handler
                     forKey:identifier];
-    ISCacheObserverBlock *observer
-    = [ISCacheObserverBlock observerWithItem:item
-                                     context:context
-                                       block:completionBlock];
-    [self.observers addObject:observer];
-    [self addObserver:observer];
+    
+    if (completionBlock) {
+      ISCacheObserverBlock *observer
+      = [ISCacheObserverBlock observerWithItem:item
+                                       context:context
+                                         block:completionBlock];
+      [self.observers addObject:observer];
+      [self addObserver:observer];
+    }
+    
     [handler fetchItem:info
               delegate:self];
     
@@ -227,13 +226,107 @@ static ISCache *sCache;
 }
 
 
+// TODO Does this need a block observer?
+- (void)removeItem:(NSString *)item
+           context:(NSString *)context
+{
+  // Get the relevant details for the item.
+  NSString *identifier = [self identifierForItem:item
+                                         context:context];
+  ISCacheItemInfo *info = [self cacheItemInfoForItem:item
+                                             context:context];
+  
+  if (info.state == ISCacheItemStateFound) {
+    
+    // If the item exists, simply delete the file at the path
+    // and notify any cache observers.
+    
+    // Close the file in case it's open.
+    [info closeFile];
+    
+    // Delete the file.
+    NSError *error;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:info.path
+                            error:&error];
+    if (error) {
+      // TODO Handle an error in deleting the file.
+      // What can we actually do here if the file wasn't correctly
+      // deleted?
+    }
+    
+    // Reset the cache item state.
+    info.state = ISCacheItemStateNotFound;
+    info.totalBytesExpectedToRead = 0;
+    info.totalBytesRead = 0;
+    
+    [self notifyObservers:info];
+    
+    // TODO Should the handler be the thing which removes
+    // the file?
+    
+  } else if (info.state == ISCacheItemStateInProgress) {
+    
+    // If the item is in progress, then cancel the progress.
+    // This should be sufficient to cause the cache item to be
+    // removed.
+    id<ISCacheHandler> handler = [self.active objectForKey:identifier];
+    [handler cancel];
+    
+    // TODO Determine how the observers are notified in this
+    // mechanism. I think it should come from the handler.
+    
+  } else {
+    
+    // If the item doesn't exist and isn't in progress, it is
+    // sufficient to do nothing.
+    
+  }
+}
+
+
+// TODO Does this need a block observer?
+- (void)cancelItem:(NSString *)item
+           context:(NSString *)context
+{
+  
+}
+
+
+#pragma mark - Utility methods
+
+
+// Check there is a handler registered for the context.
+// Throws an exception if no handler can be found.
+- (Class)handlerForContext:(NSString *)context
+{
+  Class handlerClass = [self.handlers objectForKey:context];
+  if (handlerClass == nil) {
+    @throw [NSException exceptionWithName:@"MissingHandler"
+                                   reason:@"No cache handler has been registered for the specified protocol."
+                                 userInfo:nil];
+  }
+  return handlerClass;
+}
+
+
+- (void)notifyObservers:(ISCacheItemInfo *)info
+{
+  [self.notifier notify:@selector(itemDidUpdate:)
+             withObject:info];
+}
+
+
+#pragma mark - Observer methods
+
+
 - (void)addObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
 }
 
 
-- (void)remvoveObserver:(id<ISCacheObserver>)observer
+- (void)removeObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
 }
@@ -249,13 +342,17 @@ static ISCache *sCache;
 }
 
 
-- (void)itemDidUpdate:(ISCacheItemInfo *)info;
+// Callback handle for the handlers.
+// Should not be used internally as a notification mechanism.
+- (void)itemDidUpdate:(ISCacheItemInfo *)info
 {
-  [self.notifier notify:@selector(itemDidUpdate:)
-             withObject:info];
+  [self notifyObservers:info];
   if (info.state == ISCacheItemStateFound) {
     // TODO Remove the item.
   }
+  // TODO Remove the handler?
+  // TODO Do we need to do anything about cancellation and
+  // failure here?
 }
 
 @end

@@ -13,7 +13,4 @@
 
 - (void)itemDidUpdate:(ISCacheItemInfo *)info;
 
-// TODO How do we differentiate between progress unknown and progress
-// known (to support download mechanims which don't know progress...)
-
 @end

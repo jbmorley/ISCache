@@ -13,5 +13,6 @@
 
 - (void)fetchItem:(ISCacheItemInfo *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate;
+- (void)cancel;
 
 @end

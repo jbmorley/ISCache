@@ -35,9 +35,11 @@ static NSString *kCacheContextURL = @"URL";
 - (void)item:(NSString *)item
      context:(NSString *)context
        block:(ISCacheBlock)completionBlock;
+- (void)removeItem:(NSString *)item
+           context:(NSString *)context;
 
 - (void)addObserver:(id<ISCacheObserver>)observer;
-- (void)remvoveObserver:(id<ISCacheObserver>)observer;
+- (void)removeObserver:(id<ISCacheObserver>)observer;
 
 
 @end

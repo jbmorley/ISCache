@@ -42,6 +42,12 @@
 }
 
 
+- (void)cancel
+{
+  NSAssert(NO, @"Cancel needs implementing!");
+}
+
+
 #pragma mark - NSURLConnectionDelegate
 
 
@@ -75,12 +81,6 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSLog(@"connection:didFailWithError:");
 }
-
-
-//- (NSCachedURLResponse *)connection:(NSURLConnection *)connection
-//                  willCacheResponse:(NSCachedURLResponse *)cachedResponse
-//{
-//}
 
 
 @end

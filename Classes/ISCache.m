@@ -173,6 +173,9 @@ static ISCache *sCache;
      context:(NSString *)context
        block:(ISCacheBlock)completionBlock
 {
+  // Assert that we have a valid completion block.
+  NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
+  
   // Get the relevant details for the item.
   Class handlerClass = [self handlerForContext:context];
   NSString *identifier = [self identifierForItem:item
@@ -183,28 +186,24 @@ static ISCache *sCache;
   if (info.state == ISCacheItemStateFound) {
     
     // If the item exists, call back with the result.
-    if (completionBlock) {
-      completionBlock(info);
-    }
+    completionBlock(info);
     
   } else if (info.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, attach a block observer.
     // TODO Consider sharing this code with the
     // other clauses.
-    if (completionBlock) {
-      ISCacheObserverBlock *observer
-      = [ISCacheObserverBlock observerWithItem:item
-                                       context:context
-                                         block:completionBlock];
-      [self.observers addObject:observer];
-      [self addObserver:observer];
-    }
+    ISCacheObserverBlock *observer
+    = [ISCacheObserverBlock observerWithItem:item
+                                     context:context
+                                       block:completionBlock
+                                       cache:self];
+    [self.observers addObject:observer];
+    [self addObserver:observer];
     
   } else {
     
     // If the item doesn't exist and isn't in progress, fetch it.
-    NSLog(@"Initiating new fetch...");
     id<ISCacheHandler> handler = [[handlerClass alloc] init];
     [self.active setObject:handler
                     forKey:identifier];
@@ -213,11 +212,13 @@ static ISCache *sCache;
       ISCacheObserverBlock *observer
       = [ISCacheObserverBlock observerWithItem:item
                                        context:context
-                                         block:completionBlock];
+                                         block:completionBlock
+                                         cache:self];
       [self.observers addObject:observer];
       [self addObserver:observer];
     }
     
+    info.state = ISCacheItemStateInProgress;
     [handler fetchItem:info
               delegate:self];
     
@@ -285,14 +286,6 @@ static ISCache *sCache;
 }
 
 
-// TODO Does this need a block observer?
-- (void)cancelItem:(NSString *)item
-           context:(NSString *)context
-{
-  
-}
-
-
 #pragma mark - Utility methods
 
 
@@ -353,6 +346,20 @@ static ISCache *sCache;
   // TODO Remove the handler?
   // TODO Do we need to do anything about cancellation and
   // failure here?
+}
+
+
+- (void)itemDidFinish:(ISCacheItemInfo *)info
+{
+  // Update the item info with the appropriate state.
+  info.state = ISCacheItemStateFound;
+  [info closeFile];
+  
+  // Notify our observers.
+  [self notifyObservers:info];
+  
+  // Block delegates will delete themselves when they encounter an ISCacheItemStateFound for the
+  // item. This means there is no further cleanup required here.
 }
 
 @end

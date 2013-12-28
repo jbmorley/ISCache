@@ -7,12 +7,14 @@
 //
 
 #import "ISCacheObserverBlock.h"
+#import "ISCache.h"
 
 @interface ISCacheObserverBlock ()
 
 @property (nonatomic, strong) NSString *item;
 @property (nonatomic, strong) NSString *context;
 @property (nonatomic, strong) ISCacheBlock block;
+@property (nonatomic, weak) ISCache *cache;
 
 @end
 
@@ -21,16 +23,19 @@
 + (id)observerWithItem:(NSString *)item
                context:(NSString *)context
                  block:(ISCacheBlock)block
+                 cache:(ISCache *)cache
 {
   return [[self alloc] initWithItem:item
                             context:context
-                              block:block];
+                              block:block
+                              cache:cache];
 }
 
 
 - (id)initWithItem:(NSString *)item
            context:(NSString *)context
-             block:(ISCacheBlock)block;
+             block:(ISCacheBlock)block
+             cache:(ISCache *)cache;
 {
   self = [super init];
   if (self) {
@@ -49,9 +54,16 @@
        [info.item isEqualToString:self.item]) &&
       (self.context == nil ||
        [info.context isEqualToString:self.context])) {
+        
+    // Call our block.
     self.block(info);
+        
+    // Remove ourselves if the item is complete.
+    if (info.state == ISCacheItemStateFound) {
+      [self.cache removeObserver:self];
+    }
+
   }
-  // TODO Remove ourselves when our download is finished?
 }
 
 

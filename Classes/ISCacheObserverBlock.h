@@ -10,13 +10,17 @@
 #import "ISCacheBlock.h"
 #import "ISCacheObserver.h"
 
+@class ISCache;
+
 @interface ISCacheObserverBlock : NSObject <ISCacheObserver>
 
 + (id)observerWithItem:(NSString *)item
                context:(NSString *)context
-                 block:(ISCacheBlock)block;
+                 block:(ISCacheBlock)block
+                 cache:(ISCache *)cache;
 - (id)initWithItem:(NSString *)item
            context:(NSString *)context
-             block:(ISCacheBlock)block;
+             block:(ISCacheBlock)block
+             cache:(ISCache *)cache;
 
 @end

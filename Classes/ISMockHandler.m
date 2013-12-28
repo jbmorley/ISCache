@@ -23,4 +23,9 @@
   });
 }
 
+- (void)cancel
+{
+  NSAssert(NO, @"ISMockHandler does not provde a cancel implementation.");
+}
+
 @end

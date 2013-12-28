@@ -33,12 +33,16 @@
   }
   
   // Kick-off the image download.
+  UIImageView *__weak weakSelf = self;
   [defaultCache item:url
              context:kCacheContextURL
                block:^(ISCacheItemInfo *info) {
-                 if (info.state == ISCacheItemStateFound) {
-                   self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
-                   completionBlock();
+                 UIImageView *strongSelf = weakSelf;
+                 if (strongSelf) {
+                   if (info.state == ISCacheItemStateFound) {
+                     self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
+                     completionBlock();
+                   }
                  }
                }];
 }

@@ -44,7 +44,9 @@
 
 - (void)cancel
 {
-  NSAssert(NO, @"Cancel needs implementing!");
+  [self.connection cancel];
+  self.info = ISCacheItemStateNotFound;
+  [self.delegate itemDidUpdate:self.info];
 }
 
 
@@ -70,16 +72,14 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  self.info.state = ISCacheItemStateFound;
-  [self.info closeFile];
-  [self.delegate itemDidUpdate:self.info];
+  [self.delegate itemDidFinish:self.info];
 }
 
 
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
-  NSLog(@"connection:didFailWithError:");
+  NSAssert(YES, @"connection:didFailWithError:");
 }
 
 

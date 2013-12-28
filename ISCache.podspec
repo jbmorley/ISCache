@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/jbmorley/ISCache"
   s.license      = { :type => 'MIT', :file => 'LICENSE.md' }
   s.author       = { "Jason Barrie Morley" => "jason.morley@inseven.co.uk" }
-  s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "48d2e0554299f4c9b19609f67c239f2638201263" }
+  s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "9e5284fb215fcbcd668dc0736306fde7214b20fc" }
 
   s.source_files = 'Classes/*.{h,m}'
 

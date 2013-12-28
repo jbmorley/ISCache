@@ -7,7 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ISCacheHandler.h"
 
-@interface ISCacheHandlerFactory : NSObject
+@protocol ISCacheHandlerFactory <NSObject>
+
+// Ownership is passed to the callee.
+- (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo;
 
 @end

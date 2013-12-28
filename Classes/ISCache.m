@@ -9,6 +9,7 @@
 #import "ISCache.h"
 #import "ISNotifier.h"
 #import "ISCacheObserverBlock.h"
+#import "ISSimpleCacheHandlerFactory.h"
 #import "NSString+MD5.h"
 
 
@@ -37,7 +38,7 @@
 @interface ISCache ()
 
 @property (nonatomic, strong) ISNotifier *notifier;
-@property (nonatomic, strong) NSMutableDictionary *handlers;
+@property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
 @property (nonatomic, strong) NSMutableArray *observers;
 @property (nonatomic, strong) NSMutableDictionary *info;
@@ -66,7 +67,7 @@ static ISCache *sCache;
   self = [super init];
   if (self) {
     self.notifier = [ISNotifier new];
-    self.handlers = [NSMutableDictionary dictionaryWithCapacity:3];
+    self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     self.observers = [NSMutableArray arrayWithCapacity:3];
     self.info = [NSMutableDictionary dictionaryWithCapacity:3];
@@ -76,34 +77,30 @@ static ISCache *sCache;
                                            NSUserDomainMask,
                                            YES) objectAtIndex:0];
     
+    // Create and register the default factories.
+    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISHTTPCacheHandler class]];
+    
     // Register the default handlers.
-    [self registerClass:[ISHTTPCacheHandler class]
-             forContext:kCacheContextURL];
+    [self registerFactory:httpFactory
+               forContext:kCacheContextURL];
 
   }
   return self;
 }
 
 
-- (void)registerClass:(Class)handlerClass
-           forContext:(NSString *)context
+- (void)registerFactory:(id<ISCacheHandlerFactory>)factory
+             forContext:(NSString *)context
 {
-  // Check the class conforms to the correct protocol.
-  if (![handlerClass conformsToProtocol:@protocol(ISCacheHandler)]) {
-    @throw [NSException exceptionWithName:@"InvalidHandlerClass"
-                                   reason:@"Cache handlers must respond to the NSCacheHandler protocol."
-                                 userInfo:nil];
-  }
-  
   // Check that there isn't an existing handler for that context.
-  if ([self.handlers objectForKey:context] != nil) {
-    @throw [NSException exceptionWithName:@"HandlerRegistered"
-                                   reason:@"A cache handler has already been registered for the specified protocol."
+  if ([self.factories objectForKey:context] != nil) {
+    @throw [NSException exceptionWithName:@"FactoryRegistered"
+                                   reason:@"A cache handler factory has already been registered for the specified protocol."
                                  userInfo:nil];
   }
   
   // Register the handler.
-  [self.handlers setObject:handlerClass
+  [self.factories setObject:factory
                     forKey:context];
 }
 
@@ -173,11 +170,13 @@ static ISCache *sCache;
      context:(NSString *)context
        block:(ISCacheBlock)completionBlock
 {
+  // TODO Get a user dictionary.
+  NSDictionary *userInfo = nil;
+  
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
   // Get the relevant details for the item.
-  Class handlerClass = [self handlerForContext:context];
   NSString *identifier = [self identifierForItem:item
                                          context:context];
   ISCacheItemInfo *info = [self cacheItemInfoForItem:item
@@ -204,7 +203,9 @@ static ISCache *sCache;
   } else {
     
     // If the item doesn't exist and isn't in progress, fetch it.
-    id<ISCacheHandler> handler = [[handlerClass alloc] init];
+    id<ISCacheHandler> handler = [self handlerForContext:context
+                                                userInfo:userInfo];
+
     [self.active setObject:handler
                     forKey:identifier];
     
@@ -289,17 +290,18 @@ static ISCache *sCache;
 #pragma mark - Utility methods
 
 
-// Check there is a handler registered for the context.
-// Throws an exception if no handler can be found.
-- (Class)handlerForContext:(NSString *)context
+// Check there is a handler factory registered for the context.
+// Throws an exception if no handler factory can be found.
+- (id<ISCacheHandler>)handlerForContext:(NSString *)context
+                               userInfo:(NSDictionary *)userInfo
 {
-  Class handlerClass = [self.handlers objectForKey:context];
-  if (handlerClass == nil) {
+  id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
+  if (factory == nil) {
     @throw [NSException exceptionWithName:@"MissingHandler"
                                    reason:@"No cache handler has been registered for the specified protocol."
                                  userInfo:nil];
   }
-  return handlerClass;
+  return [factory createHandler:userInfo];
 }
 
 

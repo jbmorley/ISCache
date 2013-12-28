@@ -29,8 +29,6 @@ static NSString *kCacheContextURL = @"URL";
 
 + (id)defaultCache;
 
-- (void)registerClass:(Class)handlerClass
-           forContext:(NSString *)context;
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 - (ISCacheItemState)stateForItem:(NSString *)item

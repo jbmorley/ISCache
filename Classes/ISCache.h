@@ -14,6 +14,7 @@
 #import "ISCacheHandlerDelegate.h"
 #import "ISHTTPCacheHandler.h"
 #import "UIImageView+Cache.h"
+#import "ISCacheHandlerFactory.h"
 
 typedef enum {
   ISCachePolicyStrong, // Install duration
@@ -30,6 +31,8 @@ static NSString *kCacheContextURL = @"URL";
 
 - (void)registerClass:(Class)handlerClass
            forContext:(NSString *)context;
+- (void)registerFactory:(id<ISCacheHandlerFactory>)factory
+             forContext:(NSString *)context;
 - (ISCacheItemState)stateForItem:(NSString *)item
                          context:(NSString *)context;
 - (void)item:(NSString *)item

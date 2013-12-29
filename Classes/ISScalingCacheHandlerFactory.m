@@ -66,8 +66,10 @@
       }
       
       // Resize the image.
-
-      UIGraphicsBeginImageContextWithOptions(canvasSize, NO, 2.0);
+      CGFloat screenScale = [[UIScreen mainScreen] scale];
+      UIGraphicsBeginImageContextWithOptions(canvasSize,
+                                             NO,
+                                             screenScale);
       [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
       UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
       UIGraphicsEndImageContext();

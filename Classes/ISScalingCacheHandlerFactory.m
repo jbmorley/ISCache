@@ -19,69 +19,83 @@
     // provided with the required dimensions.
     if (userInfo) {
       
-      UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
-      
-      // Get the current image dimensions.
-      CGSize currentSize = image.size;
-      
-      // Get the target dimensions.
-      CGSize targetSize = CGSizeMake([userInfo[@"width"] floatValue],
-                                     [userInfo[@"height"] floatValue]);
-      
-      ISScalingCacheHandlerScale scale = [userInfo[@"scale"] integerValue];
-      
-      // Calculate the appropriate dimensions.
-      CGSize newSize = targetSize;
-      CGSize canvasSize = targetSize;
-      if (scale == ISScalingCacheHandlerScaleAspectFit) {
-        
-        CGFloat targetRatio = targetSize.width/targetSize.height;
-        CGFloat currentRatio = currentSize.width/currentSize.height;
-        
-        if (currentRatio < targetRatio) {
-          newSize.height = targetSize.width / currentRatio;
-        } else {
-          newSize.width = targetSize.height * currentRatio;
-        }
-        
-        // Since we're using a 'fit' the canvas size and new size
-        // will always be equal.
-        canvasSize = newSize;
-        
-      } else if (scale == ISScalingCacheHandlerScaleAspectFill) {
-        
-        CGFloat targetRatio = targetSize.width/targetSize.height;
-        CGFloat currentRatio = currentSize.width/currentSize.height;
+      dispatch_queue_t queue =
+      dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
+      dispatch_async(queue, ^{
 
-        if (currentRatio < targetRatio) {
-          newSize.height = targetSize.height / currentRatio;
-        } else {
-          newSize.width = targetSize.width * currentRatio;
+        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
+        
+        // Get the current image dimensions.
+        CGSize currentSize = image.size;
+        
+        // Get the target dimensions.
+        CGSize targetSize = CGSizeMake([userInfo[@"width"] floatValue],
+                                       [userInfo[@"height"] floatValue]);
+        
+        ISScalingCacheHandlerScale scale = [userInfo[@"scale"] integerValue];
+        
+        // Calculate the appropriate dimensions.
+        CGSize newSize = targetSize;
+        CGSize canvasSize = targetSize;
+        if (scale == ISScalingCacheHandlerScaleAspectFit) {
+          
+          CGFloat targetRatio = targetSize.width/targetSize.height;
+          CGFloat currentRatio = currentSize.width/currentSize.height;
+          
+          if (currentRatio < targetRatio) {
+            newSize.height = targetSize.width / currentRatio;
+          } else {
+            newSize.width = targetSize.height * currentRatio;
+          }
+          
+          // Since we're using a 'fit' the canvas size and new size
+          // will always be equal.
+          canvasSize = newSize;
+          
+        } else if (scale == ISScalingCacheHandlerScaleAspectFill) {
+          
+          CGFloat targetRatio = targetSize.width/targetSize.height;
+          CGFloat currentRatio = currentSize.width/currentSize.height;
+          
+          if (currentRatio < targetRatio) {
+            newSize.height = targetSize.height / currentRatio;
+          } else {
+            newSize.width = targetSize.width * currentRatio;
+          }
+          
+          // Since we're using a 'fill' the canvas size will always
+          // be the requested size.
+          canvasSize = targetSize;
+          
         }
         
-        // Since we're using a 'fill' the canvas size will always
-        // be the requested size.
-        canvasSize = targetSize;
+        // Resize the image.
+        CGFloat screenScale = [[UIScreen mainScreen] scale];
+        UIGraphicsBeginImageContextWithOptions(canvasSize,
+                                               NO,
+                                               screenScale);
+        [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+        UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
         
-      }
+        // Save the image.
+        [UIImagePNGRepresentation(newImage) writeToFile:info.path
+                                             atomically:YES];
+        
+        // Signal that the resizing is complete.
+        dispatch_async(dispatch_get_main_queue(), ^{
+          completeBlock();
+        });
+        
+      });
       
-      // Resize the image.
-      CGFloat screenScale = [[UIScreen mainScreen] scale];
-      UIGraphicsBeginImageContextWithOptions(canvasSize,
-                                             NO,
-                                             screenScale);
-      [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
-      UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-      UIGraphicsEndImageContext();
       
-      // Save the image.
-      [UIImagePNGRepresentation(newImage) writeToFile:info.path
-                                           atomically:YES];
+    } else {
+    
+      // Signal that the resizing is complete.
+      completeBlock();
       
     }
-    
-    // Signal that the resizing is complete.
-    completeBlock();
     
   }];
   return handler;

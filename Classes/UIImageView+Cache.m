@@ -28,10 +28,10 @@
   
   // Check the current state and clear the image if we don't
   // already have a cached copy of the image.
-  ISCacheItemState state
-  = [defaultCache stateForItem:url
-                       context:kCacheContextURL];
-  if (state != ISCacheItemStateFound) {
+  ISCacheItemInfo *info
+  = [defaultCache infoForItem:url
+                      context:kCacheContextURL];
+  if (info.state != ISCacheItemStateFound) {
     self.image = nil;
   }
   

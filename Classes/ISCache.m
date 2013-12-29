@@ -196,23 +196,22 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItemState)stateForItem:(NSString *)item
+- (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
 {
-  return [self stateForItem:item
-                    context:context
-                   userInfo:nil];
+  return [self infoForItem:item
+                   context:context
+                  userInfo:nil];
 }
 
 
-- (ISCacheItemState)stateForItem:(NSString *)item
+- (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 {
-  ISCacheItemInfo *info = [self cacheItemInfoForItem:item
-                                             context:context
-                                            userInfo:userInfo];
-  return info.state;
+  return [self cacheItemInfoForItem:item
+                            context:context
+                           userInfo:userInfo];
 }
 
 

@@ -39,9 +39,9 @@
         CGFloat currentRatio = currentSize.width/currentSize.height;
         
         if (currentRatio < targetRatio) {
-          newSize.width = targetSize.width * currentRatio;
+          newSize.height = targetSize.width / currentRatio;
         } else {
-          newSize.height = targetSize.height / currentRatio;
+          newSize.width = targetSize.height * currentRatio;
         }
         
         // Since we're using a 'fit' the canvas size and new size

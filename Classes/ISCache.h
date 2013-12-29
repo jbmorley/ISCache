@@ -34,10 +34,9 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
-// TODO Should this function even exist?
-- (ISCacheItemState)stateForItem:(NSString *)item
+- (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context;
-- (ISCacheItemState)stateForItem:(NSString *)item
+- (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 - (NSString *)item:(NSString *)item

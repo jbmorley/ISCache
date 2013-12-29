@@ -40,9 +40,11 @@
 @property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
+@property (nonatomic, strong) NSMutableDictionary *items;
 @property (nonatomic, strong) NSMutableArray *observers;
 @property (nonatomic, strong) NSMutableDictionary *info;
 @property (nonatomic, strong) NSString *documentsPath;
+@property (nonatomic, strong) NSString *path;
 
 @end
 
@@ -55,20 +57,40 @@ static ISCache *sCache;
 {
   @synchronized (self) {
     if (sCache == nil) {
-      sCache = [[self alloc] init];
+      
+      NSString *documentsPath
+      = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                             NSUserDomainMask,
+                                             YES) objectAtIndex:0];
+      NSString *path = [documentsPath stringByAppendingPathComponent:@"uk.co.inseven.cache.State.plist"];
+      
+      sCache = [[self alloc] initWithPath:path];
     }
     return sCache;
   }
 }
 
 
-- (id)init
+- (id)initWithPath:(NSString *)path
 {
   self = [super init];
   if (self) {
+    self.path = path;
     self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
+    
+    // Load the cache state if present.
+      self.items = [NSMutableDictionary dictionaryWithCapacity:3];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
+                                             isDirectory:NO]) {
+      NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
+      for (NSString *identifier in items) {
+        [self.items setObject:items[identifier]
+                       forKey:identifier];
+      }
+    }
+    
     self.observers = [NSMutableArray arrayWithCapacity:3];
     self.info = [NSMutableDictionary dictionaryWithCapacity:3];
     
@@ -113,7 +135,18 @@ static ISCache *sCache;
 // Returns an existing item info or nil.
 - (ISCacheItemInfo *)cacheItemInfoForIdentifier:(NSString *)identifier
 {
-  return [self.info objectForKey:identifier];
+  // Look for an existing active info.
+  // If one doens't exist, look for a completed and cached info.
+  // If a completed info cannot be found, return nil.
+  ISCacheItemInfo *info = [self.info objectForKey:identifier];
+  if (info == nil) {
+    NSDictionary *dictionary
+    = [self.items objectForKey:identifier];
+    if (dictionary) {
+      info = [ISCacheItemInfo itemInfoWithDictionary:dictionary];
+    }
+  }
+  return info;
 }
 
 
@@ -132,8 +165,7 @@ static ISCache *sCache;
                                         userInfo:userInfo];
   
   // Return a pre-existing cache item info.
-  ISCacheItemInfo *info
-  = [self.info objectForKey:identifier];
+  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
   if (info) {
     return info;
   }
@@ -423,6 +455,19 @@ static ISCache *sCache;
   // Update the item info with the appropriate state.
   info.state = ISCacheItemStateFound;
   [info closeFile];
+  
+  // TODO Use a temporary location for files being downloaded
+  // and move it into permanent storage at this point.
+  
+  // Delete the handler for the file.
+  [self.active removeObjectForKey:info.identifier];
+  
+  // Store the state for the completed file.
+  [self.items setObject:[info dictionary]
+                 forKey:info.identifier];
+  [self.items writeToFile:self.path
+               atomically:YES];
+  NSLog(@"Cache Items: %@", self.items);
   
   // Notify our observers.
   [self notifyObservers:info];

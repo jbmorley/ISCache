@@ -27,6 +27,9 @@ typedef enum {
 @property long long totalBytesRead;
 @property long long totalBytesExpectedToRead;
 
++ (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
+- (id)initWithDictionary:(NSDictionary *)dictionary;
+- (NSDictionary *)dictionary;
 - (void)openFile;
 - (void)closeFile;
 - (void)writeDataToFile:(NSData *)data;

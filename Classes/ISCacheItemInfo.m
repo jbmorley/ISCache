@@ -23,14 +23,64 @@ typedef enum {
 
 @implementation ISCacheItemInfo
 
+static int kCacheItemVersion = 1;
 
-- (NSString *)description
+static NSString *kKeyItem = @"item";
+static NSString *kKeyContext = @"context";
+static NSString *kKeyUserInfo = @"userInfo";
+static NSString *kKeyPath = @"path";
+static NSString *kKeyIdentifier = @"identifier";
+static NSString *kKeyVersion = @"version";
+static NSString *kKeyState = @"state";
+static NSString *kKeyTotalBytesRead = @"totalBytesRead";
+static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
+
+
+// Serialization to and from a dictionary.
+// A future implementation should probably take advatnage of
+// NSCoding.
+
+
++ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
 {
-  return [NSString stringWithFormat:
-          @"%@:%@(%@)",
-          self.context,
-          self.item,
-          self.userInfo];
+  return [[self alloc] initWithDictionary:dictionary];
+}
+
+
+- (id)initWithDictionary:(NSDictionary *)dictionary
+{
+  self = [super init];
+  if (self) {
+    
+    int version = [dictionary[kKeyVersion] intValue];
+    NSAssert(version == kCacheItemVersion,
+             @"Unsupported cache item version.");
+    
+    self.item = dictionary[kKeyItem];
+    self.context = dictionary[kKeyContext];
+    self.userInfo = dictionary[kKeyUserInfo];
+    self.path = dictionary[kKeyPath];
+    self.identifier = dictionary[kKeyIdentifier];
+    self.state = [dictionary[kKeyState] intValue];
+    self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
+    self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
+  }
+  return self;
+}
+
+
+- (NSDictionary *)dictionary
+{
+  return
+  @{kKeyVersion: @(kCacheItemVersion),
+    kKeyItem: self.item,
+    kKeyContext: self.context,
+    kKeyUserInfo: self.userInfo,
+    kKeyPath: self.path,
+    kKeyIdentifier: self.identifier,
+    kKeyState: @(self.state),
+    kKeyTotalBytesRead: @(self.totalBytesRead),
+    kKeyTotalBytesExpectedToRead: @(self.totalBytesExpectedToRead)};
 }
 
 

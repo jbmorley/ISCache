@@ -30,6 +30,7 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
 + (id)defaultCache;
+- (id)initWithPath:(NSString *)path;
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;

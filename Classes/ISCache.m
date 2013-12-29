@@ -81,18 +81,23 @@ static ISCache *sCache;
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     
     // Load the cache state if present.
-      self.items = [NSMutableDictionary dictionaryWithCapacity:3];
+    self.items = [NSMutableDictionary dictionaryWithCapacity:3];
+    self.info = [NSMutableDictionary dictionaryWithCapacity:3];
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
                                              isDirectory:NO]) {
       NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
       for (NSString *identifier in items) {
+        ISCacheItemInfo *info = [ISCacheItemInfo itemInfoWithDictionary:items[identifier]];
         [self.items setObject:items[identifier]
                        forKey:identifier];
+        [self.info setObject:info
+                      forKey:identifier];
       }
+      NSLog(@"Cache Items: %@", self.items);
+      NSLog(@"Info: %@", self.info);
     }
     
     self.observers = [NSMutableArray arrayWithCapacity:3];
-    self.info = [NSMutableDictionary dictionaryWithCapacity:3];
     
     self.documentsPath
     = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
@@ -136,17 +141,7 @@ static ISCache *sCache;
 - (ISCacheItemInfo *)cacheItemInfoForIdentifier:(NSString *)identifier
 {
   // Look for an existing active info.
-  // If one doens't exist, look for a completed and cached info.
-  // If a completed info cannot be found, return nil.
-  ISCacheItemInfo *info = [self.info objectForKey:identifier];
-  if (info == nil) {
-    NSDictionary *dictionary
-    = [self.items objectForKey:identifier];
-    if (dictionary) {
-      info = [ISCacheItemInfo itemInfoWithDictionary:dictionary];
-    }
-  }
-  return info;
+  return [self.info objectForKey:identifier];
 }
 
 
@@ -177,27 +172,24 @@ static ISCache *sCache;
   info.userInfo = userInfo;
   info.identifier = identifier;
   info.path = [self.documentsPath stringByAppendingPathComponent:identifier];
+  info.state = ISCacheItemStateNotFound;
+  
   [self.info setObject:info
                 forKey:identifier];
   
-  // Update the details if the file exists.
+  // If there isn't an active cache entry and something exists
+  // on the file system, it represents a partial download and
+  // should be cleaned up.
   NSFileManager *fileManager = [NSFileManager defaultManager];
   if ([fileManager fileExistsAtPath:info.path
                         isDirectory:NO]) {
-    info.state = ISCacheItemStateFound;
     NSError *error;
-    NSDictionary *attributes
-    = [fileManager attributesOfItemAtPath:info.path
-                                    error:&error];
-    info.totalBytesExpectedToRead
-    = [[attributes valueForKey:NSFileSize] longLongValue];
-    info.totalBytesRead = info.totalBytesExpectedToRead;
-    
-    return info;
+    [fileManager removeItemAtPath:info.path
+                            error:&error];
+    if (error != nil) {
+      // TODO What do we do in the case of an error?
+    }
   }
-  
-  // Set the details appropriately if the file doesn't exist.
-  info.state = ISCacheItemStateNotFound;
   
   return info;
   
@@ -352,10 +344,14 @@ static ISCache *sCache;
     info.totalBytesExpectedToRead = 0;
     info.totalBytesRead = 0;
     
-    [self notifyObservers:info];
+    // Update the cache.
+    [self.items removeObjectForKey:info];
+    [self.items writeToFile:self.path
+                 atomically:YES];
+    [self.info removeObjectForKey:info];
     
-    // TODO Should the handler be the thing which removes
-    // the file?
+    // Notify the observers that the item has been removed.
+    [self notifyObservers:info];
     
   } else if (info.state == ISCacheItemStateInProgress) {
     
@@ -368,12 +364,22 @@ static ISCache *sCache;
     // TODO Determine how the observers are notified in this
     // mechanism. I think it should come from the handler.
     
+    // TODO Remove the object from the cache?
+    
   } else {
     
     // If the item doesn't exist and isn't in progress, it is
     // sufficient to do nothing.
     
   }
+}
+
+
+- (NSArray *)cacheItems
+{
+  // Return the superset of cached items of all states.
+  // TODO We may wish to provide a filter for item states?
+  return [[self.info keyEnumerator] allObjects];
 }
 
 

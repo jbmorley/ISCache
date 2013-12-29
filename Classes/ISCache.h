@@ -46,12 +46,6 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
              block:(ISCacheBlock)completionBlock;
-// TODO Provide identifier based accessors. Should these include the info at all?
-- (void)removeItem:(NSString *)item
-           context:(NSString *)context;
-- (void)removeItem:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo;
 - (void)removeItemForIdentifier:(NSString *)identifier;
 
 // TODO Rename this!

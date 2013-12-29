@@ -93,8 +93,6 @@ static ISCache *sCache;
         [self.info setObject:info
                       forKey:identifier];
       }
-      NSLog(@"Cache Items: %@", self.items);
-      NSLog(@"Info: %@", self.info);
     }
     
     self.observers = [NSMutableArray arrayWithCapacity:3];
@@ -288,27 +286,6 @@ static ISCache *sCache;
 }
 
 
-- (void)removeItem:(NSString *)item
-           context:(NSString *)context
-{
-  NSString *identifier = [self identifierForItem:item
-                                         context:context
-                                        userInfo:nil];
-  [self removeItemForIdentifier:identifier];
-}
-
-
-- (void)removeItem:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-{
-  NSString *identifier = [self identifierForItem:item
-                                         context:context
-                                        userInfo:userInfo];
-  [self removeItemForIdentifier:identifier];
-}
-
-
 - (void)removeItemForIdentifier:(NSString *)identifier
 {
   // Get the relevant details for the item.
@@ -472,7 +449,6 @@ static ISCache *sCache;
                  forKey:info.identifier];
   [self.items writeToFile:self.path
                atomically:YES];
-  NSLog(@"Cache Items: %@", self.items);
   
   // Notify our observers.
   [self notifyObservers:info];

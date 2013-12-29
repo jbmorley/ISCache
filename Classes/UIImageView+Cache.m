@@ -30,7 +30,8 @@
   // already have a cached copy of the image.
   ISCacheItemInfo *info
   = [defaultCache infoForItem:url
-                      context:kCacheContextURL];
+                      context:kCacheContextURL
+                     userInfo:userInfo];
   if (info.state != ISCacheItemStateFound) {
     self.image = nil;
   }

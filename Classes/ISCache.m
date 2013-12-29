@@ -196,31 +196,11 @@ static ISCache *sCache;
 
 - (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
-{
-  return [self infoForItem:item
-                   context:context
-                  userInfo:nil];
-}
-
-
-- (ISCacheItemInfo *)infoForItem:(NSString *)item
-                         context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 {
   return [self cacheItemInfoForItem:item
                             context:context
                            userInfo:userInfo];
-}
-
-
-- (NSString *)item:(NSString *)item
-           context:(NSString *)context
-             block:(ISCacheBlock)completionBlock
-{
-  return [self item:item
-            context:context
-           userInfo:nil
-              block:completionBlock];
 }
 
 

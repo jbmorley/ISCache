@@ -35,13 +35,8 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 - (ISCacheItemInfo *)infoForItem:(NSString *)item
-                         context:(NSString *)context;
-- (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
-- (NSString *)item:(NSString *)item
-           context:(NSString *)context
-             block:(ISCacheBlock)completionBlock;
 - (NSString *)item:(NSString *)item
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo

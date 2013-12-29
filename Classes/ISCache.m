@@ -78,11 +78,16 @@ static ISCache *sCache;
                                            YES) objectAtIndex:0];
     
     // Create and register the default factories.
-    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISHTTPCacheHandler class]];
     
-    // Register the default handlers.
+    // HTTP Handler
+    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISHTTPCacheHandler class]];
     [self registerFactory:httpFactory
                forContext:kCacheContextURL];
+    
+    // Scaling HTTP Handler
+    ISScalingCacheHandlerFactory *scalingHttpfactory = [ISScalingCacheHandlerFactory new];
+    [self registerFactory:scalingHttpfactory
+               forContext:kCacheContextScaleURL];
 
   }
   return self;

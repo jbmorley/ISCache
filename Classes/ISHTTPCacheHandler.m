@@ -7,12 +7,14 @@
 //
 
 #import "ISHTTPCacheHandler.h"
+#import "ISCache.h"
 
 @interface ISHTTPCacheHandler ()
 
-@property (weak, nonatomic) id<ISCacheHandlerDelegate> delegate;
-@property (strong, nonatomic) ISCacheItemInfo *info;
-@property (strong, nonatomic) NSURLConnection *connection;
+@property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
+@property (nonatomic, strong) ISCacheItemInfo *info;
+@property (nonatomic, strong) NSURLConnection *connection;
+@property (nonatomic, copy) ISCacheBlock completionBlock;
 
 @end
 
@@ -20,21 +22,24 @@
 
 - (id)init
 {
+  return [self initWithCompletion:NULL];
+}
+
+- (id)initWithCompletion:(ISCacheBlock)completionBlock
+{
   self = [super init];
   if (self) {
-    
+    self.completionBlock = completionBlock;
   }
   return self;
 }
 
+
 - (void)fetchItem:(ISCacheItemInfo *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate
 {
-  NSLog(@"ISHTTPCacheHandler fetchItem: %@", info);
   self.delegate = delegate;
   self.info = info;
-  
-  // TODO Add a handler for when done.
   
   self.connection = [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:info.item]] delegate:self];
   [self.connection start];
@@ -72,6 +77,10 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+  [self.info closeFile];
+  if (self.completionBlock) {
+    self.completionBlock(self.info);
+  }
   [self.delegate itemDidFinish:self.info];
 }
 

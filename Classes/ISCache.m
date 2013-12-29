@@ -105,8 +105,17 @@ static ISCache *sCache;
 }
 
 
+// Returns an existing item info or nil.
+- (ISCacheItemInfo *)cacheItemInfoForIdentifier:(NSString *)identifier
+{
+  return [self.info objectForKey:identifier];
+}
+
+
+// Creates a new item info if one doesn't exist.
 - (ISCacheItemInfo *)cacheItemInfoForItem:(NSString *)item
                                   context:(NSString *)context
+                                 userInfo:(NSDictionary *)userInfo
 {
   // Check to see if we've already created a cache item info for the
   // requested item. If we have, then return that. If not, then look
@@ -114,7 +123,8 @@ static ISCache *sCache;
   // depending on whehter the file has been found or not.
   
   NSString *identifier = [self identifierForItem:item
-                                         context:context];
+                                         context:context
+                                        userInfo:userInfo];
   
   // Return a pre-existing cache item info.
   ISCacheItemInfo *info
@@ -127,9 +137,9 @@ static ISCache *sCache;
   info = [ISCacheItemInfo new];
   info.item = item;
   info.context = context;
-  NSString *hash = [[self identifierForItem:item
-                                    context:context] MD5];
-  info.path = [self.documentsPath stringByAppendingPathComponent:hash];
+  info.userInfo = userInfo;
+  info.identifier = identifier;
+  info.path = [self.documentsPath stringByAppendingPathComponent:identifier];
   [self.info setObject:info
                 forKey:identifier];
   
@@ -158,29 +168,51 @@ static ISCache *sCache;
 
 
 - (ISCacheItemState)stateForItem:(NSString *)item
-                         context:(NSString *)context;
+                         context:(NSString *)context
+{
+  return [self stateForItem:item
+                    context:context
+                   userInfo:nil];
+}
+
+
+- (ISCacheItemState)stateForItem:(NSString *)item
+                         context:(NSString *)context
+                        userInfo:(NSDictionary *)userInfo;
 {
   ISCacheItemInfo *info = [self cacheItemInfoForItem:item
-                                             context:context];
+                                             context:context
+                                            userInfo:userInfo];
   return info.state;
 }
 
 
-- (void)item:(NSString *)item
-     context:(NSString *)context
-       block:(ISCacheBlock)completionBlock
+- (NSString *)item:(NSString *)item
+           context:(NSString *)context
+             block:(ISCacheBlock)completionBlock
 {
-  // TODO Get a user dictionary.
-  NSDictionary *userInfo = nil;
-  
+  return [self item:item
+            context:context
+           userInfo:nil
+              block:completionBlock];
+}
+
+
+- (NSString *)item:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+             block:(ISCacheBlock)completionBlock
+{
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
   // Get the relevant details for the item.
   NSString *identifier = [self identifierForItem:item
-                                         context:context];
+                                         context:context
+                                        userInfo:userInfo];
   ISCacheItemInfo *info = [self cacheItemInfoForItem:item
-                                             context:context];
+                                             context:context
+                                            userInfo:userInfo];
   
   if (info.state == ISCacheItemStateFound) {
     
@@ -193,10 +225,9 @@ static ISCache *sCache;
     // TODO Consider sharing this code with the
     // other clauses.
     ISCacheObserverBlock *observer
-    = [ISCacheObserverBlock observerWithItem:item
-                                     context:context
-                                       block:completionBlock
-                                       cache:self];
+    = [ISCacheObserverBlock observerWithIdentifier:identifier
+                                             block:completionBlock
+                                             cache:self];
     [self.observers addObject:observer];
     [self addObserver:observer];
     
@@ -211,10 +242,9 @@ static ISCache *sCache;
     
     if (completionBlock) {
       ISCacheObserverBlock *observer
-      = [ISCacheObserverBlock observerWithItem:item
-                                       context:context
-                                         block:completionBlock
-                                         cache:self];
+      = [ISCacheObserverBlock observerWithIdentifier:identifier
+                                               block:completionBlock
+                                               cache:self];
       [self.observers addObject:observer];
       [self addObserver:observer];
     }
@@ -225,18 +255,41 @@ static ISCache *sCache;
     
   }
   
+  return identifier;
+  
 }
 
 
-// TODO Does this need a block observer?
 - (void)removeItem:(NSString *)item
            context:(NSString *)context
 {
-  // Get the relevant details for the item.
   NSString *identifier = [self identifierForItem:item
-                                         context:context];
-  ISCacheItemInfo *info = [self cacheItemInfoForItem:item
-                                             context:context];
+                                         context:context
+                                        userInfo:nil];
+  [self removeItemForIdentifier:identifier];
+}
+
+
+- (void)removeItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+{
+  NSString *identifier = [self identifierForItem:item
+                                         context:context
+                                        userInfo:userInfo];
+  [self removeItemForIdentifier:identifier];
+}
+
+
+- (void)removeItemForIdentifier:(NSString *)identifier
+{
+  // Get the relevant details for the item.
+  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
+  
+  // If the cache info is nil we assume that no entry exists.
+  if (info == nil) {
+    return;
+  }
   
   if (info.state == ISCacheItemStateFound) {
     
@@ -329,11 +382,20 @@ static ISCache *sCache;
 
 - (NSString *)identifierForItem:(NSString *)item
                         context:(NSString *)context
+                       userInfo:(NSDictionary *)userInfo
 {
-  return [NSString stringWithFormat:
-          @"%@:%@",
-          context,
-          item];
+  if (userInfo) {
+    return [[NSString stringWithFormat:
+             @"%@:%@(%@)",
+             context,
+             item,
+             userInfo] MD5];
+  } else {
+    return [[NSString stringWithFormat:
+             @"%@:%@",
+             context,
+             item] MD5];
+  }
 }
 
 

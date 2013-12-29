@@ -20,6 +20,8 @@ typedef enum {
 
 @property (strong) NSString *item;
 @property (strong) NSString *context;
+@property (strong) NSDictionary *userInfo;
+@property (strong) NSString *identifier;
 @property (strong) NSString *path;
 @property ISCacheItemState state;
 @property long long totalBytesRead;

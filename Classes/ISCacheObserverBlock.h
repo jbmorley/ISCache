@@ -14,13 +14,11 @@
 
 @interface ISCacheObserverBlock : NSObject <ISCacheObserver>
 
-+ (id)observerWithItem:(NSString *)item
-               context:(NSString *)context
-                 block:(ISCacheBlock)block
-                 cache:(ISCache *)cache;
-- (id)initWithItem:(NSString *)item
-           context:(NSString *)context
-             block:(ISCacheBlock)block
-             cache:(ISCache *)cache;
++ (id)observerWithIdentifier:(NSString *)item
+                       block:(ISCacheBlock)block
+                       cache:(ISCache *)cache;
+- (id)initWithIdentifier:(NSString *)identifier
+                   block:(ISCacheBlock)block
+                   cache:(ISCache *)cache;
 
 @end

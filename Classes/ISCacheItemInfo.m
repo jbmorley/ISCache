@@ -27,9 +27,10 @@ typedef enum {
 - (NSString *)description
 {
   return [NSString stringWithFormat:
-          @"%@:%@",
+          @"%@:%@(%@)",
           self.context,
-          self.item];
+          self.item,
+          self.userInfo];
 }
 
 

@@ -12,12 +12,15 @@
 @implementation UIImageView (Cache)
 
 - (void)setImageWithURL:(NSString *)url
+               userInfo:(NSDictionary *)userInfo
 {
   [self setImageWithURL:url
+               userInfo:userInfo
         completionBlock:^{}];
 }
 
 - (void)setImageWithURL:(NSString *)url
+               userInfo:(NSDictionary *)userInfo
         completionBlock:(ISCacheCompletionBlock)completionBlock
 {
   // Fetch the thumbnail from the cache and display it when ready.
@@ -35,7 +38,8 @@
   // Kick-off the image download.
   UIImageView *__weak weakSelf = self;
   [defaultCache item:url
-             context:kCacheContextURL
+             context:kCacheContextScaleURL
+            userInfo:userInfo
                block:^(ISCacheItemInfo *info) {
                  UIImageView *strongSelf = weakSelf;
                  if (strongSelf) {

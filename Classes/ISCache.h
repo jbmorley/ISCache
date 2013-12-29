@@ -15,6 +15,7 @@
 #import "ISHTTPCacheHandler.h"
 #import "UIImageView+Cache.h"
 #import "ISCacheHandlerFactory.h"
+#import "ISScalingCacheHandlerFactory.h"
 
 typedef enum {
   ISCachePolicyStrong, // Install duration
@@ -24,6 +25,7 @@ typedef enum {
 } ISCachePolicy;
 
 static NSString *kCacheContextURL = @"URL";
+static NSString *kCacheContextScaleURL = @"ScaleURL";
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
@@ -31,13 +33,26 @@ static NSString *kCacheContextURL = @"URL";
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
+// TODO Should this function even exist?
 - (ISCacheItemState)stateForItem:(NSString *)item
                          context:(NSString *)context;
-- (void)item:(NSString *)item
-     context:(NSString *)context
-       block:(ISCacheBlock)completionBlock;
+- (ISCacheItemState)stateForItem:(NSString *)item
+                         context:(NSString *)context
+                        userInfo:(NSDictionary *)userInfo;
+- (NSString *)item:(NSString *)item
+           context:(NSString *)context
+             block:(ISCacheBlock)completionBlock;
+- (NSString *)item:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+             block:(ISCacheBlock)completionBlock;
+// TODO Provide identifier based accessors. Should these include the info at all?
 - (void)removeItem:(NSString *)item
            context:(NSString *)context;
+- (void)removeItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo;
+- (void)removeItemForIdentifier:(NSString *)identifier;
 
 - (void)addObserver:(id<ISCacheObserver>)observer;
 - (void)removeObserver:(id<ISCacheObserver>)observer;

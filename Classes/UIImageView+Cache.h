@@ -13,8 +13,10 @@ typedef void (^ISCacheCompletionBlock)(void);
 
 @interface UIImageView (Cache)
 
-- (void)setImageWithURL:(NSString *)url;
 - (void)setImageWithURL:(NSString *)url
+               userInfo:(NSDictionary *)userInfo;
+- (void)setImageWithURL:(NSString *)url
+               userInfo:(NSDictionary *)userInfo
         completionBlock:(ISCacheCompletionBlock)completionBlock;
 
 @end

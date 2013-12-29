@@ -10,12 +10,17 @@
 #import "ISCacheHandler.h"
 #import "ISCacheBlock.h"
 
+typedef void (^ISCacheItemReady)();
+typedef void (^ISCachePostProcessBlock)(ISCacheItemInfo *info,
+                                        ISCacheItemReady completeBlock);
+
 @interface ISHTTPCacheHandler : NSObject
 <ISCacheHandler
 ,NSURLConnectionDelegate
 ,NSURLConnectionDataDelegate>
 
 - (id)init;
-- (id)initWithCompletion:(ISCacheBlock)completionBlock;
+// TODO Rename this API.
+- (id)initWithCompletion:(ISCachePostProcessBlock)completionBlock;
 
 @end

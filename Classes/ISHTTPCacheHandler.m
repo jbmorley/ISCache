@@ -14,7 +14,7 @@
 @property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
 @property (nonatomic, strong) ISCacheItemInfo *info;
 @property (nonatomic, strong) NSURLConnection *connection;
-@property (nonatomic, copy) ISCacheBlock completionBlock;
+@property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
 
 @end
 
@@ -25,7 +25,7 @@
   return [self initWithCompletion:NULL];
 }
 
-- (id)initWithCompletion:(ISCacheBlock)completionBlock
+- (id)initWithCompletion:(ISCachePostProcessBlock)completionBlock
 {
   self = [super init];
   if (self) {
@@ -78,10 +78,19 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
   [self.info closeFile];
+  
+  // Block to execute once any post-processing is complete.
+  ISCacheItemReady completeBlock = ^(){
+    [self.delegate itemDidFinish:self.info];
+  };
+  
+  // Schedule the post-processing if neccessary.
+  // Otherwise, simply call the final block.
   if (self.completionBlock) {
-    self.completionBlock(self.info);
+    self.completionBlock(self.info, completeBlock);
+  } else {
+    completeBlock();
   }
-  [self.delegate itemDidFinish:self.info];
 }
 
 

@@ -13,7 +13,7 @@
 
 - (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo
 {
-  ISHTTPCacheHandler *handler = [[ISHTTPCacheHandler alloc] initWithCompletion:^(ISCacheItemInfo *info) {
+  ISHTTPCacheHandler *handler = [[ISHTTPCacheHandler alloc] initWithCompletion:^(ISCacheItemInfo *info, ISCacheItemReady completeBlock) {
     
     // Only attempt to resize the image if user info has been
     // provided with the required dimensions.
@@ -79,6 +79,9 @@
                                            atomically:YES];
       
     }
+    
+    // Signal that the resizing is complete.
+    completeBlock();
     
   }];
   return handler;

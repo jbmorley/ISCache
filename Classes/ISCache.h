@@ -1,6 +1,5 @@
 //
-//  ISItemCache.h
-//  Popcorn
+//  ISCache.h
 //
 //  Created by Jason Barrie Morley on 28/07/2013.
 //
@@ -14,6 +13,7 @@
 #import "ISCacheHandlerDelegate.h"
 #import "ISHTTPCacheHandler.h"
 #import "UIImageView+Cache.h"
+#import "ISCacheImageView.h"
 #import "ISCacheHandlerFactory.h"
 #import "ISScalingCacheHandlerFactory.h"
 

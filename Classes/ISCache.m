@@ -222,6 +222,14 @@ static ISCache *sCache;
   
   if (info.state == ISCacheItemStateFound) {
     
+    // Check that there is a file on disk matching the cache item.
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if (![fileManager fileExistsAtPath:info.path
+                           isDirectory:NO]) {
+      // TODO We should recover from this scenario but at the moment doing so
+      // would mask some problems so this needs to be fixed later.
+    }
+    
     // If the item exists, call back with the result.
     completionBlock(info);
     
@@ -239,6 +247,9 @@ static ISCache *sCache;
     
   } else {
     
+    // Set the state to in progress.
+    info.state = ISCacheItemStateInProgress;
+    
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
                                                 userInfo:userInfo];
@@ -255,7 +266,10 @@ static ISCache *sCache;
       [self addObserver:observer];
     }
     
-    info.state = ISCacheItemStateInProgress;
+    // Notify the delegates.
+    [self notifyObservers:info];
+    
+    // Begin the fetch.
     [handler fetchItem:info
               delegate:self];
     
@@ -309,10 +323,10 @@ static ISCache *sCache;
     info.totalBytesRead = 0;
     
     // Update the cache.
-    [self.items removeObjectForKey:info];
+    [self.info removeObjectForKey:info.identifier];
+    [self.items removeObjectForKey:info.identifier];
     [self.items writeToFile:self.path
                  atomically:YES];
-    [self.info removeObjectForKey:info];
     
     // Notify the observers that the item has been removed.
     [self notifyObservers:info];
@@ -411,12 +425,6 @@ static ISCache *sCache;
 - (void)itemDidUpdate:(ISCacheItemInfo *)info
 {
   [self notifyObservers:info];
-  if (info.state == ISCacheItemStateFound) {
-    // TODO Remove the item.
-  }
-  // TODO Remove the handler?
-  // TODO Do we need to do anything about cancellation and
-  // failure here?
 }
 
 
@@ -437,7 +445,7 @@ static ISCache *sCache;
                  forKey:info.identifier];
   [self.items writeToFile:self.path
                atomically:YES];
-  
+
   // Notify our observers.
   [self notifyObservers:info];
   

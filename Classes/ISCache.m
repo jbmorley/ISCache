@@ -266,7 +266,15 @@ static ISCache *sCache;
 }
 
 
-- (void)removeItemForIdentifier:(NSString *)identifier
+- (void)removeItems:(NSArray *)identifiers
+{
+  for (NSString *identifier in identifiers) {
+    [self removeItem:identifier];
+  }
+}
+
+
+- (void)removeItem:(NSString *)identifier
 {
   // Get the relevant details for the item.
   ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];

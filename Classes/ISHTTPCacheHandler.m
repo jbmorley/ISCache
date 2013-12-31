@@ -86,11 +86,16 @@ didReceiveResponse:(NSURLResponse *)response
     dispatch_queue_t queue =
     dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
     dispatch_async(queue, ^{
-      self.completionBlock(self.info);
+      NSError *error = self.completionBlock(self.info);
       
       // Signal that the resizing is complete.
       dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate itemDidFinish:self.info];
+        if (error) {
+          [self.delegate item:self.info
+             didFailWithError:error];
+        } else {
+          [self.delegate itemDidFinish:self.info];
+        }
       });
       
     });

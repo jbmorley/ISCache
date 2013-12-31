@@ -40,7 +40,8 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
 - (NSString *)item:(NSString *)item
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
-             block:(ISCacheBlock)completionBlock;
+             block:(ISCacheBlock)completionBlock
+             error:(ISCacheFailureBlock)failureBlock;
 - (void)removeItems:(NSArray *)identifiers;
 
 // TODO Rename this!

@@ -79,17 +79,23 @@ didReceiveResponse:(NSURLResponse *)response
 {
   [self.info closeFile];
   
-  // Block to execute once any post-processing is complete.
-  ISCacheItemReady completeBlock = ^(){
-    [self.delegate itemDidFinish:self.info];
-  };
-  
   // Schedule the post-processing if neccessary.
   // Otherwise, simply call the final block.
   if (self.completionBlock) {
-    self.completionBlock(self.info, completeBlock);
+    
+    dispatch_queue_t queue =
+    dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
+    dispatch_async(queue, ^{
+      self.completionBlock(self.info);
+      
+      // Signal that the resizing is complete.
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate itemDidFinish:self.info];
+      });
+      
+    });
   } else {
-    completeBlock();
+    [self.delegate itemDidFinish:self.info];
   }
 }
 
@@ -97,7 +103,8 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
-  NSAssert(YES, @"connection:didFailWithError:");
+  [self.delegate item:self.info
+     didFailWithError:error];
 }
 
 

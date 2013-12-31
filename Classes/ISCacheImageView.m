@@ -10,15 +10,38 @@
 #import "ISCache.h"
 
 
+@interface ISCacheImageView ()
+
+@property (nonatomic, strong) NSString *cacheIdentifier;
+
+@end
+
+
 @implementation ISCacheImageView
 
 - (id)initWithFrame:(CGRect)frame
 {
-    self = [super initWithFrame:frame];
-    if (self) {
-        // Initialization code
-    }
-    return self;
+  self = [super initWithFrame:frame];
+  if (self) {
+    ISCache *defaultCache = [ISCache defaultCache];
+    [defaultCache addObserver:self];
+  }
+  return self;
+}
+
+
+- (void)awakeFromNib
+{
+  [super awakeFromNib];
+  ISCache *defaultCache = [ISCache defaultCache];
+  [defaultCache addObserver:self];
+}
+
+
+- (void)dealloc
+{
+  ISCache *defaultCache = [ISCache defaultCache];
+  [defaultCache removeObserver:self];
 }
 
 
@@ -48,6 +71,8 @@
     self.image = nil;
   }
   
+  self.cacheIdentifier = info.identifier;
+  
   // Kick-off the image download.
   UIImageView *__weak weakSelf = self;
   [defaultCache item:url
@@ -60,8 +85,23 @@
                      self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
                      completionBlock();
                    }
+                   return ISCacheBlockStateContinue;
                  }
+                 return ISCacheBlockStateDone;
+               }
+               error:^(ISCacheItemInfo *info, NSError *error) {
+                 // TODO We should indicate failure somehow.
+                 completionBlock();
                }];
+}
+
+
+- (void)itemDidUpdate:(ISCacheItemInfo *)info
+{
+  if ([info.identifier isEqualToString:self.cacheIdentifier] &&
+      info.state == ISCacheItemStateNotFound) {
+    NSLog(@"Item no longer in cache.");
+  }
 }
 
 

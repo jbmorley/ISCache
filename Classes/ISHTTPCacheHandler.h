@@ -10,9 +10,7 @@
 #import "ISCacheHandler.h"
 #import "ISCacheBlock.h"
 
-typedef void (^ISCacheItemReady)();
-typedef void (^ISCachePostProcessBlock)(ISCacheItemInfo *info,
-                                        ISCacheItemReady completeBlock);
+typedef void (^ISCachePostProcessBlock)(ISCacheItemInfo *info);
 
 @interface ISHTTPCacheHandler : NSObject
 <ISCacheHandler

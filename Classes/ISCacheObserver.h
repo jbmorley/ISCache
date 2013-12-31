@@ -13,4 +13,8 @@
 
 - (void)itemDidUpdate:(ISCacheItemInfo *)info;
 
+@optional
+- (void)item:(ISCacheItemInfo *)info
+didFailwithError:(NSError *)error;
+
 @end

@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "ISCacheCompletionBlock.h"
+#import "ISCacheObserver.h"
 
 @interface ISCacheImageView : UIImageView
+<ISCacheObserver>
 
 - (void)setImageWithURL:(NSString *)url
                userInfo:(NSDictionary *)userInfo;

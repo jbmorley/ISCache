@@ -48,8 +48,11 @@
                      self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
                      completionBlock();
                    }
+                   return ISCacheBlockStateContinue;
                  }
-               }];
+                 return ISCacheBlockStateDone;
+               }
+               error:NULL];
 }
 
 @end

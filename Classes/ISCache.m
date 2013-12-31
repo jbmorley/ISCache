@@ -208,6 +208,7 @@ static ISCache *sCache;
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
              block:(ISCacheBlock)completionBlock
+             error:(ISCacheFailureBlock)failureBlock
 {
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
@@ -241,6 +242,7 @@ static ISCache *sCache;
     ISCacheObserverBlock *observer
     = [ISCacheObserverBlock observerWithIdentifier:identifier
                                              block:completionBlock
+                                      failureBlock:failureBlock
                                              cache:self];
     [self.observers addObject:observer];
     [self addObserver:observer];
@@ -261,6 +263,7 @@ static ISCache *sCache;
       ISCacheObserverBlock *observer
       = [ISCacheObserverBlock observerWithIdentifier:identifier
                                                block:completionBlock
+                                        failureBlock:failureBlock
                                                cache:self];
       [self.observers addObject:observer];
       [self addObserver:observer];
@@ -392,12 +395,14 @@ static ISCache *sCache;
 - (void)addObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
+  NSLog(@"Observers: %d", self.notifier.count);
 }
 
 
 - (void)removeObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
+  NSLog(@"Observers: %d", self.notifier.count);
 }
 
 
@@ -452,5 +457,18 @@ static ISCache *sCache;
   // Block delegates will delete themselves when they encounter an ISCacheItemStateFound for the
   // item. This means there is no further cleanup required here.
 }
+
+
+- (void)item:(ISCacheItemInfo *)info
+didFailWithError:(NSError *)error
+{
+  [self.notifier notify:@selector(item:didFailwithError:)
+             withObject:info
+             withObject:error];
+  
+  // Remove the item.
+  [self.items removeObjectForKey:info.identifier];
+}
+
 
 @end

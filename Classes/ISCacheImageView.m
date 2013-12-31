@@ -71,16 +71,33 @@
     self.image = nil;
   }
   
-  self.cacheIdentifier = info.identifier;
+  // Clear the cacheIdentifier to indicate that we've just
+  // set the image.
+  self.cacheIdentifier = nil;
+  
+  // TODO Work out why setting the cache identifier from the info
+  // here doesn't work?
   
   // Kick-off the image download.
-  UIImageView *__weak weakSelf = self;
-  [defaultCache item:url
+  ISCacheImageView *__weak weakSelf = self;
+  self.cacheIdentifier = [defaultCache item:url
              context:kCacheContextScaleURL
             userInfo:userInfo
                block:^(ISCacheItemInfo *info) {
-                 UIImageView *strongSelf = weakSelf;
-                 if (strongSelf) {
+                 ISCacheImageView *strongSelf = weakSelf;
+                 // Check that the image view is valid and the
+                 // identifier we are receiving updates for matches
+                 // the one requested. This might occur if image
+                 // view is reused for a different image (e.g.
+                 // UITableViewCell, UICollectionViewCell, etc.
+                 // The special case here is that the first
+                 // response from the cache is received before
+                 // we have returned from the item:context:... call
+                 // so we need to guard against this by checking
+                 // for a nil cacheIdentifier.
+                 if (strongSelf &&
+                     (strongSelf.cacheIdentifier == nil ||
+                      [strongSelf.cacheIdentifier isEqualToString:info.identifier])) {
                    if (info.state == ISCacheItemStateFound) {
                      self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
                      completionBlock();

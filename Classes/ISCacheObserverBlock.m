@@ -13,7 +13,6 @@
 
 @property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, copy) ISCacheBlock block;
-@property (nonatomic, copy) ISCacheFailureBlock failureBlock;
 @property (nonatomic, weak) ISCache *cache;
 
 @end
@@ -22,26 +21,22 @@
 
 + (id)observerWithIdentifier:(NSString *)identifier
                        block:(ISCacheBlock)block
-                failureBlock:(ISCacheFailureBlock)failureBlock
                        cache:(ISCache *)cache
 {
   return [[self alloc] initWithIdentifier:identifier
                                     block:block
-                             failureBlock:failureBlock
                                     cache:cache];
 }
 
 
 - (id)initWithIdentifier:(NSString *)identifier
                    block:(ISCacheBlock)block
-                failureBlock:(ISCacheFailureBlock)failureBlock
                    cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
     self.identifier = identifier;
     self.block = block;
-    self.failureBlock = failureBlock;
     self.cache = cache;
   }
   return self;
@@ -54,7 +49,7 @@
   if ([info.identifier isEqualToString:self.identifier]) {
     
     // Call our block.
-    ISCacheBlockState result = self.block(info);
+    ISCacheBlockState result = self.block(info, nil);
     
     // Remove ourselves if the item is complete or the
     // block observer indicates that it is complete.
@@ -70,9 +65,7 @@
 - (void)item:(ISCacheItemInfo *)info
 didFailwithError:(NSError *)error
 {
-  if (self.failureBlock) {
-    self.failureBlock(info, error);
-  }
+  self.block(info, error);
   [self.cache removeObserver:self];
 }
 

@@ -16,7 +16,7 @@
 {
   [self setImageWithURL:url
                userInfo:userInfo
-        completionBlock:^{}];
+        completionBlock:NULL];
 }
 
 - (void)setImageWithURL:(NSString *)url
@@ -41,18 +41,19 @@
   [defaultCache item:url
              context:kCacheContextScaleURL
             userInfo:userInfo
-               block:^(ISCacheItemInfo *info) {
+               block:^(ISCacheItemInfo *info, NSError *error) {
                  UIImageView *strongSelf = weakSelf;
                  if (strongSelf) {
                    if (info.state == ISCacheItemStateFound) {
                      self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
-                     completionBlock();
+                     if (completionBlock) {
+                       completionBlock(nil);
+                     }
                    }
                    return ISCacheBlockStateContinue;
                  }
                  return ISCacheBlockStateDone;
-               }
-               error:NULL];
+               }];
 }
 
 @end

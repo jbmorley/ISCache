@@ -16,11 +16,9 @@
 
 + (id)observerWithIdentifier:(NSString *)item
                        block:(ISCacheBlock)block
-                failureBlock:(ISCacheFailureBlock)failureBlock
                        cache:(ISCache *)cache;
 - (id)initWithIdentifier:(NSString *)identifier
                    block:(ISCacheBlock)block
-            failureBlock:(ISCacheFailureBlock)failureBlock
                    cache:(ISCache *)cache;
 
 @end

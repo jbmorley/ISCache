@@ -8,4 +8,4 @@
 
 #import <Foundation/Foundation.h>
 
-typedef void (^ISCacheCompletionBlock)(void);
+typedef void (^ISCacheCompletionBlock)(NSError *error);

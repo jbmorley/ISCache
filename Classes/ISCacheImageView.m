@@ -50,7 +50,7 @@
 {
   [self setImageWithURL:url
                userInfo:userInfo
-        completionBlock:^{}];
+        completionBlock:NULL];
 }
 
 
@@ -83,7 +83,14 @@
   self.cacheIdentifier = [defaultCache item:url
              context:kCacheContextScaleURL
             userInfo:userInfo
-               block:^(ISCacheItemInfo *info) {
+               block:^(ISCacheItemInfo *info, NSError *error) {
+                 if (error != nil) {
+                   if (completionBlock) {
+                     completionBlock(error);
+                   }
+                   return ISCacheBlockStateDone;
+                 }
+                 
                  ISCacheImageView *strongSelf = weakSelf;
                  // Check that the image view is valid and the
                  // identifier we are receiving updates for matches
@@ -100,15 +107,13 @@
                       [strongSelf.cacheIdentifier isEqualToString:info.identifier])) {
                    if (info.state == ISCacheItemStateFound) {
                      self.image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
-                     completionBlock();
+                     if (completionBlock) {
+                       completionBlock(nil);
+                     }
                    }
                    return ISCacheBlockStateContinue;
                  }
                  return ISCacheBlockStateDone;
-               }
-               error:^(ISCacheItemInfo *info, NSError *error) {
-                 // TODO We should indicate failure somehow.
-                 completionBlock();
                }];
 }
 

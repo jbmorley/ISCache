@@ -19,5 +19,4 @@ typedef enum {
   ISCacheBlockStateDone,
 } ISCacheBlockState;
 
-typedef ISCacheBlockState (^ISCacheBlock)(ISCacheItemInfo *info);
-typedef void (^ISCacheFailureBlock) (ISCacheItemInfo *info, NSError *error);
+typedef ISCacheBlockState (^ISCacheBlock)(ISCacheItemInfo *info, NSError *error);

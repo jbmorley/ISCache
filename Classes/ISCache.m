@@ -210,7 +210,6 @@ static ISCache *sCache;
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
              block:(ISCacheBlock)completionBlock
-             error:(ISCacheFailureBlock)failureBlock
 {
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
@@ -234,7 +233,7 @@ static ISCache *sCache;
     }
     
     // If the item exists, call back with the result.
-    completionBlock(info);
+    completionBlock(info, nil);
     
   } else if (info.state == ISCacheItemStateInProgress) {
     
@@ -244,7 +243,6 @@ static ISCache *sCache;
     ISCacheObserverBlock *observer
     = [ISCacheObserverBlock observerWithIdentifier:identifier
                                              block:completionBlock
-                                      failureBlock:failureBlock
                                              cache:self];
     [self.observers addObject:observer];
     [self addObserver:observer];
@@ -265,7 +263,6 @@ static ISCache *sCache;
       ISCacheObserverBlock *observer
       = [ISCacheObserverBlock observerWithIdentifier:identifier
                                                block:completionBlock
-                                        failureBlock:failureBlock
                                                cache:self];
       [self.observers addObject:observer];
       [self addObserver:observer];

@@ -171,6 +171,8 @@ static ISCache *sCache;
   info.identifier = identifier;
   info.path = [self.documentsPath stringByAppendingPathComponent:identifier];
   info.state = ISCacheItemStateNotFound;
+  info.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+  info.totalBytesRead = 0;
   
   [self.info setObject:info
                 forKey:identifier];
@@ -250,7 +252,7 @@ static ISCache *sCache;
   } else {
     
     // Set the state to in progress.
-    info.state = ISCacheItemStateInProgress;
+    info.state = ISCacheItemStatePending;
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -429,6 +431,11 @@ static ISCache *sCache;
 // Should not be used internally as a notification mechanism.
 - (void)itemDidUpdate:(ISCacheItemInfo *)info
 {
+  // Upgrade the item state to 'in progress' if
+  // the number of expected bytes has been set.
+  if (info.totalBytesExpectedToRead != ISCacheItemTotalBytesUnknown) {
+    info.state = ISCacheItemStateInProgress;
+  }
   [self notifyObservers:info];
 }
 

@@ -13,6 +13,7 @@ typedef enum {
   ISCacheItemInfoFileStateOpen,
 } ISCacheItemInfoFileState;
 
+static const int ISCacheItemTotalBytesUnknown = -1;
 
 @interface ISCacheItemInfo ()
 

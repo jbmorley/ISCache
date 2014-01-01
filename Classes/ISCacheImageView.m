@@ -55,6 +55,7 @@
 
 
 - (void)setImageWithURL:(NSString *)url
+       placeholderImage:(UIImage *)placeholderImage
                userInfo:(NSDictionary *)userInfo
         completionBlock:(ISCacheCompletionBlock)completionBlock
 {
@@ -68,7 +69,11 @@
                       context:kCacheContextURL
                      userInfo:userInfo];
   if (info.state != ISCacheItemStateFound) {
-    self.image = nil;
+    if (placeholderImage) {
+      self.image = placeholderImage;
+    } else {
+      self.image = nil;
+    }
   }
   
   // Clear the cacheIdentifier to indicate that we've just

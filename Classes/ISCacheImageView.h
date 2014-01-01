@@ -14,8 +14,7 @@
 <ISCacheObserver>
 
 - (void)setImageWithURL:(NSString *)url
-               userInfo:(NSDictionary *)userInfo;
-- (void)setImageWithURL:(NSString *)url
+       placeholderImage:(UIImage *)placeholderImage
                userInfo:(NSDictionary *)userInfo
         completionBlock:(ISCacheCompletionBlock)completionBlock;
 

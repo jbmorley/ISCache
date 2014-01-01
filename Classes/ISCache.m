@@ -13,27 +13,11 @@
 #import "NSString+MD5.h"
 
 
-// TODO Handlers need some sort of identifier which is unique
-// across relaunches of the application.
-// This allows us to refer to items on the file system even if the
-// handlers aren't unique.
-
 // TODO Items need to be timestamped and it should be possible to
 // differentiate between permanently cached items and temporarily
 // cached items.
 
 // TODO Handlers should have an expiry strategy.
-
-// TODO Rename handler to context
-// UBUNTU:  http://mirror.bytemark.co.uk/ubuntu-releases//precise/ubuntu-12.04.2-desktop-i386.iso
-
-// TODO Ensure delegates are correctly deleted.
-
-// TODO Is it better if the info block contains the file handle,
-// represents the mechanism for notification, etc?
-// The Info could have the identifier for the file baked in which
-// would make it easy to do filtered lookup, etc
-
 
 @interface ISCache ()
 
@@ -238,8 +222,6 @@ static ISCache *sCache;
   } else if (info.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, attach a block observer.
-    // TODO Consider sharing this code with the
-    // other clauses.
     ISCacheObserverBlock *observer
     = [ISCacheObserverBlock observerWithIdentifier:identifier
                                              block:completionBlock

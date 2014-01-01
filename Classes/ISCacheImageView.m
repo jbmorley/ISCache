@@ -19,29 +19,13 @@
 
 @implementation ISCacheImageView
 
+
 - (id)initWithFrame:(CGRect)frame
 {
   self = [super initWithFrame:frame];
   if (self) {
-    ISCache *defaultCache = [ISCache defaultCache];
-    [defaultCache addObserver:self];
   }
   return self;
-}
-
-
-- (void)awakeFromNib
-{
-  [super awakeFromNib];
-  ISCache *defaultCache = [ISCache defaultCache];
-  [defaultCache addObserver:self];
-}
-
-
-- (void)dealloc
-{
-  ISCache *defaultCache = [ISCache defaultCache];
-  [defaultCache removeObserver:self];
 }
 
 
@@ -120,15 +104,6 @@
                  }
                  return ISCacheBlockStateDone;
                }];
-}
-
-
-- (void)itemDidUpdate:(ISCacheItemInfo *)info
-{
-  if ([info.identifier isEqualToString:self.cacheIdentifier] &&
-      info.state == ISCacheItemStateNotFound) {
-    NSLog(@"Item no longer in cache.");
-  }
 }
 
 

@@ -24,7 +24,7 @@
 @property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
-@property (nonatomic, strong) NSMutableDictionary *items;
+@property (nonatomic, strong) NSMutableDictionary *dictionaries;
 @property (nonatomic, strong) NSMutableArray *observers;
 @property (nonatomic, strong) NSMutableDictionary *info;
 @property (nonatomic, strong) NSString *documentsPath;
@@ -65,14 +65,14 @@ static ISCache *sCache;
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     
     // Load the cache state if present.
-    self.items = [NSMutableDictionary dictionaryWithCapacity:3];
+    self.dictionaries = [NSMutableDictionary dictionaryWithCapacity:3];
     self.info = [NSMutableDictionary dictionaryWithCapacity:3];
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
                                              isDirectory:NO]) {
       NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
       for (NSString *identifier in items) {
         ISCacheItemInfo *info = [ISCacheItemInfo itemInfoWithDictionary:items[identifier]];
-        [self.items setObject:items[identifier]
+        [self.dictionaries setObject:items[identifier]
                        forKey:identifier];
         [self.info setObject:info
                       forKey:identifier];
@@ -308,8 +308,8 @@ static ISCache *sCache;
     
     // Update the cache.
     [self.info removeObjectForKey:info.identifier];
-    [self.items removeObjectForKey:info.identifier];
-    [self.items writeToFile:self.path
+    [self.dictionaries removeObjectForKey:info.identifier];
+    [self.dictionaries writeToFile:self.path
                  atomically:YES];
     
     // Notify the observers that the item has been removed.
@@ -337,11 +337,17 @@ static ISCache *sCache;
 }
 
 
-- (NSArray *)cacheItems
+// Return a subset of the items matching the filter.
+- (NSArray *)identifiers:(int)filter
 {
-  // Return the superset of cached items of all states.
-  // TODO We may wish to provide a filter for item states?
-  return [[self.info keyEnumerator] allObjects];
+  NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
+  for (NSString *identifier in self.info) {
+    ISCacheItemInfo *item = self.info[identifier];
+    if ((item.state & filter) > 0) {
+      [items addObject:item.identifier];
+    }
+  }
+  return items;
 }
 
 
@@ -432,9 +438,9 @@ static ISCache *sCache;
   [self.active removeObjectForKey:info.identifier];
   
   // Store the state for the completed file.
-  [self.items setObject:[info dictionary]
+  [self.dictionaries setObject:[info dictionary]
                  forKey:info.identifier];
-  [self.items writeToFile:self.path
+  [self.dictionaries writeToFile:self.path
                atomically:YES];
 
   // Notify our observers.
@@ -453,7 +459,7 @@ didFailWithError:(NSError *)error
              withObject:error];
   
   // Remove the item.
-  [self.items removeObjectForKey:info.identifier];
+  [self.dictionaries removeObjectForKey:info.identifier];
 }
 
 

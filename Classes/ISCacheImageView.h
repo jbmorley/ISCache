@@ -11,7 +11,6 @@
 #import "ISCacheObserver.h"
 
 @interface ISCacheImageView : UIImageView
-<ISCacheObserver>
 
 - (void)setImageWithURL:(NSString *)url
        placeholderImage:(UIImage *)placeholderImage

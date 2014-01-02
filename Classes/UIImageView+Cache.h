@@ -12,10 +12,10 @@
 
 @interface UIImageView (Cache)
 
-- (void)setImageWithURL:(NSString *)url
-               userInfo:(NSDictionary *)userInfo;
-- (void)setImageWithURL:(NSString *)url
-               userInfo:(NSDictionary *)userInfo
-        completionBlock:(ISCacheCompletionBlock)completionBlock;
+- (NSString *)setImageWithURL:(NSString *)url
+             placeholderImage:(UIImage *)placeholderImage
+                     userInfo:(NSDictionary *)userInfo
+              completionBlock:(ISCacheCompletionBlock)completionBlock;
+- (void)cancelSetImageWithURL;
 
 @end

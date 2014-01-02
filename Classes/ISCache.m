@@ -435,8 +435,8 @@ static ISCache *sCache;
 {
   [self.notifier addObserver:observer];
   if (self.debug) {
-    NSLog(@"+ observers (%d)", self.notifier.count);
-    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress].count);
+    NSLog(@"+ observers (%lu)", (unsigned long)self.notifier.count);
+    NSLog(@"active: %lu", (unsigned long)[self identifiers:ISCacheItemStateInProgress].count);
   }
 }
 
@@ -445,8 +445,8 @@ static ISCache *sCache;
 {
   [self.notifier removeObserver:observer];
   if (self.debug) {
-    NSLog(@"- observers (%d)", self.notifier.count);
-    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress].count);
+    NSLog(@"- observers (%lu)", (unsigned long)self.notifier.count);
+    NSLog(@"active: %lu", (unsigned long)[self identifiers:ISCacheItemStateInProgress].count);
   }
 }
 

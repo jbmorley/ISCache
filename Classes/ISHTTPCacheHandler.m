@@ -50,8 +50,6 @@
 - (void)cancel
 {
   [self.connection cancel];
-  self.info = ISCacheItemStateNotFound;
-  [self.delegate itemDidUpdate:self.info];
 }
 
 

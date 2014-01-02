@@ -43,6 +43,7 @@ static const int ISCacheItemTotalBytesUnknown;
 - (NSDictionary *)dictionary;
 - (void)openFile;
 - (void)closeFile;
+- (void)deleteFile;
 - (void)writeDataToFile:(NSData *)data;
 
 @end

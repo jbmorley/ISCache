@@ -118,6 +118,28 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
 }
 
 
+- (void)deleteFile
+{
+  @synchronized(self) {
+    
+    // Close the file.
+    [self closeFile];
+    
+    // Delete the file.
+    NSError *error;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:self.path
+                            error:&error];
+    if (error) {
+      // TODO Handle an error in deleting the file.
+      // What can we actually do here if the file wasn't correctly
+      // deleted?
+    }
+
+  }
+}
+
+
 - (void)writeDataToFile:(NSData *)data
 {
   @synchronized(self) {

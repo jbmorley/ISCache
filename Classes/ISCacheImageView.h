@@ -16,5 +16,6 @@
        placeholderImage:(UIImage *)placeholderImage
                userInfo:(NSDictionary *)userInfo
         completionBlock:(ISCacheCompletionBlock)completionBlock;
+- (void)cancelSetImageWithURL;
 
 @end

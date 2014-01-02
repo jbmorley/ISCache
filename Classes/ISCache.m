@@ -91,12 +91,12 @@ static ISCache *sCache;
     // HTTP Handler
     ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISHTTPCacheHandler class]];
     [self registerFactory:httpFactory
-               forContext:kCacheContextURL];
+               forContext:ISCacheContextURL];
     
     // Scaling HTTP Handler
     ISScalingCacheHandlerFactory *scalingHttpfactory = [ISScalingCacheHandlerFactory new];
     [self registerFactory:scalingHttpfactory
-               forContext:kCacheContextScaleURL];
+               forContext:ISCacheContextScaleURL];
 
   }
   return self;
@@ -287,19 +287,8 @@ static ISCache *sCache;
     // If the item exists, simply delete the file at the path
     // and notify any cache observers.
     
-    // Close the file in case it's open.
-    [info closeFile];
-    
-    // Delete the file.
-    NSError *error;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:info.path
-                            error:&error];
-    if (error) {
-      // TODO Handle an error in deleting the file.
-      // What can we actually do here if the file wasn't correctly
-      // deleted?
-    }
+    // Remove the file.
+    [info deleteFile];
     
     // Reset the cache item state.
     info.state = ISCacheItemStateNotFound;
@@ -315,18 +304,11 @@ static ISCache *sCache;
     // Notify the observers that the item has been removed.
     [self notifyObservers:info];
     
-  } else if (info.state == ISCacheItemStateInProgress) {
+  } else if (info.state == ISCacheItemStateInProgress ||
+             info.state == ISCacheItemStatePending) {
     
     // If the item is in progress, then cancel the progress.
-    // This should be sufficient to cause the cache item to be
-    // removed.
-    id<ISCacheHandler> handler = [self.active objectForKey:identifier];
-    [handler cancel];
-    
-    // TODO Determine how the observers are notified in this
-    // mechanism. I think it should come from the handler.
-    
-    // TODO Remove the object from the cache?
+    [self cancelItem:info.identifier];
     
   } else {
     
@@ -334,6 +316,61 @@ static ISCache *sCache;
     // sufficient to do nothing.
     
   }
+}
+
+
+- (void)cancelItems:(NSArray *)identifiers
+{
+  for (NSString *identifier in identifiers) {
+    [self cancelItem:identifier];
+  }
+}
+
+
+- (void)cancelItem:(NSString *)identifier
+{
+  // Get the relevant details for the item.
+  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
+  
+  // If the cache info is nil we assume that no entry exists.
+  if (info == nil) {
+    NSLog(@"cancelItem:%@ -> no item exists",
+          identifier);
+    return;
+  }
+
+  // Only attmept to cancel the item if it is in progress.
+  if (info.state == ISCacheItemStatePending ||
+      info.state == ISCacheItemStateInProgress ||
+      info.state == ISCacheItemStateNotFound) {
+    
+    NSLog(@"cancelItem:%@ -> item not found or in progress",
+          identifier);
+    
+    id<ISCacheHandler> handler = [self.active objectForKey:identifier];
+    [handler cancel];
+    
+    // Delete the file.
+    [info deleteFile];
+    
+    // Remove the item.
+    [self.dictionaries removeObjectForKey:info.identifier];
+    
+    // Notify the observers.
+    info.state = ISCacheItemStateNotFound;
+    NSError *error = [NSError errorWithDomain:ISCacheErrorDomain
+                                         code:ISCacheErrorCancelled
+                                     userInfo:nil];
+    [self notifyObservers:info
+                    error:error];
+    
+  } else {
+    
+    NSLog(@"cancelItem:%@ -> item already complete, ignoring",
+          identifier);
+    
+  }
+  
 }
 
 
@@ -375,6 +412,16 @@ static ISCache *sCache;
              withObject:info];
 }
 
+- (void)notifyObservers:(ISCacheItemInfo *)info
+                  error:(NSError *)error
+{
+  [self.notifier notify:@selector(item:didFailwithError:)
+             withObject:info
+             withObject:error];
+}
+
+
+
 
 #pragma mark - Observer methods
 
@@ -382,14 +429,16 @@ static ISCache *sCache;
 - (void)addObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
-  NSLog(@"Observers: %d", self.notifier.count);
+  NSLog(@"+ observers (%d)", self.notifier.count);
+  NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
 }
 
 
 - (void)removeObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
-  NSLog(@"Observers: %d", self.notifier.count);
+  NSLog(@"- observers (%d)", self.notifier.count);
+  NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
 }
 
 
@@ -418,7 +467,8 @@ static ISCache *sCache;
 {
   // Upgrade the item state to 'in progress' if
   // the number of expected bytes has been set.
-  if (info.totalBytesExpectedToRead != ISCacheItemTotalBytesUnknown) {
+  if (info.totalBytesExpectedToRead
+      != ISCacheItemTotalBytesUnknown) {
     info.state = ISCacheItemStateInProgress;
   }
   [self notifyObservers:info];
@@ -446,19 +496,28 @@ static ISCache *sCache;
   // Notify our observers.
   [self notifyObservers:info];
   
-  // Block delegates will delete themselves when they encounter an ISCacheItemStateFound for the
-  // item. This means there is no further cleanup required here.
+  // Block delegates will delete themselves when they encounter
+  // an ISCacheItemStateFound for the item. This means there is
+  // no further cleanup required here.
 }
 
 
 - (void)item:(ISCacheItemInfo *)info
 didFailWithError:(NSError *)error
 {
-  [self.notifier notify:@selector(item:didFailwithError:)
-             withObject:info
-             withObject:error];
+  NSLog(@"item:didFailWithError: %@", error);
   
-  // Remove the item.
+  // Update the state of the cached item.
+  info.state = ISCacheItemStateNotFound;
+  
+  // Notify the observers of the error.
+  [self notifyObservers:info
+                  error:error];
+  
+  // Delete the partially downloaded file.
+  [info deleteFile];
+  
+  // Remove the reference to the item.
   [self.dictionaries removeObjectForKey:info.identifier];
 }
 

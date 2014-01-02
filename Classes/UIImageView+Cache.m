@@ -30,7 +30,7 @@
   // already have a cached copy of the image.
   ISCacheItemInfo *info
   = [defaultCache infoForItem:url
-                      context:kCacheContextURL
+                      context:ISCacheContextURL
                      userInfo:userInfo];
   if (info.state != ISCacheItemStateFound) {
     self.image = nil;
@@ -39,7 +39,7 @@
   // Kick-off the image download.
   UIImageView *__weak weakSelf = self;
   [defaultCache item:url
-             context:kCacheContextScaleURL
+             context:ISCacheContextScaleURL
             userInfo:userInfo
                block:^(ISCacheItemInfo *info, NSError *error) {
                  UIImageView *strongSelf = weakSelf;

@@ -65,8 +65,11 @@
 - (void)item:(ISCacheItemInfo *)info
 didFailwithError:(NSError *)error
 {
-  self.block(info, error);
-  [self.cache removeObserver:self];
+  // Ignore updates that aren't meant for us.
+  if ([info.identifier isEqualToString:self.identifier]) {
+    self.block(info, error);
+    [self.cache removeObserver:self];
+  }
 }
 
 

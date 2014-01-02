@@ -24,8 +24,13 @@ typedef enum {
   ISCachePolicyNone // Never cache
 } ISCachePolicy;
 
-static NSString *kCacheContextURL = @"URL";
-static NSString *kCacheContextScaleURL = @"ScaleURL";
+typedef enum {
+  ISCacheErrorCancelled,
+} ISCacheError;
+
+static NSString *ISCacheContextURL = @"URL";
+static NSString *ISCacheContextScaleURL = @"ScaleURL";
+static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
@@ -44,6 +49,7 @@ static NSString *kCacheContextScaleURL = @"ScaleURL";
 
 - (NSArray *)identifiers:(int)filter;
 - (void)removeItems:(NSArray *)identifiers;
+- (void)cancelItems:(NSArray *)identifier;
 
 - (void)addObserver:(id<ISCacheObserver>)observer;
 - (void)removeObserver:(id<ISCacheObserver>)observer;

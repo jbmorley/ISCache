@@ -40,7 +40,9 @@
   // Cancel any outstanding load and then clear the identifier.
   if (self.cacheIdentifier) {
     ISCache *defaultCache = [ISCache defaultCache];
-    NSLog(@"Cancel: %@", self.cacheIdentifier);
+    if (defaultCache.debug) {
+      NSLog(@"Cancel: %@", self.cacheIdentifier);
+    }
     [defaultCache cancelItems:@[self.cacheIdentifier]];
     self.cacheIdentifier = nil;
   }
@@ -76,7 +78,9 @@
   // set the image.
   self.cacheIdentifier = info.identifier;
   
-  NSLog(@"Start: %@", self.cacheIdentifier);
+  if (defaultCache.debug) {
+    NSLog(@"Start: %@", self.cacheIdentifier);
+  }
   
   // Kick-off the image download.
   ISCacheImageView *__weak weakSelf = self;
@@ -106,10 +110,12 @@
                    // receive any further notification through
                    // the initial block.
                    if (error != nil) {
-                     NSLog(@"block:%@ -> cancelled with error %@",
-                           info.identifier,
-                           error);
-                     
+                     if (defaultCache.debug) {
+                       NSLog(@"block:%@ -> cancelled with error %@",
+                             info.identifier,
+                             error);
+                     }
+                   
                      if (completionBlock) {
                        completionBlock(error);
                      }
@@ -118,8 +124,10 @@
 
                    // Load the image.
                    if (info.state == ISCacheItemStateFound) {
-                     NSLog(@"block:%@ -> item complete",
-                           info.identifier);
+                     if (defaultCache.debug) {
+                       NSLog(@"block:%@ -> item complete",
+                             info.identifier);
+                     }
                      [self loadImageAsynchronously:info
                                    completionBlock:completionBlock];
                      return ISCacheBlockStateDone;
@@ -127,8 +135,10 @@
                      return ISCacheBlockStateContinue;
                    }
                  }
+                 if (defaultCache.debug) {
                    NSLog(@"block:%@ -> lost interest",
                          info.identifier);
+                 }
                  return ISCacheBlockStateDone;
                }];
 }

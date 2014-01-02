@@ -59,6 +59,7 @@ static ISCache *sCache;
 {
   self = [super init];
   if (self) {
+    self.debug = NO;
     self.path = path;
     self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
@@ -334,8 +335,10 @@ static ISCache *sCache;
   
   // If the cache info is nil we assume that no entry exists.
   if (info == nil) {
-    NSLog(@"cancelItem:%@ -> no item exists",
-          identifier);
+    if (self.debug) {
+      NSLog(@"cancelItem:%@ -> no item exists",
+            identifier);
+    }
     return;
   }
 
@@ -344,8 +347,10 @@ static ISCache *sCache;
       info.state == ISCacheItemStateInProgress ||
       info.state == ISCacheItemStateNotFound) {
     
-    NSLog(@"cancelItem:%@ -> item not found or in progress",
-          identifier);
+    if (self.debug) {
+      NSLog(@"cancelItem:%@ -> item not found or in progress",
+            identifier);
+    }
     
     id<ISCacheHandler> handler = [self.active objectForKey:identifier];
     [handler cancel];
@@ -366,8 +371,10 @@ static ISCache *sCache;
     
   } else {
     
-    NSLog(@"cancelItem:%@ -> item already complete, ignoring",
-          identifier);
+    if (self.debug) {
+      NSLog(@"cancelItem:%@ -> item already complete, ignoring",
+            identifier);
+    }
     
   }
   
@@ -429,16 +436,20 @@ static ISCache *sCache;
 - (void)addObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
-  NSLog(@"+ observers (%d)", self.notifier.count);
-  NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+  if (self.debug) {
+    NSLog(@"+ observers (%d)", self.notifier.count);
+    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+  }
 }
 
 
 - (void)removeObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
-  NSLog(@"- observers (%d)", self.notifier.count);
-  NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+  if (self.debug) {
+    NSLog(@"- observers (%d)", self.notifier.count);
+    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+  }
 }
 
 
@@ -505,7 +516,9 @@ static ISCache *sCache;
 - (void)item:(ISCacheItemInfo *)info
 didFailWithError:(NSError *)error
 {
-  NSLog(@"item:didFailWithError: %@", error);
+  if (self.debug) {
+    NSLog(@"item:didFailWithError: %@", error);
+  }
   
   // Update the state of the cached item.
   info.state = ISCacheItemStateNotFound;

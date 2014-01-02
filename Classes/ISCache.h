@@ -34,6 +34,8 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
+@property (nonatomic) BOOL debug;
+
 + (id)defaultCache;
 - (id)initWithPath:(NSString *)path;
 

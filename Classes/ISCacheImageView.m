@@ -8,16 +8,14 @@
 
 #import "ISCacheImageView.h"
 #import "ISCache.h"
-
-
-@interface ISCacheImageView ()
-
-@property (strong) NSString *cacheIdentifier;
-
-@end
+#import "ISCleanup.h"
+#import <objc/runtime.h>
 
 
 @implementation ISCacheImageView
+
+static char *kCacheIdentifierKey = "cacheIdentifier";
+static char *kCleanupIdentifier = "cleanup";
 
 
 - (id)initWithFrame:(CGRect)frame
@@ -37,25 +35,46 @@
 
 - (void)cancelSetImageWithURL
 {
+  NSString *cacheIdentifier = objc_getAssociatedObject(self, kCacheIdentifierKey);
+  
   // Cancel any outstanding load and then clear the identifier.
-  if (self.cacheIdentifier) {
+  if (cacheIdentifier) {
     ISCache *defaultCache = [ISCache defaultCache];
     if (defaultCache.debug) {
-      NSLog(@"Cancel: %@", self.cacheIdentifier);
+      NSLog(@"Cancel: %@", cacheIdentifier);
     }
-    [defaultCache cancelItems:@[self.cacheIdentifier]];
-    self.cacheIdentifier = nil;
+    [defaultCache cancelItems:@[cacheIdentifier]];
+    objc_setAssociatedObject(self,
+                             kCacheIdentifierKey,
+                             nil,
+                             OBJC_ASSOCIATION_RETAIN);
   }
 }
 
 
-- (void)setImageWithURL:(NSString *)url
-       placeholderImage:(UIImage *)placeholderImage
-               userInfo:(NSDictionary *)userInfo
-        completionBlock:(ISCacheCompletionBlock)completionBlock
+- (NSString *)setImageWithURL:(NSString *)url
+             placeholderImage:(UIImage *)placeholderImage
+                     userInfo:(NSDictionary *)userInfo
+              completionBlock:(ISCacheCompletionBlock)completionBlock
 {
+  // Ensure there is a cleanup object to cancel any outstanding
+  // image fetches. This will be called whenever the cleanup is
+  // replaced on subsequent calls to this function so will
+  // magically cancel the previous fetch for us.
+  ISCacheImageView *__weak weakSelf = self;
+  ISCleanup *cleanup = [ISCleanup cleanupWithBlock:^(){
+    ISCacheImageView *strongSelf = weakSelf;
+    if (strongSelf) {
+      [strongSelf cancelSetImageWithURL];
+    }
+  }];
+  objc_setAssociatedObject(self,
+                           kCleanupIdentifier,
+                           cleanup,
+                           OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  
   // Cancel any previous load.
-  [self cancelSetImageWithURL];
+
   
   // Fetch the thumbnail from the cache and display it when ready.
   ISCache *defaultCache = [ISCache defaultCache];
@@ -66,25 +85,26 @@
   = [defaultCache infoForItem:url
                       context:ISCacheContextScaleURL
                      userInfo:userInfo];
-  if (info.state != ISCacheItemStateFound) {
-    if (placeholderImage) {
-      self.image = placeholderImage;
-    } else {
-      self.image = nil;
-    }
+  if (placeholderImage) {
+    self.image = placeholderImage;
+  } else {
+    self.image = nil;
   }
   
   // Clear the cacheIdentifier to indicate that we've just
   // set the image.
-  self.cacheIdentifier = info.identifier;
+  objc_setAssociatedObject(self,
+                           kCacheIdentifierKey,
+                           info.identifier,
+                           OBJC_ASSOCIATION_RETAIN);
   
   if (defaultCache.debug) {
-    NSLog(@"Start: %@", self.cacheIdentifier);
+    NSLog(@"Start: %@", info.identifier);
   }
   
   // Kick-off the image download.
-  ISCacheImageView *__weak weakSelf = self;
-  self.cacheIdentifier = [defaultCache item:url
+  NSString *cacheIdentifier =
+  [defaultCache item:url
              context:ISCacheContextScaleURL
             userInfo:userInfo
                block:^(ISCacheItemInfo *info, NSError *error) {
@@ -100,8 +120,7 @@
                  // so we need to guard against this by checking
                  // for a nil cacheIdentifier.
                  ISCacheImageView *strongSelf = weakSelf;
-                 if (strongSelf &&
-                     [strongSelf.cacheIdentifier isEqualToString:info.identifier]) {
+                 if ([strongSelf identifierValid:info.identifier]) {
                    
                    // Handle any errors.
                    // We do this inside the guarded block to ensure
@@ -135,12 +154,30 @@
                      return ISCacheBlockStateContinue;
                    }
                  }
+                 
                  if (defaultCache.debug) {
                    NSLog(@"block:%@ -> lost interest",
                          info.identifier);
                  }
+                 
                  return ISCacheBlockStateDone;
                }];
+  objc_setAssociatedObject(self,
+                           kCacheIdentifierKey,
+                           cacheIdentifier,
+                           OBJC_ASSOCIATION_RETAIN);
+  
+  return cacheIdentifier;
+}
+
+
+- (BOOL)identifierValid:(NSString *)identifier
+{
+  @synchronized(self) {
+    NSString *cacheIdentifier = objc_getAssociatedObject(self,
+                                                         kCacheIdentifierKey);
+    return [cacheIdentifier isEqualToString:identifier];
+  }
 }
 
 
@@ -157,9 +194,7 @@
     // This gives us an oportunity to cancel loading the image
     // early if the image view has been destroyed.
     ISCacheImageView *strongSelf = weakSelf;
-    if (strongSelf == nil ||
-        ![strongSelf.cacheIdentifier isEqualToString:info.identifier]) {
-      NSLog(@"Not attempting to load image...");
+    if (![strongSelf identifierValid:info.identifier]) {
       return;
     }
     
@@ -170,8 +205,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
       // Check that it is still valid to set the image.
       ISCacheImageView *strongSelf = weakSelf;
-      if (strongSelf &&
-          [strongSelf.cacheIdentifier isEqualToString:info.identifier]) {
+      if ([strongSelf identifierValid:info.identifier]) {
         strongSelf.image = image;
         if (completionBlock) {
           completionBlock(nil);

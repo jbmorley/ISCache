@@ -13,17 +13,15 @@ typedef enum {
   // The item is not present in the cache.
   ISCacheItemStateNotFound = 0,
 
-  // The item has been requested but the fetch has either
-  // not begun, or no progress information is known.
-  ISCacheItemStatePending = 1,
-
-  // The item has been requested and its progress is known.
-  ISCacheItemStateInProgress = 2,
+  // The item has been requested and is in progress.
+  ISCacheItemStateInProgress = 1,
   
   // The item is present in the cache.
-  ISCacheItemStateFound = 4,
+  ISCacheItemStateFound = 2,
   
 } ISCacheItemState;
+
+static const int ISCacheItemStateAll;
 
 static const int ISCacheItemTotalBytesUnknown;
 

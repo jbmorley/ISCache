@@ -233,7 +233,7 @@ static ISCache *sCache;
   } else {
     
     // Set the state to in progress.
-    info.state = ISCacheItemStatePending;
+    info.state = ISCacheItemStateInProgress;
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -305,8 +305,7 @@ static ISCache *sCache;
     // Notify the observers that the item has been removed.
     [self notifyObservers:info];
     
-  } else if (info.state == ISCacheItemStateInProgress ||
-             info.state == ISCacheItemStatePending) {
+  } else if (info.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, then cancel the progress.
     [self cancelItem:info.identifier];
@@ -343,8 +342,7 @@ static ISCache *sCache;
   }
 
   // Only attmept to cancel the item if it is in progress.
-  if (info.state == ISCacheItemStatePending ||
-      info.state == ISCacheItemStateInProgress ||
+  if (info.state == ISCacheItemStateInProgress ||
       info.state == ISCacheItemStateNotFound) {
     
     if (self.debug) {
@@ -438,7 +436,7 @@ static ISCache *sCache;
   [self.notifier addObserver:observer];
   if (self.debug) {
     NSLog(@"+ observers (%d)", self.notifier.count);
-    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress].count);
   }
 }
 
@@ -448,7 +446,7 @@ static ISCache *sCache;
   [self.notifier removeObserver:observer];
   if (self.debug) {
     NSLog(@"- observers (%d)", self.notifier.count);
-    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress | ISCacheItemStatePending].count);
+    NSLog(@"active: %d", [self identifiers:ISCacheItemStateInProgress].count);
   }
 }
 

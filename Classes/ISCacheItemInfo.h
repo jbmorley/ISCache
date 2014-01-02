@@ -21,9 +21,9 @@ typedef enum {
   
 } ISCacheItemState;
 
-static const int ISCacheItemStateAll;
+static const int ISCacheItemStateAll = 7;
 
-static const int ISCacheItemTotalBytesUnknown;
+static const int ISCacheItemTotalBytesUnknown = -1;
 
 @interface ISCacheItemInfo : NSObject
 

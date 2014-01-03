@@ -6,7 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 
 typedef enum {
   // Indicates that the cache block wishes to continue receiving
@@ -19,4 +19,4 @@ typedef enum {
   ISCacheBlockStateDone,
 } ISCacheBlockState;
 
-typedef ISCacheBlockState (^ISCacheBlock)(ISCacheItemInfo *info, NSError *error);
+typedef ISCacheBlockState (^ISCacheBlock)(ISCacheItem *info, NSError *error);

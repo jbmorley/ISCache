@@ -36,7 +36,7 @@
                                              isDirectory:NO]) {
       NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
       for (NSString *identifier in items) {
-        ISCacheItemInfo *item = [ISCacheItemInfo itemInfoWithDictionary:items[identifier]];
+        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:items[identifier]];
         [self.items setObject:item
                       forKey:identifier];
       }
@@ -46,7 +46,7 @@
 }
 
 
-- (ISCacheItemInfo *)item:(NSString *)identifier
+- (ISCacheItem *)item:(NSString *)identifier
 {
   return [self.items objectForKey:identifier];
 }
@@ -56,7 +56,7 @@
 {
   NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
   for (NSString *identifier in self.items) {
-    ISCacheItemInfo *item = self.items[identifier];
+    ISCacheItem *item = self.items[identifier];
     if ((item.state & states) > 0) {
       [items addObject:item];
     }
@@ -65,14 +65,14 @@
 }
 
 
-- (void)addItem:(ISCacheItemInfo *)item
+- (void)addItem:(ISCacheItem *)item
 {
   [self.items setObject:item
                  forKey:item.identifier];
 }
 
 
-- (void)removeItem:(ISCacheItemInfo *)item
+- (void)removeItem:(ISCacheItem *)item
 {
   [self.items removeObjectForKey:item.identifier];
 }

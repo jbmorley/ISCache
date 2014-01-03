@@ -72,7 +72,7 @@ static ISCache *sCache;
     // Clean up any partially downloaded files.
     NSArray *incompleteItems = [self.store items:ISCacheItemStateInProgress];
     if (incompleteItems.count > 0) {
-      for (ISCacheItemInfo *item in [self.store items:ISCacheItemStateInProgress]) {
+      for (ISCacheItem *item in [self.store items:ISCacheItemStateInProgress]) {
         [item deleteFile];
         [self.store removeItem:item];
       }
@@ -120,14 +120,14 @@ static ISCache *sCache;
 
 
 // Returns an existing item info or nil.
-- (ISCacheItemInfo *)cacheItemInfoForIdentifier:(NSString *)identifier
+- (ISCacheItem *)cacheItemInfoForIdentifier:(NSString *)identifier
 {
   return [self.store item:identifier];
 }
 
 
 // Creates a new item info if one doesn't exist.
-- (ISCacheItemInfo *)cacheItemInfoForItem:(NSString *)item
+- (ISCacheItem *)cacheItemInfoForItem:(NSString *)item
                                   context:(NSString *)context
                                  userInfo:(NSDictionary *)userInfo
 {
@@ -141,13 +141,13 @@ static ISCache *sCache;
                                         userInfo:userInfo];
   
   // Return a pre-existing cache item info.
-  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
+  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
   if (info) {
     return info;
   }
   
   // Create a new info for the file.
-  info = [ISCacheItemInfo new];
+  info = [ISCacheItem new];
   info.item = item;
   info.context = context;
   info.userInfo = userInfo;
@@ -177,7 +177,7 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItemInfo *)infoForItem:(NSString *)item
+- (ISCacheItem *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 {
@@ -199,7 +199,7 @@ static ISCache *sCache;
   NSString *identifier = [self identifierForItem:item
                                          context:context
                                         userInfo:userInfo];
-  ISCacheItemInfo *info = [self cacheItemInfoForItem:item
+  ISCacheItem *info = [self cacheItemInfoForItem:item
                                              context:context
                                             userInfo:userInfo];
   
@@ -281,7 +281,7 @@ static ISCache *sCache;
 - (void)removeItem:(NSString *)identifier
 {
   // Get the relevant details for the item.
-  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
+  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
   
   // If the cache info is nil we assume that no entry exists.
   if (info == nil) {
@@ -331,7 +331,7 @@ static ISCache *sCache;
 - (void)cancelItem:(NSString *)identifier
 {
   // Get the relevant details for the item.
-  ISCacheItemInfo *info = [self cacheItemInfoForIdentifier:identifier];
+  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
   
   // If the cache info is nil we assume that no entry exists.
   if (info == nil) {
@@ -386,7 +386,7 @@ static ISCache *sCache;
 {
   NSArray *items = [self.store items:filter];
   NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
-  for (ISCacheItemInfo *item in items) {
+  for (ISCacheItem *item in items) {
     [identifiers addObject:item.identifier];
   }
   return identifiers;
@@ -397,7 +397,7 @@ static ISCache *sCache;
 
 
 // TODO Should this be a method on ISCacheItemInfo?
-- (void)resetInfo:(ISCacheItemInfo *)info
+- (void)resetInfo:(ISCacheItem *)info
 {
   info.state = ISCacheItemStateNotFound;
   info.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
@@ -420,13 +420,13 @@ static ISCache *sCache;
 }
 
 
-- (void)notifyObservers:(ISCacheItemInfo *)info
+- (void)notifyObservers:(ISCacheItem *)info
 {
   [self.notifier notify:@selector(itemDidUpdate:)
              withObject:info];
 }
 
-- (void)notifyObservers:(ISCacheItemInfo *)info
+- (void)notifyObservers:(ISCacheItem *)info
                   error:(NSError *)error
 {
   [self.notifier notify:@selector(item:didFailwithError:)
@@ -481,7 +481,7 @@ static ISCache *sCache;
 
 // Callback handle for the handlers.
 // Should not be used internally as a notification mechanism.
-- (void)itemDidUpdate:(ISCacheItemInfo *)info
+- (void)itemDidUpdate:(ISCacheItem *)info
 {
   // Upgrade the item state to 'in progress' if
   // the number of expected bytes has been set.
@@ -493,7 +493,7 @@ static ISCache *sCache;
 }
 
 
-- (void)itemDidFinish:(ISCacheItemInfo *)info
+- (void)itemDidFinish:(ISCacheItem *)info
 {
   // Update the item info with the appropriate state.
   info.state = ISCacheItemStateFound;
@@ -514,7 +514,7 @@ static ISCache *sCache;
 }
 
 
-- (void)item:(ISCacheItemInfo *)info
+- (void)item:(ISCacheItem *)info
 didFailWithError:(NSError *)error
 {
   if (self.debug) {

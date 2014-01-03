@@ -25,7 +25,7 @@ static const int ISCacheItemStateAll = 7;
 
 static const int ISCacheItemTotalBytesUnknown = -1;
 
-@interface ISCacheItemInfo : NSObject
+@interface ISCacheItem : NSObject
 
 @property (strong) NSString *item;
 @property (strong) NSString *context;

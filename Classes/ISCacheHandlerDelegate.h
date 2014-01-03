@@ -7,13 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 
 @protocol ISCacheHandlerDelegate <NSObject>
 
-- (void)itemDidUpdate:(ISCacheItemInfo *)info;
-- (void)itemDidFinish:(ISCacheItemInfo *)info;
-- (void)item:(ISCacheItemInfo *)info
+- (void)itemDidUpdate:(ISCacheItem *)info;
+- (void)itemDidFinish:(ISCacheItem *)info;
+- (void)item:(ISCacheItem *)info
 didFailWithError:(NSError *)error;
 
 @end

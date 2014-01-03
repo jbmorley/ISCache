@@ -6,21 +6,21 @@
 //
 //
 
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 
 typedef enum {
   ISCacheItemInfoFileStateClosed,
   ISCacheItemInfoFileStateOpen,
 } ISCacheItemInfoFileState;
 
-@interface ISCacheItemInfo ()
+@interface ISCacheItem ()
 
 @property (strong) NSFileHandle *fileHandle;
 @property ISCacheItemInfoFileState fileState;
 
 @end
 
-@implementation ISCacheItemInfo
+@implementation ISCacheItem
 
 static int kCacheItemVersion = 1;
 

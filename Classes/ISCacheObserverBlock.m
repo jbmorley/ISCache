@@ -43,7 +43,7 @@
 }
 
 
-- (void)itemDidUpdate:(ISCacheItemInfo *)info
+- (void)itemDidUpdate:(ISCacheItem *)info
 {
   // Ignore updates that aren't meant for us.
   if ([info.identifier isEqualToString:self.identifier]) {
@@ -62,7 +62,7 @@
 }
 
 
-- (void)item:(ISCacheItemInfo *)info
+- (void)item:(ISCacheItem *)info
 didFailwithError:(NSError *)error
 {
   // Ignore updates that aren't meant for us.

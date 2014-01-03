@@ -12,7 +12,7 @@
 @interface ISHTTPCacheHandler ()
 
 @property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
-@property (nonatomic, strong) ISCacheItemInfo *info;
+@property (nonatomic, strong) ISCacheItem *info;
 @property (nonatomic, strong) NSURLConnection *connection;
 @property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
 
@@ -35,7 +35,7 @@
 }
 
 
-- (void)fetchItem:(ISCacheItemInfo *)info
+- (void)fetchItem:(ISCacheItem *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate
 {
   self.delegate = delegate;

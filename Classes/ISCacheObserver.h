@@ -7,14 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 
 @protocol ISCacheObserver <NSObject>
 
-- (void)itemDidUpdate:(ISCacheItemInfo *)info;
+- (void)itemDidUpdate:(ISCacheItem *)info;
 
 @optional
-- (void)item:(ISCacheItemInfo *)info
+- (void)item:(ISCacheItem *)info
 didFailwithError:(NSError *)error;
 
 @end

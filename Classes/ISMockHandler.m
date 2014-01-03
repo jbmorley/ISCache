@@ -10,7 +10,7 @@
 
 @implementation ISMockHandler
 
-- (void)fetchItem:(ISCacheItemInfo *)info
+- (void)fetchItem:(ISCacheItem *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate
 {
   // TODO Is this a reference cycle?

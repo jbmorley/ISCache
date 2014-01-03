@@ -62,7 +62,7 @@ static char *kCleanupIdentifier = "cleanup";
   
   // Check the current state and clear the image if we don't
   // already have a cached copy of the image.
-  ISCacheItemInfo *info
+  ISCacheItem *info
   = [defaultCache infoForItem:url
                       context:ISCacheContextScaleURL
                      userInfo:userInfo];
@@ -88,7 +88,7 @@ static char *kCleanupIdentifier = "cleanup";
   [defaultCache item:url
              context:ISCacheContextScaleURL
             userInfo:userInfo
-               block:^(ISCacheItemInfo *info, NSError *error) {
+               block:^(ISCacheItem *info, NSError *error) {
                  
                  // Check that the image view is valid and the
                  // identifier we are receiving updates for matches
@@ -162,7 +162,7 @@ static char *kCleanupIdentifier = "cleanup";
 }
 
 
-- (void)loadImageAsynchronously:(ISCacheItemInfo *)info
+- (void)loadImageAsynchronously:(ISCacheItem *)info
                 completionBlock:(ISCacheCompletionBlock)completionBlock
 {
   UIImageView *__weak weakSelf = self;

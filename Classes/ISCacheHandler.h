@@ -11,7 +11,7 @@
 
 @protocol ISCacheHandler <NSObject>
 
-- (void)fetchItem:(ISCacheItemInfo *)info
+- (void)fetchItem:(ISCacheItem *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate;
 - (void)cancel;
 

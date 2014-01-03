@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import "ISCacheHandler.h"
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 #import "ISCacheObserver.h"
 #import "ISCacheBlock.h"
 #import "ISCacheHandlerDelegate.h"
@@ -42,7 +42,7 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
              forContext:(NSString *)context;
 
 - (NSArray *)identifiers:(int)filter;
-- (ISCacheItemInfo *)infoForItem:(NSString *)item
+- (ISCacheItem *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 - (NSString *)item:(NSString *)item

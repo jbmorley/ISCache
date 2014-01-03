@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheItemInfo.h"
+#import "ISCacheItem.h"
 
 @interface ISCacheStore : NSObject
 
@@ -15,10 +15,10 @@
 - (id)initWithPath:(NSString *)path;
 - (void)save;
 
-- (ISCacheItemInfo *)item:(NSString *)identifier;
+- (ISCacheItem *)item:(NSString *)identifier;
 - (NSArray *)items:(int)states;
-- (void)addItem:(ISCacheItemInfo *)item;
-- (void)removeItem:(ISCacheItemInfo *)item;
+- (void)addItem:(ISCacheItem *)item;
+- (void)removeItem:(ISCacheItem *)item;
 
 
 @end

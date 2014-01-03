@@ -40,6 +40,8 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
+
+- (NSArray *)identifiers:(int)filter;
 - (ISCacheItemInfo *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
@@ -47,8 +49,6 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
              block:(ISCacheBlock)completionBlock;
-
-- (NSArray *)identifiers:(int)filter;
 - (void)removeItems:(NSArray *)identifiers;
 - (void)cancelItems:(NSArray *)identifier;
 

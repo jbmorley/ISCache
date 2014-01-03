@@ -11,6 +11,7 @@
 #import "ISCacheObserverBlock.h"
 #import "ISSimpleCacheHandlerFactory.h"
 #import "NSString+MD5.h"
+#import "ISCacheStore.h"
 
 
 // TODO Items need to be timestamped and it should be possible to
@@ -24,11 +25,10 @@
 @property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
-@property (nonatomic, strong) NSMutableDictionary *dictionaries;
 @property (nonatomic, strong) NSMutableArray *observers;
-@property (nonatomic, strong) NSMutableDictionary *info;
 @property (nonatomic, strong) NSString *documentsPath;
 @property (nonatomic, strong) NSString *path;
+@property (nonatomic, strong) ISCacheStore *store;
 
 @end
 
@@ -64,24 +64,23 @@ static ISCache *sCache;
     self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
-    
-    // Load the cache state if present.
-    self.dictionaries = [NSMutableDictionary dictionaryWithCapacity:3];
-    self.info = [NSMutableDictionary dictionaryWithCapacity:3];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
-                                             isDirectory:NO]) {
-      NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
-      for (NSString *identifier in items) {
-        ISCacheItemInfo *info = [ISCacheItemInfo itemInfoWithDictionary:items[identifier]];
-        [self.dictionaries setObject:items[identifier]
-                       forKey:identifier];
-        [self.info setObject:info
-                      forKey:identifier];
-      }
-    }
-    
     self.observers = [NSMutableArray arrayWithCapacity:3];
     
+    // Load the store.
+    self.store = [ISCacheStore storeWithPath:self.path];
+    
+    // Clean up any partially downloaded files.
+    NSArray *incompleteItems = [self.store items:ISCacheItemStateInProgress];
+    if (incompleteItems.count > 0) {
+      for (ISCacheItemInfo *item in [self.store items:ISCacheItemStateInProgress]) {
+        [item deleteFile];
+        [self.store removeItem:item];
+      }
+      [self.store save];
+    }
+
+    // TODO Should this be set by the user or should it have an
+    // additional stub in there for the current path instance?
     self.documentsPath
     = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                            NSUserDomainMask,
@@ -123,8 +122,7 @@ static ISCache *sCache;
 // Returns an existing item info or nil.
 - (ISCacheItemInfo *)cacheItemInfoForIdentifier:(NSString *)identifier
 {
-  // Look for an existing active info.
-  return [self.info objectForKey:identifier];
+  return [self.store item:identifier];
 }
 
 
@@ -155,12 +153,10 @@ static ISCache *sCache;
   info.userInfo = userInfo;
   info.identifier = identifier;
   info.path = [self.documentsPath stringByAppendingPathComponent:identifier];
-  info.state = ISCacheItemStateNotFound;
-  info.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
-  info.totalBytesRead = 0;
+  [self resetInfo:info];
   
-  [self.info setObject:info
-                forKey:identifier];
+  [self.store addItem:info];
+  [self.store save];
   
   // If there isn't an active cache entry and something exists
   // on the file system, it represents a partial download and
@@ -207,15 +203,24 @@ static ISCache *sCache;
                                              context:context
                                             userInfo:userInfo];
   
+  // Before proceeding we check to see if, in the case of an
+  // item which is present in the cache, the file has been removed
+  // unexpectedly. This can happen if we are relying on Apple's
+  // mechanisms for cached files.
   if (info.state == ISCacheItemStateFound) {
     
     // Check that there is a file on disk matching the cache item.
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if (![fileManager fileExistsAtPath:info.path
                            isDirectory:NO]) {
-      // TODO We should recover from this scenario but at the moment doing so
-      // would mask some problems so this needs to be fixed later.
+      [self resetInfo:info];
     }
+    
+  }
+  
+  // Once we know the item is in a valid state, we process it
+  // and report the results to the callee.
+  if (info.state == ISCacheItemStateFound) {
     
     // If the item exists, call back with the result.
     completionBlock(info, nil);
@@ -292,15 +297,11 @@ static ISCache *sCache;
     [info deleteFile];
     
     // Reset the cache item state.
-    info.state = ISCacheItemStateNotFound;
-    info.totalBytesExpectedToRead = 0;
-    info.totalBytesRead = 0;
+    [self resetInfo:info];
     
     // Update the cache.
-    [self.info removeObjectForKey:info.identifier];
-    [self.dictionaries removeObjectForKey:info.identifier];
-    [self.dictionaries writeToFile:self.path
-                 atomically:YES];
+    [self.store removeItem:info];
+    [self.store save];
     
     // Notify the observers that the item has been removed.
     [self notifyObservers:info];
@@ -357,7 +358,8 @@ static ISCache *sCache;
     [info deleteFile];
     
     // Remove the item.
-    [self.dictionaries removeObjectForKey:info.identifier];
+    [self.store removeItem:info];
+    [self.store save];
     
     // Notify the observers.
     info.state = ISCacheItemStateNotFound;
@@ -382,18 +384,25 @@ static ISCache *sCache;
 // Return a subset of the items matching the filter.
 - (NSArray *)identifiers:(int)filter
 {
-  NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
-  for (NSString *identifier in self.info) {
-    ISCacheItemInfo *item = self.info[identifier];
-    if ((item.state & filter) > 0) {
-      [items addObject:item.identifier];
-    }
+  NSArray *items = [self.store items:filter];
+  NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
+  for (ISCacheItemInfo *item in items) {
+    [identifiers addObject:item.identifier];
   }
-  return items;
+  return identifiers;
 }
 
 
 #pragma mark - Utility methods
+
+
+// TODO Should this be a method on ISCacheItemInfo?
+- (void)resetInfo:(ISCacheItemInfo *)info
+{
+  info.state = ISCacheItemStateNotFound;
+  info.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+  info.totalBytesRead = 0;
+}
 
 
 // Check there is a handler factory registered for the context.
@@ -490,17 +499,11 @@ static ISCache *sCache;
   info.state = ISCacheItemStateFound;
   [info closeFile];
   
-  // TODO Use a temporary location for files being downloaded
-  // and move it into permanent storage at this point.
-  
   // Delete the handler for the file.
   [self.active removeObjectForKey:info.identifier];
   
-  // Store the state for the completed file.
-  [self.dictionaries setObject:[info dictionary]
-                 forKey:info.identifier];
-  [self.dictionaries writeToFile:self.path
-               atomically:YES];
+  // Save the store as the state of one of the items has changed.
+  [self.store save];
 
   // Notify our observers.
   [self notifyObservers:info];
@@ -521,15 +524,16 @@ didFailWithError:(NSError *)error
   // Update the state of the cached item.
   info.state = ISCacheItemStateNotFound;
   
+  // Delete the partially downloaded file.
+  [info deleteFile];
+  
   // Notify the observers of the error.
   [self notifyObservers:info
                   error:error];
   
-  // Delete the partially downloaded file.
-  [info deleteFile];
-  
   // Remove the reference to the item.
-  [self.dictionaries removeObjectForKey:info.identifier];
+  [self.store removeItem:info];
+  [self.store save];
 }
 
 

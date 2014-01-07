@@ -63,7 +63,7 @@ static char *kCleanupIdentifier = "cleanup";
   // Check the current state and clear the image if we don't
   // already have a cached copy of the image.
   ISCacheItem *info
-  = [defaultCache infoForItem:url
+  = [defaultCache item:url
                       context:ISCacheContextScaleURL
                      userInfo:userInfo];
   if (placeholderImage) {
@@ -85,7 +85,7 @@ static char *kCleanupIdentifier = "cleanup";
   
   // Kick-off the image download.
   ISCacheItem *cacheItem =
-  [defaultCache item:url
+  [defaultCache fetchItem:url
              context:ISCacheContextScaleURL
             userInfo:userInfo
                block:^(ISCacheItem *info, NSError *error) {

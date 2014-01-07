@@ -43,13 +43,13 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
              forContext:(NSString *)context;
 
 - (NSArray *)identifiers:(int)filter;
-- (ISCacheItem *)infoForItem:(NSString *)item
-                         context:(NSString *)context
-                        userInfo:(NSDictionary *)userInfo;
 - (ISCacheItem *)item:(NSString *)item
               context:(NSString *)context
-             userInfo:(NSDictionary *)userInfo
-                block:(ISCacheBlock)completionBlock;
+             userInfo:(NSDictionary *)userInfo;
+- (ISCacheItem *)fetchItem:(NSString *)item
+                   context:(NSString *)context
+                  userInfo:(NSDictionary *)userInfo
+                     block:(ISCacheBlock)completionBlock;
 - (void)removeItems:(NSArray *)identifiers;
 - (void)cancelItems:(NSArray *)identifier;
 

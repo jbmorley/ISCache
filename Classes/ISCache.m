@@ -195,7 +195,7 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)infoForItem:(NSString *)item
+- (ISCacheItem *)item:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
 {
@@ -205,7 +205,7 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)item:(NSString *)item
+- (ISCacheItem *)fetchItem:(NSString *)item
               context:(NSString *)context
              userInfo:(NSDictionary *)userInfo
                 block:(ISCacheBlock)completionBlock

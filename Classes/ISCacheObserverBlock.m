@@ -19,23 +19,23 @@
 
 @implementation ISCacheObserverBlock
 
-+ (id)observerWithIdentifier:(NSString *)identifier
-                       block:(ISCacheBlock)block
-                       cache:(ISCache *)cache
++ (id)observerWithItem:(ISCacheItem *)item
+                 block:(ISCacheBlock)block
+                 cache:(ISCache *)cache
 {
-  return [[self alloc] initWithIdentifier:identifier
-                                    block:block
-                                    cache:cache];
+  return [[self alloc] initWithItem:item
+                              block:block
+                              cache:cache];
 }
 
 
-- (id)initWithIdentifier:(NSString *)identifier
-                   block:(ISCacheBlock)block
-                   cache:(ISCache *)cache
+- (id)initWithItem:(ISCacheItem *)item
+             block:(ISCacheBlock)block
+             cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
-    self.identifier = identifier;
+    self.identifier = item.identifier;
     self.block = block;
     self.cache = cache;
   }

@@ -28,6 +28,7 @@
 @property (nonatomic, strong) NSString *documentsPath;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISCacheStore *store;
+@property (nonatomic, strong) NSFileManager *fileManager;
 
 @end
 
@@ -64,6 +65,7 @@ static ISCache *sCache;
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     self.observers = [NSMutableArray arrayWithCapacity:3];
+    self.fileManager = [NSFileManager defaultManager];
     
     // Load the store.
     self.store = [ISCacheStore storeWithPath:self.path];
@@ -78,12 +80,27 @@ static ISCache *sCache;
       [self.store save];
     }
 
-    // TODO Should this be set by the user or should it have an
-    // additional stub in there for the current path instance?
+    // Generate a unique path for the cache items.
     self.documentsPath
     = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                            NSUserDomainMask,
                                            YES) objectAtIndex:0];
+    self.documentsPath =
+    [NSString pathWithComponents:@[self.documentsPath,
+                                   @"Cache",
+                                   [self.path MD5]]];
+    BOOL isDirectory = NO;
+    if (![self.fileManager fileExistsAtPath:self.documentsPath
+                                isDirectory:&isDirectory]) {
+      NSError *error;
+      [self.fileManager createDirectoryAtPath:self.documentsPath
+                  withIntermediateDirectories:YES
+                                   attributes:nil
+                                        error:&error];
+      if (error) {
+        
+      }
+    }
     
     // Create and register the default factories.
     
@@ -160,14 +177,16 @@ static ISCache *sCache;
   // If there isn't an active cache entry and something exists
   // on the file system, it represents a partial download and
   // should be cleaned up.
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  if ([fileManager fileExistsAtPath:info.path
-                        isDirectory:NO]) {
+  BOOL isDirectory = NO;
+  if ([self.fileManager fileExistsAtPath:info.path
+                             isDirectory:&isDirectory]) {
     NSError *error;
-    [fileManager removeItemAtPath:info.path
-                            error:&error];
+    [self.fileManager removeItemAtPath:info.path
+                                 error:&error];
     if (error != nil) {
-      // TODO What do we do in the case of an error?
+      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
+                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
+                                   userInfo:nil];
     }
   }
   
@@ -210,9 +229,9 @@ static ISCache *sCache;
   if (info.state == ISCacheItemStateFound) {
     
     // Check that there is a file on disk matching the cache item.
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if (![fileManager fileExistsAtPath:info.path
-                           isDirectory:NO]) {
+    BOOL isDirectory = NO;
+    if (![self.fileManager fileExistsAtPath:info.path
+                                isDirectory:&isDirectory]) {
       [self resetInfo:info];
     }
     

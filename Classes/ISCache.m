@@ -275,12 +275,24 @@ static ISCache *sCache;
       [self addObserver:observer];
     }
     
-    // Notify the delegates.
-    [self notifyObservers:info];
-    
-    // Begin the fetch.
-    [handler fetchItem:info
-              delegate:self];
+    // Notify the delegates and begin the fetch operation
+    // asynchronously. This ensures that any calling code can
+    // set up filters, etc based on the returned ISCacheItem before
+    // the operation begins ensuring they do not miss a callback.
+    // Assuming ISCache is only accessed from the main thread, we
+    // calling code is guaranteed never to miss any updates which
+    // occur any time after calling fetchItem.
+    dispatch_queue_t mainQueue = dispatch_get_main_queue();
+    dispatch_async(mainQueue, ^{
+      
+      // Notify the delegates.
+      [self notifyObservers:info];
+      
+      // Begin the fetch.
+      [handler fetchItem:info
+                delegate:self];
+      
+    });
     
   }
   

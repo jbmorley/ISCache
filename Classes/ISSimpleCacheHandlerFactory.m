@@ -7,6 +7,7 @@
 //
 
 #import "ISSimpleCacheHandlerFactory.h"
+#import "ISCacheExceptions.h"
 
 @interface ISSimpleCacheHandlerFactory ()
 
@@ -30,8 +31,8 @@
   if (self) {
     // Check the class conforms to the correct protocol.
     if (![handlerClass conformsToProtocol:@protocol(ISCacheHandler)]) {
-      @throw [NSException exceptionWithName:@"InvalidHandlerClass"
-                                     reason:@"Cache handlers must respond to the NSCacheHandler protocol."
+      @throw [NSException exceptionWithName:ISCacheExceptionInvalidHandler
+                                     reason:ISCacheExceptionInvalidHandlerReason
                                    userInfo:nil];
     }
     

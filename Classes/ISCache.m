@@ -13,7 +13,6 @@
 #import "NSString+MD5.h"
 #import "ISCacheStore.h"
 
-
 // TODO Items need to be timestamped and it should be possible to
 // differentiate between permanently cached items and temporarily
 // cached items.
@@ -108,8 +107,8 @@ static ISCache *sCache;
 {
   // Check that there isn't an existing handler for that context.
   if ([self.factories objectForKey:context] != nil) {
-    @throw [NSException exceptionWithName:@"FactoryRegistered"
-                                   reason:@"A cache handler factory has already been registered for the specified protocol."
+    @throw [NSException exceptionWithName:ISCacheExceptionExistingFactoryForContext
+                                   reason:ISCacheExceptionFactoryAlreadyRegisteredReason
                                  userInfo:nil];
   }
   
@@ -412,8 +411,8 @@ static ISCache *sCache;
 {
   id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
   if (factory == nil) {
-    @throw [NSException exceptionWithName:@"MissingHandler"
-                                   reason:@"No cache handler has been registered for the specified protocol."
+    @throw [NSException exceptionWithName:ISCacheExceptionMissingFactoryForContext
+                                   reason:ISCacheExceptionMissingFactoryForContextReason
                                  userInfo:nil];
   }
   return [factory createHandler:userInfo];

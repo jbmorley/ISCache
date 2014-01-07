@@ -7,6 +7,7 @@
 //
 
 #import "ISCacheStore.h"
+#import "ISCacheExceptions.h"
 
 @interface ISCacheStore ()
 
@@ -16,6 +17,11 @@
 @end
 
 @implementation ISCacheStore
+
+static NSString *kKeyCacheStoreVersion = @"version";
+static NSString *kKeyCacheStoreItems = @"items";
+
+static NSInteger kCacheStoreVersion = 1;
 
 
 + (id)storeWithPath:(NSString *)path
@@ -34,11 +40,22 @@
     // Load the cache items if present.
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
                                              isDirectory:NO]) {
-      NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:self.path];
-      for (NSString *identifier in items) {
-        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:items[identifier]];
+      NSDictionary *store = [NSDictionary dictionaryWithContentsOfFile:self.path];
+      
+      // Check the version.
+      NSNumber *version = store[kKeyCacheStoreVersion];
+      if (!version ||
+          [version integerValue] == kCacheStoreVersion) {
+        @throw [NSException exceptionWithName:ISCacheExceptionUnsupportedCacheStoreVersion
+                                       reason:ISCacheExceptionUnsupportedCacheStoreVersionReason
+                                     userInfo:nil];
+      }
+      
+      // Load the items.
+      for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
+        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:dictionary];
         [self.items setObject:item
-                      forKey:identifier];
+                      forKey:item.identifier];
       }
     }
   }
@@ -80,18 +97,24 @@
 
 - (void)save
 {
-  // Create a dictionary into which we will place the items.
-  NSMutableDictionary *items = [NSMutableDictionary dictionaryWithCapacity:self.items.count];
-  
-  // Add item dictionaries into the dictionary.
+  // Create an array of items.
+  NSMutableArray *items = [NSMutableArray arrayWithCapacity:self.items.count];
   for (NSString *identifier in self.items) {
     NSDictionary *item = [self.items[identifier] dictionary];
-    [items setObject:item
-              forKey:identifier];
+    [items addObject:item];
   }
   
+  // Create a dictionary to write to file.
+  NSMutableDictionary *store =
+  [NSMutableDictionary dictionaryWithObjectsAndKeys:
+   @(kCacheStoreVersion),
+   kKeyCacheStoreVersion,
+   items,
+   kKeyCacheStoreItems,
+   nil];
+  
   // Write the dictionary to disk.
-  [items writeToFile:self.path
+  [store writeToFile:self.path
           atomically:YES];
 }
 

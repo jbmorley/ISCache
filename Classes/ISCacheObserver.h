@@ -11,10 +11,10 @@
 
 @protocol ISCacheObserver <NSObject>
 
-- (void)itemDidUpdate:(ISCacheItem *)info;
+- (void)itemDidUpdate:(ISCacheItem *)item;
 
 @optional
-- (void)item:(ISCacheItem *)info
+- (void)item:(ISCacheItem *)item
 didFailwithError:(NSError *)error;
 
 @end

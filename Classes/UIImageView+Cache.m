@@ -13,23 +13,23 @@
 
 @implementation UIImageView (Cache)
 
-static char *kCacheIdentifierKey = "cacheIdentifier";
+static char *kCacheItemKey = "cacheItem";
 static char *kCleanupIdentifier = "cleanup";
 
 
 - (void)cancelSetImageWithURL
 {
-  NSString *cacheIdentifier = objc_getAssociatedObject(self, kCacheIdentifierKey);
+  ISCacheItem *cacheItem = objc_getAssociatedObject(self, kCacheItemKey);
   
   // Cancel any outstanding load and then clear the identifier.
-  if (cacheIdentifier) {
+  if (cacheItem) {
     ISCache *defaultCache = [ISCache defaultCache];
     if (defaultCache.debug) {
-      NSLog(@"Cancel: %@", cacheIdentifier);
+      NSLog(@"Cancel: %@", cacheItem.identifier);
     }
-    [defaultCache cancelItems:@[cacheIdentifier]];
+    [defaultCache cancelItems:@[cacheItem]];
     objc_setAssociatedObject(self,
-                             kCacheIdentifierKey,
+                             kCacheItemKey,
                              nil,
                              OBJC_ASSOCIATION_RETAIN);
   }
@@ -46,6 +46,7 @@ static char *kCleanupIdentifier = "cleanup";
   // replaced on subsequent calls to this function so will
   // magically cancel the previous fetch for us.
   UIImageView *__weak weakSelf = self;
+  
   ISCleanup *cleanup = [ISCleanup cleanupWithBlock:^(){
     UIImageView *strongSelf = weakSelf;
     if (strongSelf) {
@@ -62,7 +63,7 @@ static char *kCleanupIdentifier = "cleanup";
   
   // Check the current state and clear the image if we don't
   // already have a cached copy of the image.
-  ISCacheItem *info
+  ISCacheItem *item
   = [defaultCache item:url
                       context:ISCacheContextScaleURL
                      userInfo:userInfo];
@@ -75,12 +76,12 @@ static char *kCleanupIdentifier = "cleanup";
   // Clear the cacheIdentifier to indicate that we've just
   // set the image.
   objc_setAssociatedObject(self,
-                           kCacheIdentifierKey,
-                           info.identifier,
+                           kCacheItemKey,
+                           item,
                            OBJC_ASSOCIATION_RETAIN);
   
   if (defaultCache.debug) {
-    NSLog(@"Start: %@", info.identifier);
+    NSLog(@"Start: %@", item.identifier);
   }
   
   // Kick-off the image download.
@@ -144,8 +145,8 @@ static char *kCleanupIdentifier = "cleanup";
                  return ISCacheBlockStateDone;
                }];
   objc_setAssociatedObject(self,
-                           kCacheIdentifierKey,
-                           cacheItem.identifier,
+                           kCacheItemKey,
+                           cacheItem,
                            OBJC_ASSOCIATION_RETAIN);
   
   return cacheItem;
@@ -155,9 +156,9 @@ static char *kCleanupIdentifier = "cleanup";
 - (BOOL)identifierValid:(NSString *)identifier
 {
   @synchronized(self) {
-    NSString *cacheIdentifier = objc_getAssociatedObject(self,
-                                                         kCacheIdentifierKey);
-    return [cacheIdentifier isEqualToString:identifier];
+    ISCacheItem *cacheItem = objc_getAssociatedObject(self,
+                                                         kCacheItemKey);
+    return [cacheItem.identifier isEqualToString:identifier];
   }
 }
 

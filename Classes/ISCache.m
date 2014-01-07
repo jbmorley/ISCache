@@ -169,7 +169,7 @@ static ISCache *sCache;
   info.userInfo = userInfo;
   info.identifier = identifier;
   info.path = [self.documentsPath stringByAppendingPathComponent:identifier];
-  [self resetInfo:info];
+  [self resetItem:info];
   
   [self.store addItem:info];
   [self.store save];
@@ -206,9 +206,9 @@ static ISCache *sCache;
 
 
 - (ISCacheItem *)fetchItem:(NSString *)item
-              context:(NSString *)context
-             userInfo:(NSDictionary *)userInfo
-                block:(ISCacheBlock)completionBlock
+                   context:(NSString *)context
+                  userInfo:(NSDictionary *)userInfo
+                     block:(ISCacheBlock)completionBlock
 {
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
@@ -232,7 +232,7 @@ static ISCache *sCache;
     BOOL isDirectory = NO;
     if (![self.fileManager fileExistsAtPath:info.path
                                 isDirectory:&isDirectory]) {
-      [self resetInfo:info];
+      [self resetItem:info];
     }
     
   }
@@ -289,46 +289,43 @@ static ISCache *sCache;
 }
 
 
-- (void)removeItems:(NSArray *)identifiers
+- (void)removeItems:(NSArray *)items
 {
-  for (NSString *identifier in identifiers) {
-    [self removeItem:identifier];
+  for (ISCacheItem *item in items) {
+    [self removeItem:item];
   }
 }
 
 
-- (void)removeItem:(NSString *)identifier
+- (void)removeItem:(ISCacheItem *)item
 {
-  // Get the relevant details for the item.
-  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
-  
   // If the cache info is nil we assume that no entry exists.
-  if (info == nil) {
+  if (item == nil) {
     return;
   }
   
-  if (info.state == ISCacheItemStateFound) {
+  if (item.state == ISCacheItemStateFound) {
     
     // If the item exists, simply delete the file at the path
     // and notify any cache observers.
     
     // Remove the file.
-    [info deleteFile];
+    [item deleteFile];
     
     // Reset the cache item state.
-    [self resetInfo:info];
+    [self resetItem:item];
     
     // Update the cache.
-    [self.store removeItem:info];
+    [self.store removeItem:item];
     [self.store save];
     
     // Notify the observers that the item has been removed.
-    [self notifyObservers:info];
+    [self notifyObservers:item];
     
-  } else if (info.state == ISCacheItemStateInProgress) {
+  } else if (item.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, then cancel the progress.
-    [self cancelItem:info.identifier];
+    [self cancelItem:item];
     
   } else {
     
@@ -339,60 +336,48 @@ static ISCache *sCache;
 }
 
 
-- (void)cancelItems:(NSArray *)identifiers
+- (void)cancelItems:(NSArray *)items
 {
-  for (NSString *identifier in identifiers) {
-    [self cancelItem:identifier];
+  for (ISCacheItem *item in items) {
+    [self cancelItem:item];
   }
 }
 
 
-- (void)cancelItem:(NSString *)identifier
+- (void)cancelItem:(ISCacheItem *)item
 {
-  // Get the relevant details for the item.
-  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
-  
-  // If the cache info is nil we assume that no entry exists.
-  if (info == nil) {
-    if (self.debug) {
-      NSLog(@"cancelItem:%@ -> no item exists",
-            identifier);
-    }
-    return;
-  }
-
   // Only attmept to cancel the item if it is in progress.
-  if (info.state == ISCacheItemStateInProgress ||
-      info.state == ISCacheItemStateNotFound) {
+  if (item.state == ISCacheItemStateInProgress ||
+      item.state == ISCacheItemStateNotFound) {
     
     if (self.debug) {
       NSLog(@"cancelItem:%@ -> item not found or in progress",
-            identifier);
+            item.identifier);
     }
     
-    id<ISCacheHandler> handler = [self.active objectForKey:identifier];
+    id<ISCacheHandler> handler = [self.active objectForKey:item.identifier];
     [handler cancel];
     
     // Delete the file.
-    [info deleteFile];
+    [item deleteFile];
     
     // Remove the item.
-    [self.store removeItem:info];
+    [self.store removeItem:item];
     [self.store save];
     
     // Notify the observers.
-    info.state = ISCacheItemStateNotFound;
+    item.state = ISCacheItemStateNotFound;
     NSError *error = [NSError errorWithDomain:ISCacheErrorDomain
                                          code:ISCacheErrorCancelled
                                      userInfo:nil];
-    [self notifyObservers:info
+    [self notifyObservers:item
                     error:error];
     
   } else {
     
     if (self.debug) {
       NSLog(@"cancelItem:%@ -> item already complete, ignoring",
-            identifier);
+            item.identifier);
     }
     
   }
@@ -401,12 +386,12 @@ static ISCache *sCache;
 
 
 // Return a subset of the items matching the filter.
-- (NSArray *)identifiers:(int)filter
+- (NSArray *)items:(int)filter
 {
   NSArray *items = [self.store items:filter];
   NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
   for (ISCacheItem *item in items) {
-    [identifiers addObject:item.identifier];
+    [identifiers addObject:item];
   }
   return identifiers;
 }
@@ -416,11 +401,11 @@ static ISCache *sCache;
 
 
 // TODO Should this be a method on ISCacheItemInfo?
-- (void)resetInfo:(ISCacheItem *)info
+- (void)resetItem:(ISCacheItem *)item
 {
-  info.state = ISCacheItemStateNotFound;
-  info.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
-  info.totalBytesRead = 0;
+  item.state = ISCacheItemStateNotFound;
+  item.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+  item.totalBytesRead = 0;
 }
 
 
@@ -464,7 +449,7 @@ static ISCache *sCache;
   [self.notifier addObserver:observer];
   if (self.debug) {
     NSLog(@"+ observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self identifiers:ISCacheItemStateInProgress].count);
+    NSLog(@"active: %lu", (unsigned long)[self items:ISCacheItemStateInProgress].count);
   }
 }
 
@@ -474,7 +459,7 @@ static ISCache *sCache;
   [self.notifier removeObserver:observer];
   if (self.debug) {
     NSLog(@"- observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self identifiers:ISCacheItemStateInProgress].count);
+    NSLog(@"active: %lu", (unsigned long)[self items:ISCacheItemStateInProgress].count);
   }
 }
 
@@ -533,7 +518,7 @@ static ISCache *sCache;
 }
 
 
-- (void)item:(ISCacheItem *)info
+- (void)item:(ISCacheItem *)item
 didFailWithError:(NSError *)error
 {
   if (self.debug) {
@@ -541,17 +526,17 @@ didFailWithError:(NSError *)error
   }
   
   // Update the state of the cached item.
-  info.state = ISCacheItemStateNotFound;
+  item.state = ISCacheItemStateNotFound;
   
   // Delete the partially downloaded file.
-  [info deleteFile];
+  [item deleteFile];
   
   // Notify the observers of the error.
-  [self notifyObservers:info
+  [self notifyObservers:item
                   error:error];
   
   // Remove the reference to the item.
-  [self.store removeItem:info];
+  [self.store removeItem:item];
   [self.store save];
 }
 

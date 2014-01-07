@@ -42,16 +42,19 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 
-- (NSArray *)identifiers:(int)filter;
+- (NSArray *)items:(int)filter;
+// TODO Is this required? Would it be better to have a way
+// to determine if the item exists?
 - (ISCacheItem *)item:(NSString *)item
               context:(NSString *)context
              userInfo:(NSDictionary *)userInfo;
+
 - (ISCacheItem *)fetchItem:(NSString *)item
                    context:(NSString *)context
                   userInfo:(NSDictionary *)userInfo
                      block:(ISCacheBlock)completionBlock;
-- (void)removeItems:(NSArray *)identifiers;
-- (void)cancelItems:(NSArray *)identifier;
+- (void)removeItems:(NSArray *)items;
+- (void)cancelItems:(NSArray *)items;
 
 - (void)addObserver:(id<ISCacheObserver>)observer;
 - (void)removeObserver:(id<ISCacheObserver>)observer;

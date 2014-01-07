@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "ISCacheItem.h"
+#import "ISCacheFilter.h"
 
 @interface ISCacheStore : NSObject
 
@@ -16,7 +17,7 @@
 - (void)save;
 
 - (ISCacheItem *)item:(NSString *)identifier;
-- (NSArray *)items:(int)states;
+- (NSArray *)items:(id <ISCacheFilter>)filter;
 - (void)addItem:(ISCacheItem *)item;
 - (void)removeItem:(ISCacheItem *)item;
 

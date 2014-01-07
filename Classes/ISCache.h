@@ -16,6 +16,8 @@
 #import "ISCacheHandlerFactory.h"
 #import "ISScalingCacheHandlerFactory.h"
 #import "ISCacheExceptions.h"
+#import "ISCacheFilter.h"
+#import "ISCacheStateFilter.h"
 
 typedef enum {
   ISCachePolicyStrong, // Install duration
@@ -42,13 +44,10 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 
-- (NSArray *)items:(int)filter;
-// TODO Is this required? Would it be better to have a way
-// to determine if the item exists?
+- (NSArray *)items:(id<ISCacheFilter>)filter;
 - (ISCacheItem *)item:(NSString *)item
               context:(NSString *)context
              userInfo:(NSDictionary *)userInfo;
-
 - (ISCacheItem *)fetchItem:(NSString *)item
                    context:(NSString *)context
                   userInfo:(NSDictionary *)userInfo

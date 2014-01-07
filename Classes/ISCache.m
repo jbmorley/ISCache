@@ -71,9 +71,9 @@ static ISCache *sCache;
     self.store = [ISCacheStore storeWithPath:self.path];
     
     // Clean up any partially downloaded files.
-    NSArray *incompleteItems = [self.store items:ISCacheItemStateInProgress];
+    NSArray *incompleteItems = [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
     if (incompleteItems.count > 0) {
-      for (ISCacheItem *item in [self.store items:ISCacheItemStateInProgress]) {
+      for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]]) {
         [item deleteFile];
         [self.store removeItem:item];
       }
@@ -386,7 +386,7 @@ static ISCache *sCache;
 
 
 // Return a subset of the items matching the filter.
-- (NSArray *)items:(int)filter
+- (NSArray *)items:(id<ISCacheFilter>)filter
 {
   NSArray *items = [self.store items:filter];
   NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
@@ -449,7 +449,7 @@ static ISCache *sCache;
   [self.notifier addObserver:observer];
   if (self.debug) {
     NSLog(@"+ observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self items:ISCacheItemStateInProgress].count);
+    NSLog(@"active: %lu", (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count);
   }
 }
 
@@ -459,7 +459,7 @@ static ISCache *sCache;
   [self.notifier removeObserver:observer];
   if (self.debug) {
     NSLog(@"- observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self items:ISCacheItemStateInProgress].count);
+    NSLog(@"active: %lu", (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count);
   }
 }
 

@@ -69,12 +69,12 @@ static NSInteger kCacheStoreVersion = 1;
 }
 
 
-- (NSArray *)items:(int)states
+- (NSArray *)items:(id <ISCacheFilter>)filter
 {
   NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
   for (NSString *identifier in self.items) {
     ISCacheItem *item = self.items[identifier];
-    if ((item.state & states) > 0) {
+    if ([filter matchesFilter:item]) {
       [items addObject:item];
     }
   }

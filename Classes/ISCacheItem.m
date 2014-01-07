@@ -52,6 +52,7 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
   if (self) {
     
     int version = [dictionary[kKeyVersion] intValue];
+    // TODO this is not the correct way to report the error.
     NSAssert(version == kCacheItemVersion,
              @"Unsupported cache item version.");
     

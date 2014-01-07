@@ -135,14 +135,7 @@ static ISCache *sCache;
 }
 
 
-// Returns an existing item info or nil.
-- (ISCacheItem *)cacheItemInfoForIdentifier:(NSString *)identifier
-{
-  return [self.store item:identifier];
-}
-
-
-// Creates a new item info if one doesn't exist.
+// Creates a new item if one doesn't exist.
 - (ISCacheItem *)cacheItemInfoForItem:(NSString *)item
                                   context:(NSString *)context
                                  userInfo:(NSDictionary *)userInfo
@@ -157,7 +150,7 @@ static ISCache *sCache;
                                         userInfo:userInfo];
   
   // Return a pre-existing cache item info.
-  ISCacheItem *info = [self cacheItemInfoForIdentifier:identifier];
+  ISCacheItem *info = [self.store item:identifier];
   if (info) {
     return info;
   }
@@ -214,10 +207,6 @@ static ISCache *sCache;
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
   // Get the relevant details for the item.
-  // TODO Do we need to look up the identifier here?
-  NSString *identifier = [self identifierForItem:item
-                                         context:context
-                                        userInfo:userInfo];
   ISCacheItem *info = [self cacheItemInfoForItem:item
                                          context:context
                                         userInfo:userInfo];
@@ -248,7 +237,7 @@ static ISCache *sCache;
     
     // If the item is in progress, attach a block observer.
     ISCacheObserverBlock *observer
-    = [ISCacheObserverBlock observerWithIdentifier:identifier
+    = [ISCacheObserverBlock observerWithIdentifier:info.identifier
                                              block:completionBlock
                                              cache:self];
     [self.observers addObject:observer];
@@ -264,11 +253,11 @@ static ISCache *sCache;
                                                 userInfo:userInfo];
 
     [self.active setObject:handler
-                    forKey:identifier];
+                    forKey:info.identifier];
     
     if (completionBlock) {
       ISCacheObserverBlock *observer
-      = [ISCacheObserverBlock observerWithIdentifier:identifier
+      = [ISCacheObserverBlock observerWithIdentifier:info.identifier
                                                block:completionBlock
                                                cache:self];
       [self.observers addObject:observer];
@@ -442,6 +431,7 @@ static ISCache *sCache;
              withObject:info];
 }
 
+
 - (void)notifyObservers:(ISCacheItem *)info
                   error:(NSError *)error
 {
@@ -449,8 +439,6 @@ static ISCache *sCache;
              withObject:info
              withObject:error];
 }
-
-
 
 
 #pragma mark - Observer methods

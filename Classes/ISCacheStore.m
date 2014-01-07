@@ -45,7 +45,7 @@ static NSInteger kCacheStoreVersion = 1;
       // Check the version.
       NSNumber *version = store[kKeyCacheStoreVersion];
       if (!version ||
-          [version integerValue] == kCacheStoreVersion) {
+          [version integerValue] != kCacheStoreVersion) {
         @throw [NSException exceptionWithName:ISCacheExceptionUnsupportedCacheStoreVersion
                                        reason:ISCacheExceptionUnsupportedCacheStoreVersionReason
                                      userInfo:nil];

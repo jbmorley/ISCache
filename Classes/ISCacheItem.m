@@ -147,4 +147,14 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
 }
 
 
+- (BOOL)isEqual:(id)object
+{
+  if ([object class] == [self class]) {
+    ISCacheItem *otherItem = (ISCacheItem *)object;
+    return ([self.identifier isEqualToString:otherItem.identifier]);
+  }
+  return [super isEqual:object];
+}
+
+
 @end

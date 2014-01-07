@@ -36,10 +36,10 @@ static char *kCleanupIdentifier = "cleanup";
 }
 
 
-- (NSString *)setImageWithURL:(NSString *)url
-             placeholderImage:(UIImage *)placeholderImage
-                     userInfo:(NSDictionary *)userInfo
-              completionBlock:(ISCacheCompletionBlock)completionBlock
+- (ISCacheItem *)setImageWithURL:(NSString *)url
+                placeholderImage:(UIImage *)placeholderImage
+                        userInfo:(NSDictionary *)userInfo
+                 completionBlock:(ISCacheCompletionBlock)completionBlock
 {
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is
@@ -84,7 +84,7 @@ static char *kCleanupIdentifier = "cleanup";
   }
   
   // Kick-off the image download.
-  NSString *cacheIdentifier =
+  ISCacheItem *cacheItem =
   [defaultCache item:url
              context:ISCacheContextScaleURL
             userInfo:userInfo
@@ -145,10 +145,10 @@ static char *kCleanupIdentifier = "cleanup";
                }];
   objc_setAssociatedObject(self,
                            kCacheIdentifierKey,
-                           cacheIdentifier,
+                           cacheItem.identifier,
                            OBJC_ASSOCIATION_RETAIN);
   
-  return cacheIdentifier;
+  return cacheItem;
 }
 
 

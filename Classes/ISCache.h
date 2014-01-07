@@ -46,10 +46,10 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (ISCacheItem *)infoForItem:(NSString *)item
                          context:(NSString *)context
                         userInfo:(NSDictionary *)userInfo;
-- (NSString *)item:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-             block:(ISCacheBlock)completionBlock;
+- (ISCacheItem *)item:(NSString *)item
+              context:(NSString *)context
+             userInfo:(NSDictionary *)userInfo
+                block:(ISCacheBlock)completionBlock;
 - (void)removeItems:(NSArray *)identifiers;
 - (void)cancelItems:(NSArray *)identifier;
 

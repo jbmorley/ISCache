@@ -9,13 +9,14 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "ISCacheCompletionBlock.h"
+#import "ISCacheItem.h"
 
 @interface UIImageView (Cache)
 
-- (NSString *)setImageWithURL:(NSString *)url
-             placeholderImage:(UIImage *)placeholderImage
-                     userInfo:(NSDictionary *)userInfo
-              completionBlock:(ISCacheCompletionBlock)completionBlock;
+- (ISCacheItem *)setImageWithURL:(NSString *)url
+                placeholderImage:(UIImage *)placeholderImage
+                        userInfo:(NSDictionary *)userInfo
+                 completionBlock:(ISCacheCompletionBlock)completionBlock;
 - (void)cancelSetImageWithURL;
 
 @end

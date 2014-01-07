@@ -186,21 +186,22 @@ static ISCache *sCache;
 }
 
 
-- (NSString *)item:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-             block:(ISCacheBlock)completionBlock
+- (ISCacheItem *)item:(NSString *)item
+              context:(NSString *)context
+             userInfo:(NSDictionary *)userInfo
+                block:(ISCacheBlock)completionBlock
 {
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
   // Get the relevant details for the item.
+  // TODO Do we need to look up the identifier here?
   NSString *identifier = [self identifierForItem:item
                                          context:context
                                         userInfo:userInfo];
   ISCacheItem *info = [self cacheItemInfoForItem:item
-                                             context:context
-                                            userInfo:userInfo];
+                                         context:context
+                                        userInfo:userInfo];
   
   // Before proceeding we check to see if, in the case of an
   // item which is present in the cache, the file has been removed
@@ -264,7 +265,7 @@ static ISCache *sCache;
     
   }
   
-  return identifier;
+  return info;
   
 }
 

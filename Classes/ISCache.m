@@ -230,6 +230,13 @@ static ISCache *sCache;
   // and report the results to the callee.
   if (cacheItem.state == ISCacheItemStateFound) {
     
+    // The item exists, but we update the modified date to
+    // indicate that it has been accessed.
+    cacheItem.modified = [NSDate new];
+    
+    // Save the cache store to reflect the updated cache item.
+    [self.store save];
+    
     // If the item exists, call back with the result.
     completionBlock(cacheItem, nil);
     
@@ -246,6 +253,11 @@ static ISCache *sCache;
     
     // Set the state to in progress.
     cacheItem.state = ISCacheItemStateInProgress;
+    cacheItem.created = [NSDate new];
+    cacheItem.modified = cacheItem.created;
+
+    // Save the cache store to reflect this state change.
+    [self.store save];
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -310,7 +322,10 @@ static ISCache *sCache;
     [self resetItem:item];
     
     // Update the cache.
-    [self.store removeItem:item];
+    // We do not remove the item during the life-time of the cache
+    // to ensure it remains a unique instance of that cache item
+    // during the running of the application.
+    // We do, however, save the store to cache its new state.
     [self.store save];
     
     // Notify the observers that the item has been removed.
@@ -356,7 +371,11 @@ static ISCache *sCache;
     [item deleteFile];
     
     // Remove the item.
-    [self.store removeItem:item];
+    // Update the cache.
+    // We do not remove the item during the life-time of the cache
+    // to ensure it remains a unique instance of that cache item
+    // during the running of the application.
+    // We do, however, save the store to cache its new state.
     [self.store save];
     
     // Notify the observers.

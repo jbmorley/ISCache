@@ -7,6 +7,7 @@
 //
 
 #import "ISCacheItem.h"
+#import "ISCacheExceptions.h"
 
 typedef enum {
   ISCacheItemInfoFileStateClosed,
@@ -33,6 +34,8 @@ static NSString *kKeyVersion = @"version";
 static NSString *kKeyState = @"state";
 static NSString *kKeyTotalBytesRead = @"totalBytesRead";
 static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
+static NSString *kKeyCreated = @"created";
+static NSString *kKeyModified = @"modified";
 
 
 // Serialization to and from a dictionary.
@@ -46,15 +49,28 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
 }
 
 
+- (id)init
+{
+  self = [super init];
+  if (self) {
+    self.created = [NSDate new];
+    self.modified = [NSDate new];
+  }
+  return self;
+}
+
+
 - (id)initWithDictionary:(NSDictionary *)dictionary
 {
   self = [super init];
   if (self) {
     
+    // Check the cache item version.
     int version = [dictionary[kKeyVersion] intValue];
-    // TODO this is not the correct way to report the error.
-    NSAssert(version == kCacheItemVersion,
-             @"Unsupported cache item version.");
+    if (version != kCacheItemVersion) {
+      @throw [NSException exceptionWithName:ISCacheExceptionUnsupportedCacheStoreItemVersion
+                                     reason:ISCacheExceptionUnsupportedCacheStoreItemVersionReason userInfo:nil];
+    }
     
     self.item = dictionary[kKeyItem];
     self.context = dictionary[kKeyContext];
@@ -64,6 +80,8 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
     self.state = [dictionary[kKeyState] intValue];
     self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
+    self.created = dictionary[kKeyCreated];
+    self.modified = dictionary[kKeyModified];
   }
   return self;
 }
@@ -80,7 +98,9 @@ static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
     kKeyIdentifier: self.identifier,
     kKeyState: @(self.state),
     kKeyTotalBytesRead: @(self.totalBytesRead),
-    kKeyTotalBytesExpectedToRead: @(self.totalBytesExpectedToRead)};
+    kKeyTotalBytesExpectedToRead: @(self.totalBytesExpectedToRead),
+    kKeyCreated: self.created,
+    kKeyModified: self.modified};
 }
 
 

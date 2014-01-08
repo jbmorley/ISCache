@@ -17,6 +17,7 @@ static NSString *ISCacheExceptionUnableToCreateItemDirectory = @"ISCacheExceptio
 static NSString *ISCacheExceptionExistingFactoryForContext = @"ISCacheExceptionExistingFactoryForContext";
 static NSString *ISCacheExceptionMissingFactoryForContext = @"ISCacheExceptionMissingFactoryForContext";
 static NSString *ISCacheExceptionUnsupportedCacheStoreVersion = @"ISCacheExceptionUnsupportedCacheStoreVersion";
+static NSString *ISCacheExceptionUnsupportedCacheStoreItemVersion =  @"ISCacheExceptionUnsupportedCacheStoreItemVersion";
 static NSString *ISCacheExceptionInvalidHandler = @"ISCacheExceptionInvalidHandler";
 
 // Reason.
@@ -24,4 +25,5 @@ static NSString *ISCacheExceptionUnableToCreateItemDirectoryReason = @"It was no
 static NSString *ISCacheExceptionFactoryAlreadyRegisteredReason = @"A cache handler factory has already been registered for the specified protocol.";
 static NSString *ISCacheExceptionMissingFactoryForContextReason = @"No cache handler factory has been registered for the specified protocol.";
 static NSString *ISCacheExceptionUnsupportedCacheStoreVersionReason = @"The cache store is using an unsupported version.";
+static NSString *ISCacheExceptionUnsupportedCacheStoreItemVersionReason =  @"Unable to internalize cache item with unsupported version.";
 static NSString *ISCacheExceptionInvalidHandlerReason = @"Cache handlers must respond to the NSCacheHandler protocol.";

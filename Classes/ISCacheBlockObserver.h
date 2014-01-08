@@ -15,10 +15,8 @@
 @interface ISCacheBlockObserver : NSObject <ISCacheObserver>
 
 + (id)observerWithItem:(ISCacheItem *)item
-                 block:(ISCacheBlock)block
-                 cache:(ISCache *)cache;
+                 block:(ISCacheBlock)block;
 - (id)initWithItem:(ISCacheItem *)identifier
-             block:(ISCacheBlock)block
-             cache:(ISCache *)cache;
+             block:(ISCacheBlock)block;
 
 @end

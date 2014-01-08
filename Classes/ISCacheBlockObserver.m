@@ -13,7 +13,6 @@
 
 @property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, copy) ISCacheBlock block;
-@property (nonatomic, weak) ISCache *cache;
 
 @end
 
@@ -21,23 +20,19 @@
 
 + (id)observerWithItem:(ISCacheItem *)item
                  block:(ISCacheBlock)block
-                 cache:(ISCache *)cache
 {
   return [[self alloc] initWithItem:item
-                              block:block
-                              cache:cache];
+                              block:block];
 }
 
 
 - (id)initWithItem:(ISCacheItem *)item
              block:(ISCacheBlock)block
-             cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
     self.identifier = item.identifier;
     self.block = block;
-    self.cache = cache;
   }
   return self;
 }

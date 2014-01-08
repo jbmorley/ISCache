@@ -238,8 +238,7 @@ static ISCache *sCache;
     // If the item is in progress, attach a block observer.
     ISCacheBlockObserver *observer
     = [ISCacheBlockObserver observerWithItem:cacheItem
-                                       block:completionBlock
-                                       cache:self];
+                                       block:completionBlock];
     [self.observers addObject:observer];
     [self addObserver:observer];
     
@@ -258,8 +257,7 @@ static ISCache *sCache;
     if (completionBlock) {
       ISCacheBlockObserver *observer
       = [ISCacheBlockObserver observerWithItem:cacheItem
-                                         block:completionBlock
-                                         cache:self];
+                                         block:completionBlock];
       [self.observers addObject:observer];
       [self addObserver:observer];
     }

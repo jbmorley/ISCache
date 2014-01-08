@@ -21,13 +21,6 @@
 #import "ISCacheStateFilter.h"
 
 typedef enum {
-  ISCachePolicyStrong, // Install duration
-  ISCachePolicyWeak, // Until out-of-memory
-  ISCachePolicySession, // During a single running application session
-  ISCachePolicyNone // Never cache
-} ISCachePolicy;
-
-typedef enum {
   ISCacheErrorCancelled,
 } ISCacheError;
 

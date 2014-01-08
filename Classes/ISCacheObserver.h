@@ -9,12 +9,16 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheItem.h"
 
+@class ISCache;
+
 @protocol ISCacheObserver <NSObject>
 
-- (void)itemDidUpdate:(ISCacheItem *)item;
+- (void)cache:(ISCache *)cache
+itemDidUpdate:(ISCacheItem *)item;
 
 @optional
-- (void)item:(ISCacheItem *)item
+- (void)cache:(ISCache *)cache
+         item:(ISCacheItem *)item
 didFailwithError:(NSError *)error;
 
 @end

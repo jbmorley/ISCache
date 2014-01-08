@@ -10,6 +10,7 @@
 #import "ISCacheItem.h"
 #import "ISCacheObserver.h"
 #import "ISCacheBlock.h"
+#import "ISCacheBlockObserver.h"
 #import "ISCacheHandlerDelegate.h"
 #import "ISHTTPCacheHandler.h"
 #import "UIImageView+Cache.h"

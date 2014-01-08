@@ -6,10 +6,10 @@
 //
 //
 
-#import "ISCacheObserverBlock.h"
+#import "ISCacheBlockObserver.h"
 #import "ISCache.h"
 
-@interface ISCacheObserverBlock ()
+@interface ISCacheBlockObserver ()
 
 @property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, copy) ISCacheBlock block;
@@ -17,7 +17,7 @@
 
 @end
 
-@implementation ISCacheObserverBlock
+@implementation ISCacheBlockObserver
 
 + (id)observerWithItem:(ISCacheItem *)item
                  block:(ISCacheBlock)block
@@ -43,32 +43,34 @@
 }
 
 
-- (void)itemDidUpdate:(ISCacheItem *)info
+- (void)cache:(ISCache *)cache
+itemDidUpdate:(ISCacheItem *)item
 {
   // Ignore updates that aren't meant for us.
-  if ([info.identifier isEqualToString:self.identifier]) {
+  if ([item.identifier isEqualToString:self.identifier]) {
     
     // Call our block.
-    ISCacheBlockState result = self.block(info, nil);
+    ISCacheBlockState result = self.block(item, nil);
     
     // Remove ourselves if the item is complete or the
     // block observer indicates that it is complete.
-    if (info.state == ISCacheItemStateFound ||
+    if (item.state == ISCacheItemStateFound ||
         result == ISCacheBlockStateDone) {
-      [self.cache removeObserver:self];
+      [cache removeObserver:self];
     }
 
   }
 }
 
 
-- (void)item:(ISCacheItem *)info
+- (void)cache:(ISCache *)cache
+         item:(ISCacheItem *)item
 didFailwithError:(NSError *)error
 {
   // Ignore updates that aren't meant for us.
-  if ([info.identifier isEqualToString:self.identifier]) {
-    self.block(info, error);
-    [self.cache removeObserver:self];
+  if ([item.identifier isEqualToString:self.identifier]) {
+    self.block(item, error);
+    [cache removeObserver:self];
   }
 }
 

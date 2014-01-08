@@ -12,7 +12,7 @@
 
 @class ISCache;
 
-@interface ISCacheObserverBlock : NSObject <ISCacheObserver>
+@interface ISCacheBlockObserver : NSObject <ISCacheObserver>
 
 + (id)observerWithItem:(ISCacheItem *)item
                  block:(ISCacheBlock)block

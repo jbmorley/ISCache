@@ -8,7 +8,7 @@
 
 #import "ISCache.h"
 #import "ISNotifier.h"
-#import "ISCacheObserverBlock.h"
+#import "ISCacheBlockObserver.h"
 #import "ISSimpleCacheHandlerFactory.h"
 #import "NSString+MD5.h"
 #import "ISCacheStore.h"
@@ -236,8 +236,8 @@ static ISCache *sCache;
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, attach a block observer.
-    ISCacheObserverBlock *observer
-    = [ISCacheObserverBlock observerWithItem:cacheItem
+    ISCacheBlockObserver *observer
+    = [ISCacheBlockObserver observerWithItem:cacheItem
                                        block:completionBlock
                                        cache:self];
     [self.observers addObject:observer];
@@ -256,8 +256,8 @@ static ISCache *sCache;
                     forKey:cacheItem.identifier];
     
     if (completionBlock) {
-      ISCacheObserverBlock *observer
-      = [ISCacheObserverBlock observerWithItem:cacheItem
+      ISCacheBlockObserver *observer
+      = [ISCacheBlockObserver observerWithItem:cacheItem
                                          block:completionBlock
                                          cache:self];
       [self.observers addObject:observer];
@@ -421,7 +421,8 @@ static ISCache *sCache;
 
 - (void)notifyObservers:(ISCacheItem *)item
 {
-  [self.notifier notify:@selector(itemDidUpdate:)
+  [self.notifier notify:@selector(cache:itemDidUpdate:)
+             withObject:self
              withObject:item];
 }
 
@@ -429,7 +430,8 @@ static ISCache *sCache;
 - (void)notifyObservers:(ISCacheItem *)item
                   error:(NSError *)error
 {
-  [self.notifier notify:@selector(item:didFailwithError:)
+  [self.notifier notify:@selector(cache:item:didFailwithError:)
+             withObject:self
              withObject:item
              withObject:error];
 }

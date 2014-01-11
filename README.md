@@ -112,9 +112,9 @@ It is also possible to combine this with direct calls to `ISCache` to determine 
     }
 
     // Set the image.
-    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
+    [self.imageView setImageWithURL:url
                    placeholderImage:placeholder
-                           userInfo:nil
+                           userInfo:userInfo
                               block:^(ISCacheItem *item) {
                                   ...
                                 }];

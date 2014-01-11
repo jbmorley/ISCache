@@ -12,7 +12,7 @@
 
 typedef NSError *(^ISCachePostProcessBlock)(ISCacheItem *info);
 
-@interface ISHTTPCacheHandler : NSObject
+@interface ISCacheHTTPHandler : NSObject
 <ISCacheHandler
 ,NSURLConnectionDelegate
 ,NSURLConnectionDataDelegate>

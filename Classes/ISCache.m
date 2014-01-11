@@ -105,7 +105,7 @@ static ISCache *sCache;
     // Create and register the default factories.
     
     // HTTP Handler
-    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISHTTPCacheHandler class]];
+    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISCacheHTTPHandler class]];
     [self registerFactory:httpFactory
                forContext:ISCacheContextURL];
     

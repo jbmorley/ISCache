@@ -12,7 +12,7 @@
 #import "ISCacheBlock.h"
 #import "ISCacheBlockObserver.h"
 #import "ISCacheHandlerDelegate.h"
-#import "ISHTTPCacheHandler.h"
+#import "ISCacheHTTPHandler.h"
 #import "UIImageView+Cache.h"
 #import "ISCacheHandlerFactory.h"
 #import "ISScalingCacheHandlerFactory.h"

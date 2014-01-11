@@ -6,10 +6,10 @@
 //
 //
 
-#import "ISHTTPCacheHandler.h"
+#import "ISCacheHTTPHandler.h"
 #import "ISCache.h"
 
-@interface ISHTTPCacheHandler ()
+@interface ISCacheHTTPHandler ()
 
 @property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
 @property (nonatomic, strong) ISCacheItem *info;
@@ -18,7 +18,7 @@
 
 @end
 
-@implementation ISHTTPCacheHandler
+@implementation ISCacheHTTPHandler
 
 - (id)init
 {

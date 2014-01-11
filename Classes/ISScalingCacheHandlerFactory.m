@@ -7,13 +7,13 @@
 //
 
 #import "ISScalingCacheHandlerFactory.h"
-#import "ISHTTPCacheHandler.h"
+#import "ISCacheHTTPHandler.h"
 
 @implementation ISScalingCacheHandlerFactory
 
 - (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo
 {
-  ISHTTPCacheHandler *handler = [[ISHTTPCacheHandler alloc] initWithCompletion:^(ISCacheItem *info) {
+  ISCacheHTTPHandler *handler = [[ISCacheHTTPHandler alloc] initWithCompletion:^(ISCacheItem *info) {
     
     // Only attempt to resize the image if user info has been
     // provided with the required dimensions.

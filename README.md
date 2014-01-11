@@ -7,6 +7,10 @@ Introduction
 Getting Started
 ---------------
 
+### Items
+
+
+
 ### Images
 
 ISCache provides a handy UIImage extension for loading images:
@@ -29,6 +33,7 @@ Cached images can be resized by providing the resizing settings in the userInfo:
                                     @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
                   completionBlock:NULL];
 
+TODO Write something about how UIImage cache items can be managed.
 
 Custom handlers
 ---------------

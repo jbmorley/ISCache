@@ -41,13 +41,45 @@ static NSString *kKeyItem = @"item";
 static NSString *kKeyContext = @"context";
 static NSString *kKeyUserInfo = @"userInfo";
 static NSString *kKeyPath = @"path";
-static NSString *kKeyIdentifier = @"identifier";
+static NSString *kKeyUid = @"uid";
 static NSString *kKeyVersion = @"version";
 static NSString *kKeyState = @"state";
 static NSString *kKeyTotalBytesRead = @"totalBytesRead";
 static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
 static NSString *kKeyCreated = @"created";
 static NSString *kKeyModified = @"modified";
+
+
++ (id)itemWithItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+               uid:(NSString *)uid
+              path:(NSString *)path
+{
+  return [[self alloc] initWithItem:item
+                            context:context
+                           userInfo:userInfo
+                                uid:uid
+                               path:path];
+}
+
+
+- (id)initWithItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+               uid:(NSString *)uid
+              path:(NSString *)path
+{
+  self = [super init];
+  if (self) {
+    _item = item;
+    _context = context;
+    _userInfo = userInfo;
+    _uid = uid;
+    _path = path;
+  }
+  return self;
+}
 
 
 // Serialization to and from a dictionary.
@@ -88,11 +120,11 @@ static NSString *kKeyModified = @"modified";
                                      reason:ISCacheExceptionUnsupportedCacheStoreItemVersionReason userInfo:nil];
     }
     
-    self.item = dictionary[kKeyItem];
-    self.context = dictionary[kKeyContext];
-    self.userInfo = dictionary[kKeyUserInfo];
-    self.path = dictionary[kKeyPath];
-    self.identifier = dictionary[kKeyIdentifier];
+    _item = dictionary[kKeyItem];
+    _context = dictionary[kKeyContext];
+    _userInfo = dictionary[kKeyUserInfo];
+    _uid = dictionary[kKeyUid];
+    _path = dictionary[kKeyPath];
     self.state = [dictionary[kKeyState] intValue];
     self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
@@ -112,7 +144,7 @@ static NSString *kKeyModified = @"modified";
    self.context, kKeyContext,
    self.userInfo, kKeyUserInfo,
    self.path, kKeyPath,
-   self.identifier, kKeyIdentifier,
+   self.uid, kKeyUid,
    @(self.state), kKeyState,
    @(self.totalBytesRead), kKeyTotalBytesRead,
    @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
@@ -199,7 +231,7 @@ static NSString *kKeyModified = @"modified";
 {
   if ([object class] == [self class]) {
     ISCacheItem *otherItem = (ISCacheItem *)object;
-    return ([self.identifier isEqualToString:otherItem.identifier]);
+    return ([self.uid isEqualToString:otherItem.uid]);
   }
   return [super isEqual:object];
 }

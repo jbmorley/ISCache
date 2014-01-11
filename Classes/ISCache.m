@@ -160,12 +160,12 @@ static ISCache *sCache;
   }
   
   // Create a new info for the file.
-  cacheItem = [ISCacheItem new];
-  cacheItem.item = item;
-  cacheItem.context = context;
-  cacheItem.userInfo = userInfo;
-  cacheItem.identifier = identifier;
-  cacheItem.path = [self.documentsPath stringByAppendingPathComponent:identifier];
+  NSString *path = [self.documentsPath stringByAppendingPathComponent:identifier];
+  cacheItem = [ISCacheItem itemWithItem:item
+                                context:context
+                               userInfo:userInfo
+                                    uid:identifier
+                                   path:path];
   [self resetItem:cacheItem];
   
   [self.store addItem:cacheItem];
@@ -268,7 +268,7 @@ static ISCache *sCache;
                                                 userInfo:userInfo];
 
     [self.active setObject:handler
-                    forKey:cacheItem.identifier];
+                    forKey:cacheItem.uid];
     
     if (completionBlock) {
       ISCacheBlockObserver *observer
@@ -365,10 +365,10 @@ static ISCache *sCache;
     
     if (self.debug) {
       NSLog(@"cancelItem:%@ -> item not found or in progress",
-            item.identifier);
+            item.uid);
     }
     
-    id<ISCacheHandler> handler = [self.active objectForKey:item.identifier];
+    id<ISCacheHandler> handler = [self.active objectForKey:item.uid];
     [handler cancel];
     
     // Delete the file.
@@ -396,7 +396,7 @@ static ISCache *sCache;
     
     if (self.debug) {
       NSLog(@"cancelItem:%@ -> item already complete, ignoring",
-            item.identifier);
+            item.uid);
     }
     
   }
@@ -516,7 +516,7 @@ static ISCache *sCache;
   [item closeFile];
   
   // Delete the handler for the file.
-  [self.active removeObjectForKey:item.identifier];
+  [self.active removeObjectForKey:item.uid];
   
   // Save the store as the state of one of the items has changed.
   [self.store save];

@@ -41,7 +41,7 @@
 {
   self = [super init];
   if (self) {
-    self.identifier = item.identifier;
+    self.identifier = item.uid;
     self.block = block;
   }
   return self;
@@ -52,7 +52,7 @@
 itemDidUpdate:(ISCacheItem *)item
 {
   // Ignore updates that aren't meant for us.
-  if ([item.identifier isEqualToString:self.identifier]) {
+  if ([item.uid isEqualToString:self.identifier]) {
     
     // Call our block.
     ISCacheBlockState result = self.block(item);

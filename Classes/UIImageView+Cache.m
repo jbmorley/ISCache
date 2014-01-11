@@ -38,7 +38,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
     if (cacheItem) {
       ISCache *defaultCache = [ISCache defaultCache];
       if (defaultCache.debug) {
-        NSLog(@"Cancel: %@", cacheItem.identifier);
+        NSLog(@"Cancel: %@", cacheItem.uid);
       }
       [defaultCache cancelItems:@[cacheItem]];
       objc_setAssociatedObject(self,
@@ -95,7 +95,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                            OBJC_ASSOCIATION_RETAIN);
   
   if (defaultCache.debug) {
-    NSLog(@"Start: %@", item.identifier);
+    NSLog(@"Start: %@", item.uid);
   }
   
   // Kick-off the image download.
@@ -116,7 +116,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                  // so we need to guard against this by checking
                  // for a nil cacheIdentifier.
                  UIImageView *strongSelf = weakSelf;
-                 if ([strongSelf identifierValid:info.identifier]) {
+                 if ([strongSelf identifierValid:info.uid]) {
                    
                    // Handle any errors.
                    // We do this inside the guarded block to ensure
@@ -127,7 +127,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                    if (item.lastError) {
                      if (defaultCache.debug) {
                        NSLog(@"block:%@ -> cancelled with error %@",
-                             info.identifier,
+                             info.uid,
                              item.lastError);
                      }
                      
@@ -138,7 +138,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                    if (info.state == ISCacheItemStateFound) {
                      if (defaultCache.debug) {
                        NSLog(@"block:%@ -> item complete",
-                             info.identifier);
+                             info.uid);
                      }
                      [self loadImageAsynchronously:info];
                      return ISCacheBlockStateDone;
@@ -149,7 +149,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                  
                  if (defaultCache.debug) {
                    NSLog(@"block:%@ -> lost interest",
-                         info.identifier);
+                         info.uid);
                  }
                  
                  return ISCacheBlockStateDone;
@@ -176,7 +176,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   @synchronized(self) {
     ISCacheItem *cacheItem = objc_getAssociatedObject(self,
                                                          kCacheItemKey);
-    return [cacheItem.identifier isEqualToString:identifier];
+    return [cacheItem.uid isEqualToString:identifier];
   }
 }
 
@@ -193,7 +193,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
     // This gives us an oportunity to cancel loading the image
     // early if the image view has been destroyed.
     UIImageView *strongSelf = weakSelf;
-    if (![strongSelf identifierValid:info.identifier]) {
+    if (![strongSelf identifierValid:info.uid]) {
       return;
     }
     
@@ -204,7 +204,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
     dispatch_async(dispatch_get_main_queue(), ^{
       // Check that it is still valid to set the image.
       UIImageView *strongSelf = weakSelf;
-      if ([strongSelf identifierValid:info.identifier]) {
+      if ([strongSelf identifierValid:info.uid]) {
         strongSelf.image = image;
       }
     });

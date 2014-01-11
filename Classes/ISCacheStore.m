@@ -65,7 +65,7 @@ static NSInteger kCacheStoreVersion = 1;
       for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
         ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:dictionary];
         [self.items setObject:item
-                      forKey:item.identifier];
+                      forKey:item.uid];
       }
     }
   }
@@ -95,13 +95,13 @@ static NSInteger kCacheStoreVersion = 1;
 - (void)addItem:(ISCacheItem *)item
 {
   [self.items setObject:item
-                 forKey:item.identifier];
+                 forKey:item.uid];
 }
 
 
 - (void)removeItem:(ISCacheItem *)item
 {
-  [self.items removeObjectForKey:item.identifier];
+  [self.items removeObjectForKey:item.uid];
 }
 
 

@@ -37,11 +37,11 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 @interface ISCacheItem : NSObject
 
-@property (strong) NSString *item;
-@property (strong) NSString *context;
-@property (strong) NSDictionary *userInfo;
-@property (strong) NSString *identifier;
-@property (strong) NSString *path;
+@property (strong, readonly) NSString *item;
+@property (strong, readonly) NSString *context;
+@property (strong, readonly) NSDictionary *userInfo;
+@property (strong, readonly) NSString *uid;
+@property (strong, readonly) NSString *path;
 @property ISCacheItemState state;
 @property long long totalBytesRead;
 @property long long totalBytesExpectedToRead;
@@ -50,9 +50,21 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong) NSError *lastError;
 @property (readonly) CGFloat progress;
 
++ (id)itemWithItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+               uid:(NSString *)identifier
+              path:(NSString *)path;
+- (id)initWithItem:(NSString *)item
+           context:(NSString *)context
+          userInfo:(NSDictionary *)userInfo
+               uid:(NSString *)uid
+              path:(NSString *)path;
+
 + (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
 - (id)initWithDictionary:(NSDictionary *)dictionary;
 - (NSDictionary *)dictionary;
+
 - (void)openFile;
 - (void)closeFile;
 - (void)deleteFile;

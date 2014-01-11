@@ -425,7 +425,8 @@ static ISCache *sCache;
   item.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
   item.totalBytesRead = 0;
   item.lastError = nil;
-  // TODO We should clear the modified and created times here.
+  item.created = nil;
+  item.modified = nil;
 }
 
 

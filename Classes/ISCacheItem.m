@@ -63,8 +63,8 @@ static NSString *kKeyModified = @"modified";
 {
   self = [super init];
   if (self) {
-    self.created = [NSDate new];
-    self.modified = [NSDate new];
+    self.created = nil;
+    self.modified = nil;
     self.lastError = nil;
     self.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
     self.totalBytesRead = 0;
@@ -103,18 +103,29 @@ static NSString *kKeyModified = @"modified";
 
 - (NSDictionary *)dictionary
 {
-  return
-  @{kKeyVersion: @(kCacheItemVersion),
-    kKeyItem: self.item,
-    kKeyContext: self.context,
-    kKeyUserInfo: self.userInfo,
-    kKeyPath: self.path,
-    kKeyIdentifier: self.identifier,
-    kKeyState: @(self.state),
-    kKeyTotalBytesRead: @(self.totalBytesRead),
-    kKeyTotalBytesExpectedToRead: @(self.totalBytesExpectedToRead),
-    kKeyCreated: self.created,
-    kKeyModified: self.modified};
+  NSMutableDictionary *dictionary =
+  [NSMutableDictionary dictionaryWithObjectsAndKeys:
+   @(kCacheItemVersion), kKeyVersion,
+   self.item, kKeyItem,
+   self.context, kKeyContext,
+   self.userInfo, kKeyUserInfo,
+   self.path, kKeyPath,
+   self.identifier, kKeyIdentifier,
+   @(self.state), kKeyState,
+   @(self.totalBytesRead), kKeyTotalBytesRead,
+   @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
+   nil];
+  
+  if (self.created) {
+    [dictionary setObject:self.created
+                   forKey:kKeyCreated];
+  }
+  if (self.modified) {
+    [dictionary setObject:self.modified
+                   forKey:kKeyModified];
+  }
+  
+  return dictionary;
 }
 
 

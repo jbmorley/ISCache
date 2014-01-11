@@ -46,7 +46,7 @@ Handlers are transient objects; they exist for a single fetch attempt of a cache
 
 ### Registering a custom handler
 
-In order to provide maximum flexibility, `ISCache` makes use of the factory design pattern for constructing new handlers. `ISCacheSimpleHandlerFactory` is provided as a default cache handler which will simply alloc-init any class provided so long as it implements the ISCacheHandler protocol. More complex handlers which require non-trivial initialization (e.g. to share state across handlers) will have to implement their own ISCacheHandlerFactory.
+In order to provide maximum flexibility, `ISCache` makes use of the factory design pattern for constructing new handlers. `ISCacheSimpleHandlerFactory` is provided as an off-the-shelf factory which will simply alloc-init any class provided so long as it implements the ISCacheHandler protocol. More complex handlers which require non-trivial initialization (e.g. to share state across handlers) will have to implement their own ISCacheHandlerFactory.
 
 While the `ISCacheHTTPHandler` is automatically registered for the `ISCacheURLContext`, the code which does this serves as a good example of how to register your own ISCacheHandlerFactory and ISCacheHandler:
 

@@ -37,7 +37,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 @interface ISCacheItem : NSObject
 
-@property (strong, readonly) NSString *item;
+@property (strong, readonly) NSString *identifier;
 @property (strong, readonly) NSString *context;
 @property (strong, readonly) NSDictionary *userInfo;
 @property (strong, readonly) NSString *uid;
@@ -52,16 +52,16 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 @property (readonly) CGFloat progress;
 
-+ (id)itemWithItem:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-               uid:(NSString *)identifier
-              path:(NSString *)path;
-- (id)initWithItem:(NSString *)item
++ (id)itemWithIdentifier:(NSString *)identifier
            context:(NSString *)context
           userInfo:(NSDictionary *)userInfo
                uid:(NSString *)uid
               path:(NSString *)path;
+- (id)initWithIdentifier:(NSString *)identifier
+                 context:(NSString *)context
+                userInfo:(NSDictionary *)userInfo
+                     uid:(NSString *)uid
+                    path:(NSString *)path;
 
 + (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
 - (id)initWithDictionary:(NSDictionary *)dictionary;

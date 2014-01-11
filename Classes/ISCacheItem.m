@@ -37,7 +37,7 @@ typedef enum {
 
 static int kCacheItemVersion = 1;
 
-static NSString *kKeyItem = @"item";
+static NSString *kKeyIdentifier = @"identifier";
 static NSString *kKeyContext = @"context";
 static NSString *kKeyUserInfo = @"userInfo";
 static NSString *kKeyPath = @"path";
@@ -50,29 +50,29 @@ static NSString *kKeyCreated = @"created";
 static NSString *kKeyModified = @"modified";
 
 
-+ (id)itemWithItem:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-               uid:(NSString *)uid
-              path:(NSString *)path
++ (id)itemWithIdentifier:(NSString *)identifier
+                 context:(NSString *)context
+                userInfo:(NSDictionary *)userInfo
+                     uid:(NSString *)uid
+                    path:(NSString *)path
 {
-  return [[self alloc] initWithItem:item
-                            context:context
-                           userInfo:userInfo
-                                uid:uid
-                               path:path];
+  return [[self alloc] initWithIdentifier:identifier
+                                  context:context
+                                 userInfo:userInfo
+                                      uid:uid
+                                     path:path];
 }
 
 
-- (id)initWithItem:(NSString *)item
-           context:(NSString *)context
-          userInfo:(NSDictionary *)userInfo
-               uid:(NSString *)uid
-              path:(NSString *)path
+- (id)initWithIdentifier:(NSString *)identifier
+                 context:(NSString *)context
+                userInfo:(NSDictionary *)userInfo
+                     uid:(NSString *)uid
+                    path:(NSString *)path
 {
   self = [super init];
   if (self) {
-    _item = item;
+    _identifier = identifier;
     _context = context;
     _userInfo = userInfo;
     _uid = uid;
@@ -120,7 +120,7 @@ static NSString *kKeyModified = @"modified";
                                      reason:ISCacheExceptionUnsupportedCacheStoreItemVersionReason userInfo:nil];
     }
     
-    _item = dictionary[kKeyItem];
+    _identifier = dictionary[kKeyIdentifier];
     _context = dictionary[kKeyContext];
     _userInfo = dictionary[kKeyUserInfo];
     _uid = dictionary[kKeyUid];
@@ -140,7 +140,7 @@ static NSString *kKeyModified = @"modified";
   NSMutableDictionary *dictionary =
   [NSMutableDictionary dictionaryWithObjectsAndKeys:
    @(kCacheItemVersion), kKeyVersion,
-   self.item, kKeyItem,
+   self.identifier, kKeyIdentifier,
    self.context, kKeyContext,
    self.userInfo, kKeyUserInfo,
    self.path, kKeyPath,

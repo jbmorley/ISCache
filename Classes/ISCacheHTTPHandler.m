@@ -51,7 +51,7 @@
   self.delegate = delegate;
   self.info = info;
   
-  self.connection = [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:info.item]] delegate:self];
+  self.connection = [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:info.identifier]] delegate:self];
   [self.connection start];
   
 }

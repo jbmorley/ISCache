@@ -23,12 +23,6 @@
 #import "NSString+MD5.h"
 #import "ISCacheStore.h"
 
-// TODO Items need to be timestamped and it should be possible to
-// differentiate between permanently cached items and temporarily
-// cached items.
-
-// TODO Handlers should have an expiry strategy.
-
 @interface ISCache ()
 
 @property (nonatomic, strong) ISNotifier *notifier;

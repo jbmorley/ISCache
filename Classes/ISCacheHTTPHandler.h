@@ -28,7 +28,6 @@ typedef NSError *(^ISCachePostProcessBlock)(ISCacheItem *info);
 ,NSURLConnectionDataDelegate>
 
 - (id)init;
-// TODO Rename this API.
 - (id)initWithCompletion:(ISCachePostProcessBlock)completionBlock;
 
 @end

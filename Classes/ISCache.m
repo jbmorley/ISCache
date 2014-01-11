@@ -238,7 +238,7 @@ static ISCache *sCache;
     [self.store save];
     
     // If the item exists, call back with the result.
-    completionBlock(cacheItem, nil);
+    completionBlock(cacheItem);
     
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
@@ -378,13 +378,15 @@ static ISCache *sCache;
     // We do, however, save the store to cache its new state.
     [self.store save];
     
-    // Notify the observers.
-    item.state = ISCacheItemStateNotFound;
-    NSError *error = [NSError errorWithDomain:ISCacheErrorDomain
+    // Set an appropriate error for the item.
+    item.lastError = [NSError errorWithDomain:ISCacheErrorDomain
                                          code:ISCacheErrorCancelled
                                      userInfo:nil];
-    [self notifyObservers:item
-                    error:error];
+    
+    // Update the item state.
+    item.state = ISCacheItemStateNotFound;
+
+    [self notifyObservers:item];
     
   } else {
     
@@ -443,16 +445,6 @@ static ISCache *sCache;
   [self.notifier notify:@selector(cache:itemDidUpdate:)
              withObject:self
              withObject:item];
-}
-
-
-- (void)notifyObservers:(ISCacheItem *)item
-                  error:(NSError *)error
-{
-  [self.notifier notify:@selector(cache:item:didFailwithError:)
-             withObject:self
-             withObject:item
-             withObject:error];
 }
 
 
@@ -558,11 +550,13 @@ didFailWithError:(NSError *)error
   item.state = ISCacheItemStateNotFound;
   
   // Notify the observers of the error.
-  // TODO Notify the observers of the state change, not the error.
-  [self notifyObservers:item
-                  error:error];
+  // We do this via the normal notification mechanism and require
+  // clients to inspect the item when in the
+  // ISCacheItemStateNotFound state to see if an error has been
+  // encountered.
+  [self notifyObservers:item];
   
-  // Remove the reference to the item.
+  // Update the state of the item.
   [self.store save];
 }
 

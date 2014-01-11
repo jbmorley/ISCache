@@ -16,9 +16,4 @@
 - (void)cache:(ISCache *)cache
 itemDidUpdate:(ISCacheItem *)item;
 
-@optional
-- (void)cache:(ISCache *)cache
-         item:(ISCacheItem *)item
-didFailwithError:(NSError *)error;
-
 @end

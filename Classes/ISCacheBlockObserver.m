@@ -45,27 +45,19 @@ itemDidUpdate:(ISCacheItem *)item
   if ([item.identifier isEqualToString:self.identifier]) {
     
     // Call our block.
-    ISCacheBlockState result = self.block(item, nil);
+    ISCacheBlockState result = self.block(item);
     
-    // Remove ourselves if the item is complete or the
-    // block observer indicates that it is complete.
+    // Remove ourselves if the item is complete, if the
+    // block observer indicates that it is complete, or if
+    // we have encountered an error.
+    // While strictly lastError should only ever be set if the
+    // state is ISCacheItemStateNotFound, it is safer to always
+    // check for a non-nil lastError.
     if (item.state == ISCacheItemStateFound ||
-        result == ISCacheBlockStateDone) {
+        result == ISCacheBlockStateDone ||
+        item.lastError) {
       [cache removeObserver:self];
     }
-
-  }
-}
-
-
-- (void)cache:(ISCache *)cache
-         item:(ISCacheItem *)item
-didFailwithError:(NSError *)error
-{
-  // Ignore updates that aren't meant for us.
-  if ([item.identifier isEqualToString:self.identifier]) {
-    self.block(item, error);
-    [cache removeObserver:self];
   }
 }
 

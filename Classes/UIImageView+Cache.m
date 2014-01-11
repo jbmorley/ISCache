@@ -89,7 +89,7 @@ static char *kCleanupIdentifier = "cleanup";
   [defaultCache fetchItem:url
              context:ISCacheContextScaleURL
             userInfo:userInfo
-               block:^(ISCacheItem *info, NSError *error) {
+               block:^(ISCacheItem *info) {
                  
                  // Check that the image view is valid and the
                  // identifier we are receiving updates for matches
@@ -110,15 +110,15 @@ static char *kCleanupIdentifier = "cleanup";
                    // operation or requested a new one, they never
                    // receive any further notification through
                    // the initial block.
-                   if (error != nil) {
+                   if (item.lastError) {
                      if (defaultCache.debug) {
                        NSLog(@"block:%@ -> cancelled with error %@",
                              info.identifier,
-                             error);
+                             item.lastError);
                      }
                      
                      if (completionBlock) {
-                       completionBlock(error);
+                       completionBlock(item.lastError);
                      }
                      return ISCacheBlockStateDone;
                    }

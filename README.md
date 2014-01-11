@@ -22,6 +22,7 @@ Getting Started
 
 ISCache provides a handy UIImage extension for loading images. Image loading are performed using GCD to prevent large images from blocking the UI making it ideal for use in UITableViewCells and UICollectionViewCells:
 
+    ```objc
     #import <ISCache/ISCache.h>
 
     UIImage *placeholder = [UIImage imageNamed:@"placeholder.png"];
@@ -30,6 +31,7 @@ ISCache provides a handy UIImage extension for loading images. Image loading are
                    placeholderImage:placeholder
                            userInfo:nil
                               block:NULL];
+    ```
 
 Cached images can be resized by providing the resizing settings in the userInfo:
 

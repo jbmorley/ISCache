@@ -42,7 +42,7 @@ Cached images can be resized by providing the resizing settings in the userInfo:
 
 #### Cancellation
 
-Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous outstanding fetch. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates.
+Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous fetches. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates. If the item fetch has already completed (and the item is in state `ISCacheItemStateFound`) the cancellation will have no effect and the item will remain in the cache.
 
 Fetches can also be explicitly cancelled as follows:
 
@@ -62,6 +62,7 @@ For example, a simple image fetch which displays progress and hides and shows th
     self.imageView.hidden = YES;
     self.progressView.hidden = NO;
 
+    // Set the image.
     [self.imageView setImageWithURL:@"http://www.example.com/image.png"
                    placeholderImage:placeholder
                            userInfo:nil
@@ -110,13 +111,12 @@ It is also possible to combine this with direct calls to `ISCache` to determine 
       self.progressView.hidden = NO;
     }
 
+    // Set the image.
     [self.imageView setImageWithURL:@"http://www.example.com/image.png"
                    placeholderImage:placeholder
                            userInfo:nil
                               block:^(ISCacheItem *item) {
-
                                   ...
-
                                 }];
 
 
@@ -141,7 +141,7 @@ While the `ISCacheHTTPHandler` is automatically registered for the `ISCacheURLCo
                        forContext:ISCacheURLContext];
 
 
-*N.B. This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
+*This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
 
 ### Completion actions
 

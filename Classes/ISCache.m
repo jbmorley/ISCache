@@ -117,12 +117,12 @@ static ISCache *sCache;
     // HTTP Handler
     ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISCacheHTTPHandler class]];
     [self registerFactory:httpFactory
-               forContext:ISCacheContextURL];
+               forContext:ISCacheURLContext];
     
     // Scaling HTTP Handler
     ISScalingCacheHandlerFactory *scalingHttpfactory = [ISScalingCacheHandlerFactory new];
     [self registerFactory:scalingHttpfactory
-               forContext:ISCacheContextScaleURL];
+               forContext:ISCacheScaleURLContext];
 
   }
   return self;

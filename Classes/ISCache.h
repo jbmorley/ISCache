@@ -35,8 +35,8 @@ typedef enum {
   ISCacheErrorCancelled,
 } ISCacheError;
 
-static NSString *ISCacheContextURL = @"URL";
-static NSString *ISCacheContextScaleURL = @"ScaleURL";
+static NSString *ISCacheURLContext = @"URL";
+static NSString *ISCacheScaleURLContext = @"ScaleURL";
 static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>

@@ -4,6 +4,8 @@ ISCache
 Introduction
 ------------
 
+ISCache is intended to be a transport agnostic way to cache and work with data: it may be desirable to cache files within custom domains such as Google Drive or Dropbox, to generate and cache locally generated thumbnails (e.g. rendering a PDF) or caching data over a completely proprietary mechanism. In order to support this, fetches are performed by objects which implement the `ISCacheHandler` protocol.
+
 Getting Started
 ---------------
 
@@ -13,7 +15,7 @@ Getting Started
 
 ### Images
 
-ISCache provides a handy UIImage extension for loading images:
+ISCache provides a handy UIImage extension for loading images. Both fetches and image loading are performed using GCD:
 
     #import <ISCache/ISCache.h>
 
@@ -33,12 +35,14 @@ Cached images can be resized by providing the resizing settings in the userInfo:
                                     @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
                   completionBlock:NULL];
 
+Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous outstanding fetch. Fetches can also be explicitly cancelled as follows:
+
+    [self.imageView cancelSetImageWithURL];
+
 TODO Write something about how UIImage cache items can be managed.
 
 Custom handlers
 ---------------
-
-ISCache is intended to be a transport agnostic way to cache and work with data: it may be desirable to cache files within custom domains such as Google Drive or Dropbox, to generate and cache locally generated thumbnails (e.g. rendering a PDF) or caching data over a completely proprietary mechanism. In order to support this, fetches are performed by objects which implement the `ISCacheHandler` protocol.
 
 ### Handler lifecycle
 
@@ -58,7 +62,7 @@ While the `ISCacheHTTPHandler` is automatically registered for the `ISCacheURLCo
                        forContext:ISCacheURLContext];
 
 
-*This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
+*N.B. This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
 
 ### Completion actions
 

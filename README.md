@@ -100,7 +100,7 @@ self.progressView.hidden = NO;
 
 It is also possible to combine this with direct calls to `ISCache` to determine the cache item state before showing the progress view (to avoid it flickering when the image is already present in the cache):
 
-```ojbc
+```objc
 // Shared arguments.
 NSString *url = @"http://www.example.com/image.png";
 NSDictionary *userDict = nil;

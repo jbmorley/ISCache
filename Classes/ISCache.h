@@ -30,6 +30,7 @@
 #import "ISCacheExceptions.h"
 #import "ISCacheFilter.h"
 #import "ISCacheStateFilter.h"
+#import "ISCacheContextFilter.h"
 
 typedef enum {
   ISCacheErrorCancelled,

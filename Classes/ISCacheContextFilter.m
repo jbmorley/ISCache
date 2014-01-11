@@ -16,11 +16,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#import <Foundation/Foundation.h>
-#import "ISCacheItem.h"
+#import "ISCacheContextFilter.h"
 
-@protocol ISCacheFilter <NSObject>
+@interface ISCacheContextFilter ()
 
-- (BOOL)matchesFilter:(ISCacheItem *)item;
+@property (nonatomic, retain) NSString *context;
+
+@end
+
+@implementation ISCacheContextFilter
+
+
++ (id)filterWithContext:(NSString *)context
+{
+  return [[self alloc] initWithContext:context];
+}
+
+
+- (id)initWithContext:(NSString *)context
+{
+  self = [super init];
+  if (self) {
+    self.context = context;
+  }
+  return self;
+}
+
+
+- (BOOL)matchesFilter:(ISCacheItem *)item
+{
+  if ([item.context isEqualToString:self.context]) {
+    return YES;
+  }
+  return NO;
+}
 
 @end

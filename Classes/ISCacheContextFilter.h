@@ -16,11 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#import <Foundation/Foundation.h>
-#import "ISCacheItem.h"
+#import <UIKit/UIKit.h>
+#import "ISCacheFilter.h"
 
-@protocol ISCacheFilter <NSObject>
+@interface ISCacheContextFilter : NSObject <ISCacheFilter>
 
-- (BOOL)matchesFilter:(ISCacheItem *)item;
++ (id)filterWithContext:(NSString *)context;
+- (id)initWithContext:(NSString *)context;
 
 @end

@@ -42,12 +42,14 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, readonly) NSDictionary *userInfo;
 @property (strong, readonly) NSString *uid;
 @property (strong, readonly) NSString *path;
+
 @property ISCacheItemState state;
 @property long long totalBytesRead;
 @property long long totalBytesExpectedToRead;
 @property (strong) NSDate *created;
 @property (strong) NSDate *modified;
 @property (strong) NSError *lastError;
+
 @property (readonly) CGFloat progress;
 
 + (id)itemWithItem:(NSString *)item

@@ -48,6 +48,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong) NSDate *created;
 @property (strong) NSDate *modified;
 @property (strong) NSError *lastError;
+@property (readonly) CGFloat progress;
 
 + (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
 - (id)initWithDictionary:(NSDictionary *)dictionary;

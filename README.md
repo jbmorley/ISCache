@@ -35,10 +35,10 @@ Cached images can be resized by providing the resizing settings in the userInfo:
 
     [self.imageView setImageWithURL:@"http://www.example.com/image.png"
                    placeholderImage:placeholder
-                         userInfo:@{@"width": @152.0,
-                                    @"height": @152.0,
-                                    @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
-                            block:NULL];
+                           userInfo:@{@"width": @152.0,
+                                      @"height": @152.0,
+                                      @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
+                              block:NULL];
 
 #### Cancellation
 

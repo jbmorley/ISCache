@@ -53,6 +53,7 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (ISCacheItem *)item:(NSString *)item
               context:(NSString *)context
              userInfo:(NSDictionary *)userInfo;
+
 - (ISCacheItem *)fetchItem:(NSString *)item
                    context:(NSString *)context
                   userInfo:(NSDictionary *)userInfo

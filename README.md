@@ -23,24 +23,26 @@ Getting Started
 ISCache provides a handy UIImage extension for loading images. Image loading are performed using GCD to prevent large images from blocking the UI making it ideal for use in UITableViewCells and UICollectionViewCells:
 
 ```objc
-    #import <ISCache/ISCache.h>
+#import <ISCache/ISCache.h>
 
-    UIImage *placeholder = [UIImage imageNamed:@"placeholder.png"];
+UIImage *placeholder = [UIImage imageNamed:@"placeholder.png"];
 
-    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
-                   placeholderImage:placeholder
-                           userInfo:nil
-                              block:NULL];
+[self.imageView setImageWithURL:@"http://www.example.com/image.png"
+               placeholderImage:placeholder
+                       userInfo:nil
+                          block:NULL];
 ```
 
 Cached images can be resized by providing the resizing settings in the userInfo:
 
-    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
-                   placeholderImage:placeholder
-                           userInfo:@{@"width": @152.0,
-                                      @"height": @152.0,
-                                      @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
-                              block:NULL];
+```objc
+[self.imageView setImageWithURL:@"http://www.example.com/image.png"
+               placeholderImage:placeholder
+                       userInfo:@{@"width": @152.0,
+                                  @"height": @152.0,
+                                  @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
+                          block:NULL];
+```
 
 #### Cancellation
 
@@ -48,11 +50,15 @@ Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` w
 
 Fetches can also be explicitly cancelled as follows:
 
-    [self.imageView cancelSetImageWithURL];
+```objc
+[self.imageView cancelSetImageWithURL];
+```
 
 If you wish to prevent the automatic cancellation of fetches, you can set the following property:
 
-    self.imageView.automaticallyCancelsFetches = NO;
+```objc
+self.imageView.automaticallyCancelsFetches = NO;
+```
 
 ### Management and observing
 
@@ -60,33 +66,35 @@ Once an image has been set you are free to manage the item fetch lifecycle using
 
 For example, a simple image fetch which displays progress and hides and shows the UIProgressView and UIImageView might use the block mechanism as follows:
 
-    // Show the progress view and hide the image view.
-    self.imageView.hidden = YES;
-    self.progressView.hidden = NO;
+```objc
+// Show the progress view and hide the image view.
+self.imageView.hidden = YES;
+self.progressView.hidden = NO;
 
-    // Set the image.
-    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
-                   placeholderImage:placeholder
-                           userInfo:nil
-                              block:^(ISCacheItem *item) {
+// Set the image.
+[self.imageView setImageWithURL:@"http://www.example.com/image.png"
+               placeholderImage:placeholder
+                       userInfo:nil
+                          block:^(ISCacheItem *item) {
 
-                                  if (item.state == ISCacheItemStateInProgress) {
+                              if (item.state == ISCacheItemStateInProgress) {
 
-                                    // Update the progress view.
-                                    self.progressView.visible = item.progress;
+                                // Update the progress view.
+                                self.progressView.visible = item.progress;
 
-                                  } else if (item.state == ISCacheItemStateFound) {
+                              } else if (item.state == ISCacheItemStateFound) {
 
-                                    // Hide the progress view and show the image view.
-                                    self.imageView.hidden = NO;
-                                    self.progressView.hidden = YES;
+                                // Hide the progress view and show the image view.
+                                self.imageView.hidden = NO;
+                                self.progressView.hidden = YES;
 
-                                  }
+                              }
 
-                                  // Indicate that we still wish to receive updates.
-                                  return ISCacheBlockStateContinue;
+                              // Indicate that we still wish to receive updates.
+                              return ISCacheBlockStateContinue;
 
-                                }];
+                            }];
+```
 
 *A more thorough implementation would also use the `ISCacheItemStateNotFound` state and the `lastError` property to check for unexpected errors or cancellations.*
 

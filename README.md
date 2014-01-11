@@ -109,9 +109,9 @@ NSDictionary *userDict = nil;
 // It is important to use the same userDict as we will use when setting the image
 // as this is used to identify the item in the cache.
 ISCache *defaultCache = [ISCache defaultCache];
-ISCacheItem *item = [defaultCache item:url
-                               context:ISCacheImageContext
-                              userDict:userDict]
+ISCacheItem *item = [defaultCache itemForIdentifier:url
+                                            context:ISCacheImageContext
+                                           userDict:userDict]
 
 // Only show the progress view if the item doesn't exist.
 if (item.state == ISCacheItemStateNotFound) {

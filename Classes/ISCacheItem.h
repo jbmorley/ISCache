@@ -37,6 +37,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property long long totalBytesExpectedToRead;
 @property (strong) NSDate *created;
 @property (strong) NSDate *modified;
+@property (strong) NSError *lastError;
 
 + (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
 - (id)initWithDictionary:(NSDictionary *)dictionary;

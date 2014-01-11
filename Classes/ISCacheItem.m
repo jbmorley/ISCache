@@ -55,6 +55,10 @@ static NSString *kKeyModified = @"modified";
   if (self) {
     self.created = [NSDate new];
     self.modified = [NSDate new];
+    self.lastError = nil;
+    self.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+    self.totalBytesRead = 0;
+    self.state = ISCacheItemStateNotFound;
   }
   return self;
 }

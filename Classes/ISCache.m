@@ -418,6 +418,8 @@ static ISCache *sCache;
   item.state = ISCacheItemStateNotFound;
   item.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
   item.totalBytesRead = 0;
+  item.lastError = nil;
+  // TODO We should clear the modified and created times here.
 }
 
 
@@ -538,18 +540,29 @@ didFailWithError:(NSError *)error
     NSLog(@"item:didFailWithError: %@", error);
   }
   
-  // Update the state of the cached item.
-  item.state = ISCacheItemStateNotFound;
+  // Since we are offering explicit support for KVO, we should
+  // must ensure these modifications to the ISCacheItem are
+  // performed in the correct order.
+  // In the future, it may be appropriate to add selectors to
+  // the ISCacheItem to support setting these states 'atomically'.
   
   // Delete the partially downloaded file.
   [item deleteFile];
   
+  // Cache the last error.
+  item.lastError = error;
+  
+  // Update the state of the cached item.
+  // If people are making use of KVO they are highly likely to be
+  // observing the state property.
+  item.state = ISCacheItemStateNotFound;
+  
   // Notify the observers of the error.
+  // TODO Notify the observers of the state change, not the error.
   [self notifyObservers:item
                   error:error];
   
   // Remove the reference to the item.
-  [self.store removeItem:item];
   [self.store save];
 }
 

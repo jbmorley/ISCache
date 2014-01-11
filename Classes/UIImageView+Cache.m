@@ -25,23 +25,27 @@
 
 static char *kCacheItemKey = "cacheItem";
 static char *kCleanupIdentifier = "cleanup";
+static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 
 - (void)cancelSetImageWithURL
 {
-  ISCacheItem *cacheItem = objc_getAssociatedObject(self, kCacheItemKey);
+  if (self.automaticallyCancelsFetches) {
   
-  // Cancel any outstanding load and then clear the identifier.
-  if (cacheItem) {
-    ISCache *defaultCache = [ISCache defaultCache];
-    if (defaultCache.debug) {
-      NSLog(@"Cancel: %@", cacheItem.identifier);
+    ISCacheItem *cacheItem = objc_getAssociatedObject(self, kCacheItemKey);
+    
+    // Cancel any outstanding load and then clear the identifier.
+    if (cacheItem) {
+      ISCache *defaultCache = [ISCache defaultCache];
+      if (defaultCache.debug) {
+        NSLog(@"Cancel: %@", cacheItem.identifier);
+      }
+      [defaultCache cancelItems:@[cacheItem]];
+      objc_setAssociatedObject(self,
+                               kCacheItemKey,
+                               nil,
+                               OBJC_ASSOCIATION_RETAIN);
     }
-    [defaultCache cancelItems:@[cacheItem]];
-    objc_setAssociatedObject(self,
-                             kCacheItemKey,
-                             nil,
-                             OBJC_ASSOCIATION_RETAIN);
   }
 }
 
@@ -207,6 +211,27 @@ static char *kCleanupIdentifier = "cleanup";
     
   });
   
+}
+
+
+- (BOOL)automaticallyCancelsFetches
+{
+  NSNumber *_automaticallyCancelsFetches =
+  objc_getAssociatedObject(self, kAutomaticallyCancelsFetches);
+  if (_automaticallyCancelsFetches) {
+    return [_automaticallyCancelsFetches boolValue];
+  }
+  return YES;
+}
+
+
+- (void)setAutomaticallyCancelsFetches:(BOOL)automaticallyCancelsFetches
+{
+  NSNumber *_automaticallyCancelsFetches = [NSNumber numberWithBool:automaticallyCancelsFetches];
+  objc_setAssociatedObject(self,
+                           kAutomaticallyCancelsFetches,
+                           _automaticallyCancelsFetches,
+                           OBJC_ASSOCIATION_RETAIN);
 }
 
 

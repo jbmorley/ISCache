@@ -23,6 +23,8 @@
 
 @interface UIImageView (Cache)
 
+@property (nonatomic) BOOL automaticallyCancelsFetches;
+
 - (ISCacheItem *)setImageWithURL:(NSString *)url
                 placeholderImage:(UIImage *)placeholderImage
                         userInfo:(NSDictionary *)userInfo

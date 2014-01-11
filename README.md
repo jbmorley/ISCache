@@ -100,34 +100,36 @@ self.progressView.hidden = NO;
 
 It is also possible to combine this with direct calls to `ISCache` to determine the cache item state before showing the progress view (to avoid it flickering when the image is already present in the cache):
 
-    // Shared arguments.
-    NSString *url = @"http://www.example.com/image.png";
-    NSDictionary *userDict = nil;
+```ojbc
+// Shared arguments.
+NSString *url = @"http://www.example.com/image.png";
+NSDictionary *userDict = nil;
 
-    // Fetch the current cache item to allow us to inspect its state.
-    // It is important to use the same userDict as we will use when setting the image
-    // as this is used to identify the item in the cache.
-    ISCache *defaultCache = [ISCache defaultCache];
-    ISCacheItem *item = [defaultCache item:url
-                                   context:ISCacheImageContext
-                                  userDict:userDict]
+// Fetch the current cache item to allow us to inspect its state.
+// It is important to use the same userDict as we will use when setting the image
+// as this is used to identify the item in the cache.
+ISCache *defaultCache = [ISCache defaultCache];
+ISCacheItem *item = [defaultCache item:url
+                               context:ISCacheImageContext
+                              userDict:userDict]
 
-    // Only show the progress view if the item doesn't exist.
-    if (item.state == ISCacheItemStateNotFound) {
-      self.imageView.hidden = NO;
-      self.progressView.hidden = YES;
-    } else {
-      self.imageView.hidden = YES;
-      self.progressView.hidden = NO;
-    }
+// Only show the progress view if the item doesn't exist.
+if (item.state == ISCacheItemStateNotFound) {
+  self.imageView.hidden = NO;
+  self.progressView.hidden = YES;
+} else {
+  self.imageView.hidden = YES;
+  self.progressView.hidden = NO;
+}
 
-    // Set the image.
-    [self.imageView setImageWithURL:url
-                   placeholderImage:placeholder
-                           userInfo:userInfo
-                              block:^(ISCacheItem *item) {
-                                  ...
-                                }];
+// Set the image.
+[self.imageView setImageWithURL:url
+               placeholderImage:placeholder
+                       userInfo:userInfo
+                          block:^(ISCacheItem *item) {
+                              ...
+                            }];
+```
 
 
 Custom handlers
@@ -143,13 +145,14 @@ In order to provide maximum flexibility, `ISCache` makes use of the factory desi
 
 While the `ISCacheHTTPHandler` is automatically registered for the `ISCacheURLContext`, the code which does this serves as a good example of how to register your own ISCacheHandlerFactory and ISCacheHandler:
 
-    ISCache *defaultCache = [ISCache defaultCache];
+```objc
+ISCache *defaultCache = [ISCache defaultCache];
 
-    ISCacheSimpleHandlerFactory *httpFactory = [ISCacheSimpleHandlerFactory
-                                                factoryWithClass:[ISCacheHTTPHandler class]];
-    [defaultCache registerFactory:httpFactory
-                       forContext:ISCacheURLContext];
-
+ISCacheSimpleHandlerFactory *httpFactory = [ISCacheSimpleHandlerFactory
+                                            factoryWithClass:[ISCacheHTTPHandler class]];
+[defaultCache registerFactory:httpFactory
+                   forContext:ISCacheURLContext];
+```
 
 *This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
 

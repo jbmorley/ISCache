@@ -49,7 +49,7 @@ static char *kCleanupIdentifier = "cleanup";
 - (ISCacheItem *)setImageWithURL:(NSString *)url
                 placeholderImage:(UIImage *)placeholderImage
                         userInfo:(NSDictionary *)userInfo
-                 completionBlock:(ISCacheCompletionBlock)completionBlock
+                           block:(ISCacheBlock)block
 {
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is
@@ -127,9 +127,6 @@ static char *kCleanupIdentifier = "cleanup";
                              item.lastError);
                      }
                      
-                     if (completionBlock) {
-                       completionBlock(item.lastError);
-                     }
                      return ISCacheBlockStateDone;
                    }
                    
@@ -139,8 +136,7 @@ static char *kCleanupIdentifier = "cleanup";
                        NSLog(@"block:%@ -> item complete",
                              info.identifier);
                      }
-                     [self loadImageAsynchronously:info
-                                   completionBlock:completionBlock];
+                     [self loadImageAsynchronously:info];
                      return ISCacheBlockStateDone;
                    } else {
                      return ISCacheBlockStateContinue;
@@ -159,6 +155,14 @@ static char *kCleanupIdentifier = "cleanup";
                            cacheItem,
                            OBJC_ASSOCIATION_RETAIN);
   
+  // Add the block as an obsever.
+  if (block) {
+    ISCacheBlockObserver *observer
+    = [ISCacheBlockObserver observerWithItem:cacheItem
+                                       block:block];
+    [defaultCache addObserver:observer];
+  }
+  
   return cacheItem;
 }
 
@@ -174,7 +178,6 @@ static char *kCleanupIdentifier = "cleanup";
 
 
 - (void)loadImageAsynchronously:(ISCacheItem *)info
-                completionBlock:(ISCacheCompletionBlock)completionBlock
 {
   UIImageView *__weak weakSelf = self;
   
@@ -199,9 +202,6 @@ static char *kCleanupIdentifier = "cleanup";
       UIImageView *strongSelf = weakSelf;
       if ([strongSelf identifierValid:info.identifier]) {
         strongSelf.image = image;
-        if (completionBlock) {
-          completionBlock(nil);
-        }
       }
     });
     

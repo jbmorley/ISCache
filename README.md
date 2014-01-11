@@ -24,7 +24,7 @@ ISCache provides a handy UIImage extension for loading images. Both fetches and 
     [self.imageView setImageWithURL:@"http://www.example.com/image.png"
                    placeholderImage:placeholder
                          userInfo:nil
-                  completionBlock:NULL];
+                            block:NULL];
 
 Cached images can be resized by providing the resizing settings in the userInfo:
 
@@ -33,7 +33,7 @@ Cached images can be resized by providing the resizing settings in the userInfo:
                          userInfo:@{@"width": @152.0,
                                     @"height": @152.0,
                                     @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
-                  completionBlock:NULL];
+                            block:NULL];
 
 Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous outstanding fetch. Fetches can also be explicitly cancelled as follows:
 

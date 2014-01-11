@@ -58,7 +58,7 @@ While the `ISCacheHTTPHandler` is automatically registered for the `ISCacheURLCo
                        forContext:ISCacheURLContext];
 
 
-N.B. You do not require this code and it will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.
+*This code will actually cause ISCache to throw an exception as you are not allowed to register more than one handler per context.*
 
 ### Completion actions
 

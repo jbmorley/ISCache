@@ -116,7 +116,7 @@ static ISCache *sCache;
     // Scaling HTTP Handler
     ISCacheScalingHandlerFactory *scalingHttpfactory = [ISCacheScalingHandlerFactory new];
     [self registerFactory:scalingHttpfactory
-               forContext:ISCacheScaleURLContext];
+               forContext:ISCacheImageContext];
 
   }
   return self;

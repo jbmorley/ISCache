@@ -79,7 +79,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   // already have a cached copy of the image.
   ISCacheItem *item
   = [defaultCache item:url
-                      context:ISCacheScaleURLContext
+                      context:ISCacheImageContext
                      userInfo:userInfo];
   if (placeholderImage) {
     self.image = placeholderImage;
@@ -101,7 +101,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   // Kick-off the image download.
   ISCacheItem *cacheItem =
   [defaultCache fetchItem:url
-             context:ISCacheScaleURLContext
+             context:ISCacheImageContext
             userInfo:userInfo
                block:^(ISCacheItem *info) {
                  

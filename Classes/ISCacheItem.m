@@ -209,9 +209,6 @@ static NSString *kKeyModified = @"modified";
     [fileManager removeItemAtPath:self.path
                             error:&error];
     if (error) {
-      // TODO Handle an error in deleting the file.
-      // What can we actually do here if the file wasn't correctly
-      // deleted?
     }
 
   }

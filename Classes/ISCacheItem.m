@@ -33,6 +33,8 @@ typedef enum {
 
 @implementation ISCacheItem
 
+@synthesize state = _state;
+
 static int kCacheItemVersion = 1;
 
 static NSString *kKeyItem = @"item";
@@ -200,6 +202,34 @@ static NSString *kKeyModified = @"modified";
     return ([self.identifier isEqualToString:otherItem.identifier]);
   }
   return [super isEqual:object];
+}
+
+
+- (BOOL)automaticallyNotifiesObserversForState
+{
+  return NO;
+}
+
+
+- (ISCacheItemState)state
+{
+  @synchronized(self) {
+    return _state;
+  }
+}
+
+
+- (void)setState:(ISCacheItemState)state
+{
+  @synchronized(self) {
+    if (_state == state) {
+      return;
+    }
+    
+    [self willChangeValueForKey:NSStringFromSelector(@selector(state))];
+    _state = state;
+    [self didChangeValueForKey:NSStringFromSelector(@selector(state))];
+  }
 }
 
 

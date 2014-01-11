@@ -11,11 +11,16 @@ Getting Started
 
 ### Items
 
+#### Observing
+
+* providing an `ISCacheBlock` which will receive callbacks during the lifetime of the image fetch
+* `ISCacheItem` [key-value observing](https://developer.apple.com/library/mac/documentation/cocoa/conceptual/KeyValueObserving/KeyValueObserving.html)
+* implemetning the `ISCacheObserver` protocol and observing `ISCache` by means of `addObserver:` and `removeObserver:`
 
 
 ### Images
 
-ISCache provides a handy UIImage extension for loading images. Both fetches and image loading are performed using GCD:
+ISCache provides a handy UIImage extension for loading images. Image loading are performed using GCD to prevent large images from blocking the UI making it ideal for use in UITableViewCells and UICollectionViewCells:
 
     #import <ISCache/ISCache.h>
 
@@ -23,8 +28,8 @@ ISCache provides a handy UIImage extension for loading images. Both fetches and 
 
     [self.imageView setImageWithURL:@"http://www.example.com/image.png"
                    placeholderImage:placeholder
-                         userInfo:nil
-                            block:NULL];
+                           userInfo:nil
+                              block:NULL];
 
 Cached images can be resized by providing the resizing settings in the userInfo:
 
@@ -35,11 +40,85 @@ Cached images can be resized by providing the resizing settings in the userInfo:
                                     @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
                             block:NULL];
 
-Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous outstanding fetch. Fetches can also be explicitly cancelled as follows:
+#### Cancellation
+
+Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous outstanding fetch. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates.
+
+Fetches can also be explicitly cancelled as follows:
 
     [self.imageView cancelSetImageWithURL];
 
-TODO Write something about how UIImage cache items can be managed.
+If you wish to prevent the automatic cancellation of fetches, you can set the following property:
+
+    self.imageView.automaticallyCancelsFetches = NO;
+
+### Management and observing
+
+Once an image has been set you are free to manage the item fetch lifecycle using the mechanisms introduced in the previous sections as `setImageWithURL:placeholderImage:userInfo:block` offers the same mechanisms as the more general `fetchItem:context:userInfo:block:`.
+
+For example, a simple image fetch which displays progress and hides and shows the UIProgressView and UIImageView might use the block mechanism as follows:
+
+    // Show the progress view and hide the image view.
+    self.imageView.hidden = YES;
+    self.progressView.hidden = NO;
+
+    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
+                   placeholderImage:placeholder
+                           userInfo:nil
+                              block:^(ISCacheItem *item) {
+
+                                  if (item.state == ISCacheItemStateInProgress) {
+
+                                    // Update the progress view.
+                                    self.progressView.visible = item.progress;
+
+                                  } else if (item.state == ISCacheItemStateFound) {
+
+                                    // Hide the progress view and show the image view.
+                                    self.imageView.hidden = NO;
+                                    self.progressView.hidden = YES;
+
+                                  }
+
+                                  // Indicate that we still wish to receive updates.
+                                  return ISCacheBlockStateContinue;
+
+                                }];
+
+*A more thorough implementation would also use the `ISCacheItemStateNotFound` state and the `lastError` property to check for unexpected errors or cancellations.*
+
+It is also possible to combine this with direct calls to `ISCache` to determine the cache item state before showing the progress view (to avoid it flickering when the image is already present in the cache):
+
+    // Shared arguments.
+    NSString *url = @"http://www.example.com/image.png";
+    NSDictionary *userDict = nil;
+
+    // Fetch the current cache item to allow us to inspect its state.
+    // It is important to use the same userDict as we will use when setting the image
+    // as this is used to identify the item in the cache.
+    ISCache *defaultCache = [ISCache defaultCache];
+    ISCacheItem *item = [defaultCache item:url
+                                   context:ISCacheImageContext
+                                  userDict:userDict]
+
+    // Only show the progress view if the item doesn't exist.
+    if (item.state == ISCacheItemStateNotFound) {
+      self.imageView.hidden = NO;
+      self.progressView.hidden = YES;
+    } else {
+      self.imageView.hidden = YES;
+      self.progressView.hidden = NO;
+    }
+
+    [self.imageView setImageWithURL:@"http://www.example.com/image.png"
+                   placeholderImage:placeholder
+                           userInfo:nil
+                              block:^(ISCacheItem *item) {
+
+                                  ...
+
+                                }];
+
 
 Custom handlers
 ---------------

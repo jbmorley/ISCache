@@ -50,15 +50,17 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 
-- (NSArray *)items:(id<ISCacheFilter>)filter;
-- (ISCacheItem *)item:(NSString *)item
-              context:(NSString *)context
-             userInfo:(NSDictionary *)userInfo;
+- (ISCacheItem *)itemForIdentifier:(NSString *)identifier
+                           context:(NSString *)context
+                          userInfo:(NSDictionary *)userInfo;
+- (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
+                                context:(NSString *)context
+                               userInfo:(NSDictionary *)userInfo
+                                  block:(ISCacheBlock)completionBlock;
 
-- (ISCacheItem *)fetchItem:(NSString *)item
-                   context:(NSString *)context
-                  userInfo:(NSDictionary *)userInfo
-                     block:(ISCacheBlock)completionBlock;
+- (NSArray *)items:(id<ISCacheFilter>)filter;
+
+
 - (void)removeItems:(NSArray *)items;
 - (void)cancelItems:(NSArray *)items;
 

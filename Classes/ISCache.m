@@ -192,9 +192,9 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)item:(NSString *)item
-                         context:(NSString *)context
-                        userInfo:(NSDictionary *)userInfo;
+- (ISCacheItem *)itemForIdentifier:(NSString *)item
+                           context:(NSString *)context
+                          userInfo:(NSDictionary *)userInfo;
 {
   return [self cacheItem:item
                             context:context
@@ -202,10 +202,10 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)fetchItem:(NSString *)item
-                   context:(NSString *)context
-                  userInfo:(NSDictionary *)userInfo
-                     block:(ISCacheBlock)completionBlock
+- (ISCacheItem *)fetchItemForIdentifier:(NSString *)item
+                                context:(NSString *)context
+                               userInfo:(NSDictionary *)userInfo
+                                  block:(ISCacheBlock)completionBlock
 {
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");

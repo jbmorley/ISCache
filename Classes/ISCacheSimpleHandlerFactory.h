@@ -19,7 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheHandlerFactory.h"
 
-@interface ISSimpleCacheHandlerFactory : NSObject
+@interface ISCacheSimpleHandlerFactory : NSObject
 <ISCacheHandlerFactory>
 
 + (id)factoryWithClass:(Class)handlerClass;

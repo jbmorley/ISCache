@@ -24,7 +24,7 @@ typedef enum {
   ISScalingCacheHandlerScaleAspectFill,
 } ISScalingCacheHandlerScale;
 
-@interface ISScalingCacheHandlerFactory : NSObject
+@interface ISCacheScalingHandlerFactory : NSObject
 <ISCacheHandlerFactory>
 
 @end

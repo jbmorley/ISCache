@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#import "ISSimpleCacheHandlerFactory.h"
+#import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheExceptions.h"
 
-@interface ISSimpleCacheHandlerFactory ()
+@interface ISCacheSimpleHandlerFactory ()
 
 @property (nonatomic, strong) Class handlerClass;
 
 @end
 
-@implementation ISSimpleCacheHandlerFactory
+@implementation ISCacheSimpleHandlerFactory
 
 
 

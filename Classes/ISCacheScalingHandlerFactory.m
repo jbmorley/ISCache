@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#import "ISScalingCacheHandlerFactory.h"
+#import "ISCacheScalingHandlerFactory.h"
 #import "ISCacheHTTPHandler.h"
 
-@implementation ISScalingCacheHandlerFactory
+@implementation ISCacheScalingHandlerFactory
 
 - (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo
 {

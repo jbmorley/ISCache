@@ -26,7 +26,7 @@
 #import "ISCacheHTTPHandler.h"
 #import "UIImageView+Cache.h"
 #import "ISCacheHandlerFactory.h"
-#import "ISScalingCacheHandlerFactory.h"
+#import "ISCacheScalingHandlerFactory.h"
 #import "ISCacheExceptions.h"
 #import "ISCacheFilter.h"
 #import "ISCacheStateFilter.h"

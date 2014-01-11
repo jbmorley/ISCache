@@ -19,7 +19,7 @@
 #import "ISCache.h"
 #import "ISNotifier.h"
 #import "ISCacheBlockObserver.h"
-#import "ISSimpleCacheHandlerFactory.h"
+#import "ISCacheSimpleHandlerFactory.h"
 #import "NSString+MD5.h"
 #import "ISCacheStore.h"
 
@@ -115,12 +115,12 @@ static ISCache *sCache;
     // Create and register the default factories.
     
     // HTTP Handler
-    ISSimpleCacheHandlerFactory *httpFactory = [ISSimpleCacheHandlerFactory factoryWithClass:[ISCacheHTTPHandler class]];
+    ISCacheSimpleHandlerFactory *httpFactory = [ISCacheSimpleHandlerFactory factoryWithClass:[ISCacheHTTPHandler class]];
     [self registerFactory:httpFactory
                forContext:ISCacheURLContext];
     
     // Scaling HTTP Handler
-    ISScalingCacheHandlerFactory *scalingHttpfactory = [ISScalingCacheHandlerFactory new];
+    ISCacheScalingHandlerFactory *scalingHttpfactory = [ISCacheScalingHandlerFactory new];
     [self registerFactory:scalingHttpfactory
                forContext:ISCacheScaleURLContext];
 

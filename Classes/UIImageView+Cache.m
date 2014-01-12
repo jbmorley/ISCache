@@ -24,27 +24,22 @@
 @implementation UIImageView (Cache)
 
 static char *kCacheItemKey = "cacheItem";
-static char *kCleanupIdentifier = "cleanup";
+static char *kCleanup = "cleanup";
 static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 
 - (void)cancelSetImageWithIdentifier
 {
   if (self.automaticallyCancelsFetches) {
-  
-    ISCacheItem *cacheItem = objc_getAssociatedObject(self, kCacheItemKey);
     
     // Cancel any outstanding load and then clear the identifier.
-    if (cacheItem) {
+    if (self.cacheItem) {
       ISCache *defaultCache = [ISCache defaultCache];
       if (defaultCache.debug) {
-        NSLog(@"Cancel: %@", cacheItem.uid);
+        NSLog(@"cancelSetImageWithIdentifier (%@)", self.cacheItem.uid);
       }
-      [defaultCache cancelItems:@[cacheItem]];
-      objc_setAssociatedObject(self,
-                               kCacheItemKey,
-                               nil,
-                               OBJC_ASSOCIATION_RETAIN);
+      [defaultCache cancelItems:@[self.cacheItem]];
+      self.cacheItem = nil;
     }
   }
 }
@@ -56,50 +51,57 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                                userInfo:(NSDictionary *)userInfo
                                   block:(ISCacheBlock)block
 {
+  // Before proceeding, check to see if the requested item matches
+  // the one we are already loading.
+  ISCache *defaultCache = [ISCache defaultCache];
+  ISCacheItem *item = [defaultCache itemForIdentifier:identifier
+                                              context:context
+                                             userInfo:userInfo];
+  if ([self.cacheItem isEqual:item]) {
+    
+    // If the cache item does exist, then we re-set the placeholder
+    // image just incase the user has requested a different one and
+    // then return.
+    if (placeholderImage) {
+      self.image = placeholderImage;
+    }
+    
+    return item;
+  }
+  
+  // The requested cache item is different, so we proceed in
+  // fetching the new one...
+  
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is
   // replaced on subsequent calls to this function so will
   // magically cancel the previous fetch for us.
   UIImageView *__weak weakSelf = self;
-  
   ISCleanup *cleanup = [ISCleanup cleanupWithBlock:^(){
     UIImageView *strongSelf = weakSelf;
     if (strongSelf) {
       [strongSelf cancelSetImageWithIdentifier];
     }
   }];
-  objc_setAssociatedObject(self,
-                           kCleanupIdentifier,
-                           cleanup,
-                           OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  self.cleanup = cleanup;
   
-  // Fetch the thumbnail from the cache and display it when ready.
-  ISCache *defaultCache = [ISCache defaultCache];
-  
-  // Check the current state and clear the image if we don't
-  // already have a cached copy of the image.
-  ISCacheItem *item
-  = [defaultCache itemForIdentifier:identifier
-                      context:context
-                     userInfo:userInfo];
+  // We always set the placeholder image as image loading is
+  // performed asynchronously so may take some time to complete.
   if (placeholderImage) {
     self.image = placeholderImage;
   } else {
     self.image = nil;
   }
   
-  // Clear the cacheIdentifier to indicate that we've just
-  // set the image.
-  objc_setAssociatedObject(self,
-                           kCacheItemKey,
-                           item,
-                           OBJC_ASSOCIATION_RETAIN);
+  // Store the cache item.
+  self.cacheItem = item;
   
+  // Logging.
   if (defaultCache.debug) {
     NSLog(@"Start: %@", item.uid);
   }
   
-  // Kick-off the image download.
+  // Fetch the thumbnail from the cache and display it when ready.
   ISCacheItem *cacheItem =
   [defaultCache fetchItemForIdentifier:identifier
              context:context
@@ -232,6 +234,36 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   objc_setAssociatedObject(self,
                            kAutomaticallyCancelsFetches,
                            _automaticallyCancelsFetches,
+                           OBJC_ASSOCIATION_RETAIN);
+}
+
+
+- (ISCacheItem *)cacheItem
+{
+  return objc_getAssociatedObject(self, kCacheItemKey);
+}
+
+
+- (void)setCacheItem:(ISCacheItem *)cacheItem
+{
+  objc_setAssociatedObject(self,
+                           kCacheItemKey,
+                           cacheItem,
+                           OBJC_ASSOCIATION_RETAIN);
+}
+
+
+- (ISCleanup *)cleanup
+{
+  return objc_getAssociatedObject(self, kCleanup);
+}
+
+
+- (void)setCleanup:(ISCleanup *)cleanup
+{
+  objc_setAssociatedObject(self,
+                           kCleanup,
+                           cleanup,
                            OBJC_ASSOCIATION_RETAIN);
 }
 

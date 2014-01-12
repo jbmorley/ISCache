@@ -25,10 +25,11 @@
 
 @property (nonatomic) BOOL automaticallyCancelsFetches;
 
-- (ISCacheItem *)setImageWithURL:(NSString *)url
-                placeholderImage:(UIImage *)placeholderImage
-                        userInfo:(NSDictionary *)userInfo
-                           block:(ISCacheBlock)block;
-- (void)cancelSetImageWithURL;
+- (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
+                                context:(NSString *)context
+                       placeholderImage:(UIImage *)placeholderImage
+                               userInfo:(NSDictionary *)userInfo
+                                  block:(ISCacheBlock)block;
+- (void)cancelSetImageWithIdentifier;
 
 @end

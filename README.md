@@ -72,28 +72,29 @@ self.imageView.hidden = YES;
 self.progressView.hidden = NO;
 
 // Set the image.
-[self.imageView setImageWithURL:@"http://www.example.com/image.png"
-               placeholderImage:placeholder
-                       userInfo:nil
-                          block:^(ISCacheItem *item) {
-
-                              if (item.state == ISCacheItemStateInProgress) {
-
-                                // Update the progress view.
-                                self.progressView.visible = item.progress;
-
-                              } else if (item.state == ISCacheItemStateFound) {
-
-                                // Hide the progress view and show the image view.
-                                self.imageView.hidden = NO;
-                                self.progressView.hidden = YES;
-
-                              }
-
-                              // Indicate that we still wish to receive updates.
-                              return ISCacheBlockStateContinue;
-
-                            }];
+[self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
+                               context:ISCacheImageContext
+                      placeholderImage:placeholder
+                              userInfo:nil
+                                 block:^(ISCacheItem *item) {
+       
+                                     if (item.state == ISCacheItemStateInProgress) {
+       
+                                       // Update the progress view.
+                                       self.progressView.visible = item.progress;
+       
+                                     } else if (item.state == ISCacheItemStateFound) {
+       
+                                       // Hide the progress view and show the image view.
+                                       self.imageView.hidden = NO;
+                                       self.progressView.hidden = YES;
+       
+                                     }
+       
+                                     // Indicate that we still wish to receive updates.
+                                     return ISCacheBlockStateContinue;
+       
+                                   }];
 ```
 
 *A more thorough implementation would also use the `ISCacheItemStateNotFound` state and the `lastError` property to check for unexpected errors or cancellations.*

@@ -28,7 +28,7 @@ static char *kCleanupIdentifier = "cleanup";
 static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 
-- (void)cancelSetImageWithURL
+- (void)cancelSetImageWithIdentifier
 {
   if (self.automaticallyCancelsFetches) {
   
@@ -50,10 +50,11 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 }
 
 
-- (ISCacheItem *)setImageWithURL:(NSString *)url
-                placeholderImage:(UIImage *)placeholderImage
-                        userInfo:(NSDictionary *)userInfo
-                           block:(ISCacheBlock)block
+- (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
+                                context:(NSString *)context
+                       placeholderImage:(UIImage *)placeholderImage
+                               userInfo:(NSDictionary *)userInfo
+                                  block:(ISCacheBlock)block
 {
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is
@@ -64,7 +65,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   ISCleanup *cleanup = [ISCleanup cleanupWithBlock:^(){
     UIImageView *strongSelf = weakSelf;
     if (strongSelf) {
-      [strongSelf cancelSetImageWithURL];
+      [strongSelf cancelSetImageWithIdentifier];
     }
   }];
   objc_setAssociatedObject(self,
@@ -78,8 +79,8 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   // Check the current state and clear the image if we don't
   // already have a cached copy of the image.
   ISCacheItem *item
-  = [defaultCache itemForIdentifier:url
-                      context:ISCacheImageContext
+  = [defaultCache itemForIdentifier:identifier
+                      context:context
                      userInfo:userInfo];
   if (placeholderImage) {
     self.image = placeholderImage;
@@ -100,8 +101,8 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   
   // Kick-off the image download.
   ISCacheItem *cacheItem =
-  [defaultCache fetchItemForIdentifier:url
-             context:ISCacheImageContext
+  [defaultCache fetchItemForIdentifier:identifier
+             context:context
             userInfo:userInfo
                block:^(ISCacheItem *info) {
                  

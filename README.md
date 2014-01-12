@@ -17,6 +17,7 @@ Getting Started
 * `ISCacheItem` [key-value observing](https://developer.apple.com/library/mac/documentation/cocoa/conceptual/KeyValueObserving/KeyValueObserving.html)
 * implemetning the `ISCacheObserver` protocol and observing `ISCache` by means of `addObserver:` and `removeObserver:`
 
+#### Contexts
 
 ### Images
 

@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.version      = "0.0.1"
   s.summary      = "Pluggable Objective-C cache framework"
   s.homepage     = "https://github.com/jbmorley/ISCache"
-  s.license      = { :type => 'MIT', :file => 'LICENSE.md' }
+  s.license      = { :type => 'MIT', :file => 'LICENSE' }
   s.author       = { "Jason Barrie Morley" => "jason.morley@inseven.co.uk" }
   s.source       = { :git => "https://github.com/jbmorley/ISCache.git", :commit => "9e5284fb215fcbcd668dc0736306fde7214b20fc" }
 

@@ -31,9 +31,9 @@
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                       placeholderImage:(UIImage *)placeholderImage
                                userInfo:(NSDictionary *)userInfo
+                       placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheBlock)block;
-- (void)cancelSetImageWithIdentifier;
+- (void)cancelSetImage;
 
 @end

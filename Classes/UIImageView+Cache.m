@@ -32,7 +32,7 @@ static char *kCleanup = "cleanup";
 static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 
-- (void)cancelSetImageWithIdentifier
+- (void)cancelSetImage
 {
   if (self.automaticallyCancelsFetches) {
     
@@ -51,8 +51,8 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                       placeholderImage:(UIImage *)placeholderImage
                                userInfo:(NSDictionary *)userInfo
+                       placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheBlock)block
 {
   // Before proceeding, check to see if the requested item matches
@@ -84,7 +84,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   ISCleanup *cleanup = [ISCleanup cleanupWithBlock:^(){
     UIImageView *strongSelf = weakSelf;
     if (strongSelf) {
-      [strongSelf cancelSetImageWithIdentifier];
+      [strongSelf cancelSetImage];
     }
   }];
   self.cleanup = cleanup;

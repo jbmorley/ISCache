@@ -28,31 +28,33 @@ ISCache provides a handy UIImage extension for loading images. Image loading are
 
 UIImage *placeholder = [UIImage imageNamed:@"placeholder.png"];
 
-[self.imageView setImageWithURL:@"http://www.example.com/image.png"
-               placeholderImage:placeholder
-                       userInfo:nil
-                          block:NULL];
+[self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
+                               context:ISCacheImageContext
+                              userInfo:nil
+                      placeholderImage:placeholder
+                                 block:NULL];
 ```
 
 Cached images can be resized by providing the resizing settings in the userInfo:
 
 ```objc
-[self.imageView setImageWithURL:@"http://www.example.com/image.png"
-               placeholderImage:placeholder
-                       userInfo:@{@"width": @152.0,
-                                  @"height": @152.0,
-                                  @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
-                          block:NULL];
+[self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
+                               context:ISCacheImageContext
+                              userInfo:@{@"width": @152.0,
+                                         @"height": @152.0,
+                                         @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
+                      placeholderImage:placeholder
+                                 block:NULL];
 ```
 
 #### Cancellation
 
-Repeated calls to `setImageWithURL:placeholderImage:userInfo:completionBlock:` will cancel any previous fetches. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates. If the item fetch has already completed (and the item is in state `ISCacheItemStateFound`) the cancellation will have no effect and the item will remain in the cache.
+Repeated calls to `setImageWithIdentifier:context:userInfo:placeholderImage:completionBlock:` will cancel any previous fetches. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates. If the item fetch has already completed (and the item is in state `ISCacheItemStateFound`) the cancellation will have no effect and the item will remain in the cache.
 
 Fetches can also be explicitly cancelled as follows:
 
 ```objc
-[self.imageView cancelSetImageWithURL];
+[self.imageView cancelSetImage];
 ```
 
 If you wish to prevent the automatic cancellation of fetches, you can set the following property:
@@ -63,7 +65,7 @@ self.imageView.automaticallyCancelsFetches = NO;
 
 ### Management and observing
 
-Once an image has been set you are free to manage the item fetch lifecycle using the mechanisms introduced in the previous sections as `setImageWithURL:placeholderImage:userInfo:block` offers the same mechanisms as the more general `fetchItem:context:userInfo:block:`.
+Once an image has been set you are free to manage the item fetch lifecycle using the mechanisms introduced in the previous sections as `setImageWithIdentifier:context:userInfo:placeholderImage:block` offers the same mechanisms as the more general `fetchItem:context:userInfo:block:`.
 
 For example, a simple image fetch which displays progress and hides and shows the UIProgressView and UIImageView might use the block mechanism as follows:
 
@@ -75,8 +77,8 @@ self.progressView.hidden = NO;
 // Set the image.
 [self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
                                context:ISCacheImageContext
-                      placeholderImage:placeholder
                               userInfo:nil
+                      placeholderImage:placeholder
                                  block:^(ISCacheItem *item) {
        
                                      if (item.state == ISCacheItemStateInProgress) {
@@ -125,12 +127,13 @@ if (item.state == ISCacheItemStateNotFound) {
 }
 
 // Set the image.
-[self.imageView setImageWithURL:url
-               placeholderImage:placeholder
-                       userInfo:userInfo
-                          block:^(ISCacheItem *item) {
-                              ...
-                            }];
+[self.imageView setImageWithIdentifier:url
+                               context:ISCacheImageContext
+                              userInfo:userInfo
+                      placeholderImage:placeholder
+                                 block:^(ISCacheItem *item) {
+                                     ...
+                                   }];
 ```
 
 

@@ -24,8 +24,8 @@
 #import "ISNotifier.h"
 #import "ISCacheBlockObserver.h"
 #import "ISCacheSimpleHandlerFactory.h"
-#import "NSString+MD5.h"
 #import "ISCacheStore.h"
+#import "NSString+Hashes.h"
 
 @interface ISCache ()
 
@@ -96,7 +96,7 @@ static ISCache *sCache;
     self.documentsPath =
     [NSString pathWithComponents:@[self.documentsPath,
                                    @"Cache",
-                                   [self.path MD5]]];
+                                   [self.path md5]]];
     BOOL isDirectory = NO;
     if (![self.fileManager fileExistsAtPath:self.documentsPath
                                 isDirectory:&isDirectory]) {
@@ -489,12 +489,12 @@ static ISCache *sCache;
              @"%@:%@(%@)",
              context,
              item,
-             userInfo] MD5];
+             userInfo] md5];
   } else {
     return [[NSString stringWithFormat:
              @"%@:%@",
              context,
-             item] MD5];
+             item] md5];
   }
 }
 

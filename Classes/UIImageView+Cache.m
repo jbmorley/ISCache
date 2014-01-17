@@ -30,6 +30,7 @@
 static char *kCacheItemKey = "cacheItem";
 static char *kCleanup = "cleanup";
 static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
+static char *kCallbackCount = "callbackCount";
 
 
 - (void)cancelSetImage
@@ -44,6 +45,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
       }
       [defaultCache cancelItems:@[self.cacheItem]];
       self.cacheItem = nil;
+      self.callbackCount++;
     }
   }
 }
@@ -105,76 +107,78 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
     NSLog(@"Start: %@", item.uid);
   }
   
+  
+  // Increment the callback count to indicate that we are requesting a new image.
+  self.callbackCount++;
+  
+  NSInteger callback = self.callbackCount;
+  
   // Fetch the thumbnail from the cache and display it when ready.
-  ISCacheItem *cacheItem =
   [defaultCache fetchItemForIdentifier:identifier
              context:context
             userInfo:userInfo
                block:^(ISCacheItem *info) {
                  
-                 // Check that the image view is valid and the
-                 // identifier we are receiving updates for matches
-                 // the one requested. This might occur if image
-                 // view is reused for a different image (e.g.
-                 // UITableViewCell, UICollectionViewCell, etc.
-                 // The special case here is that the first
-                 // response from the cache is received before
-                 // we have returned from the item:context:... call
-                 // so we need to guard against this by checking
-                 // for a nil cacheIdentifier.
+                 // If the image has been deleted or the callback is now
+                 // obsolete, simply return, expressing our lack of interest.
                  UIImageView *strongSelf = weakSelf;
-                 if ([strongSelf identifierValid:info.uid]) {
-                   
-                   // Handle any errors.
-                   // We do this inside the guarded block to ensure
-                   // that, if the client has cancelled an
-                   // operation or requested a new one, they never
-                   // receive any further notification through
-                   // the initial block.
-                   if (item.lastError) {
-                     if (defaultCache.debug) {
-                       NSLog(@"block:%@ -> cancelled with error %@",
-                             info.uid,
-                             item.lastError);
-                     }
-                     
-                     return ISCacheBlockStateDone;
+                 if (strongSelf == nil ||
+                     strongSelf.callbackCount != callback) {
+                   if (defaultCache.debug) {
+                     NSLog(@"block:%@ -> lost interest",
+                           info.uid);
                    }
-                   
-                   // Load the image.
-                   if (info.state == ISCacheItemStateFound) {
-                     if (defaultCache.debug) {
-                       NSLog(@"block:%@ -> item complete",
-                             info.uid);
-                     }
-                     [self loadImageAsynchronously:info];
-                     return ISCacheBlockStateDone;
-                   } else {
-                     return ISCacheBlockStateContinue;
-                   }
+                   return ISCacheBlockStateDone;
                  }
                  
-                 if (defaultCache.debug) {
-                   NSLog(@"block:%@ -> lost interest",
-                         info.uid);
+                 // Log any errors that are encountered.
+                 // Erros are fatal so it is OK to give up here.
+                 if (item.lastError) {
+                   if (defaultCache.debug) {
+                     NSLog(@"block:%@ -> cancelled with error %@",
+                           info.uid,
+                           item.lastError);
+                   }
+                   return ISCacheBlockStateDone;
                  }
                  
-                 return ISCacheBlockStateDone;
+                 // Load the image if we are complete.
+                 if (info.state == ISCacheItemStateFound) {
+                   if (defaultCache.debug) {
+                     NSLog(@"block:%@ -> item complete",
+                           info.uid);
+                   }
+                   [self loadImageAsynchronously:info
+                                        callback:callback];
+                   return ISCacheBlockStateDone;
+                 }
+                 
+                 // Request further updates.
+                 return ISCacheBlockStateContinue;
                }];
-  objc_setAssociatedObject(self,
-                           kCacheItemKey,
-                           cacheItem,
-                           OBJC_ASSOCIATION_RETAIN);
   
   // Add the block as an obsever.
+  // We wrap this with a block to ensure the same cancellation semtantics
+  // as the image itself. We want to guarantee that no updates are received
+  // once the image has been changed or cancelled.
   if (block) {
     ISCacheBlockObserver *observer
-    = [ISCacheBlockObserver observerWithItem:cacheItem
-                                       block:block];
+    = [ISCacheBlockObserver observerWithItem:item
+                                       block:^ISCacheBlockState(ISCacheItem *info) {
+                                         
+                                         UIImageView *strongSelf = weakSelf;
+                                         if (strongSelf == nil ||
+                                             strongSelf.callbackCount != callback) {
+                                           return ISCacheBlockStateDone;
+                                         }
+                                         
+                                         return block(info);
+                                         
+                                       }];
     [defaultCache addObserver:observer];
   }
   
-  return cacheItem;
+  return item;
 }
 
 
@@ -189,6 +193,7 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
 
 
 - (void)loadImageAsynchronously:(ISCacheItem *)info
+                       callback:(NSInteger)callback
 {
   UIImageView *__weak weakSelf = self;
   
@@ -196,29 +201,29 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
   dispatch_async(queue, ^{
     
-    // First check that the image view itself is valid.
-    // This gives us an oportunity to cancel loading the image
-    // early if the image view has been destroyed.
-    UIImageView *strongSelf = weakSelf;
-    if (![strongSelf identifierValid:info.uid]) {
-      return;
-    }
-    
-    // Do work here.
-    UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
+    // Do the work here.
+    UIImage *image =
+    [UIImage imageWithData:[NSData dataWithContentsOfFile:info.path]];
     
     // Actually set the image and notify the completion block.
     dispatch_async(dispatch_get_main_queue(), ^{
+      
       // Check that it is still valid to set the image.
       UIImageView *strongSelf = weakSelf;
-      if ([strongSelf identifierValid:info.uid]) {
-        strongSelf.image = image;
+      if (strongSelf == nil ||
+          strongSelf.callbackCount != callback) {
+        return;
       }
+
+      strongSelf.image = image;
     });
     
   });
   
 }
+
+
+#pragma mark - Getters and setters
 
 
 - (BOOL)automaticallyCancelsFetches
@@ -271,5 +276,23 @@ static char *kAutomaticallyCancelsFetches = "automaticallyCancelsFetches";
                            OBJC_ASSOCIATION_RETAIN);
 }
 
+
+- (void)setCallbackCount:(NSInteger)callbackCount
+{
+  objc_setAssociatedObject(self,
+                           kCallbackCount,
+                           [NSNumber numberWithInteger:callbackCount], OBJC_ASSOCIATION_RETAIN);
+}
+
+
+- (NSInteger)callbackCount
+{
+  NSNumber *callbackCount = objc_getAssociatedObject(self,
+                                                     kCallbackCount);
+  if (callbackCount) {
+    return [callbackCount integerValue];
+  }
+  return 0;
+}
 
 @end

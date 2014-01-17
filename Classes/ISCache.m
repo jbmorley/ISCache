@@ -54,7 +54,7 @@ static ISCache *sCache;
       = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                              NSUserDomainMask,
                                              YES) objectAtIndex:0];
-      NSString *path = [documentsPath stringByAppendingPathComponent:@"uk.co.inseven.cache.State.plist"];
+      NSString *path = [documentsPath stringByAppendingPathComponent:@"uk.co.inseven.cache.store.plist"];
       
       sCache = [[self alloc] initWithPath:path];
     }

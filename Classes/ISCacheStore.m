@@ -53,8 +53,9 @@ static NSInteger kCacheStoreVersion = 1;
     self.items = [NSMutableDictionary dictionaryWithCapacity:3];
     
     // Load the cache items if present.
+    BOOL isDirectory;
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
-                                             isDirectory:NO]) {
+                                             isDirectory:&isDirectory]) {
       NSDictionary *store = [NSDictionary dictionaryWithContentsOfFile:self.path];
       
       // Check the version.
@@ -128,18 +129,31 @@ static NSInteger kCacheStoreVersion = 1;
       }
     }
     
+    // Create the dictionaries.
+    NSMutableArray *dictionaries =
+    [NSMutableArray arrayWithCapacity:items.count];
+    for (ISCacheItem *item in items) {
+      [dictionaries addObject:[item dictionary]];
+    }
+    
     // Create a dictionary to write to file.
     NSMutableDictionary *store =
     [NSMutableDictionary dictionaryWithObjectsAndKeys:
      @(kCacheStoreVersion),
      kKeyCacheStoreVersion,
-     items,
+     dictionaries,
      kKeyCacheStoreItems,
      nil];
     
     // Write the dictionary to disk.
-    [store writeToFile:self.path
-            atomically:YES];
+    BOOL success = [store writeToFile:self.path
+                           atomically:YES];
+    if (!success) {
+      @throw [NSException exceptionWithName:ISCacheExceptionUnableToSaveStore
+                                     reason:ISCacheExceptionUnableToSaveStoreReason
+                                   userInfo:nil];
+
+    }
 
   });
 }

@@ -27,6 +27,7 @@
 
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) NSMutableDictionary *items;
+@property (nonatomic) BOOL dirty;
 
 @end
 
@@ -111,25 +112,36 @@ static NSInteger kCacheStoreVersion = 1;
 
 - (void)save
 {
-  // Create an array of items.
-  NSMutableArray *items = [NSMutableArray arrayWithCapacity:self.items.count];
-  for (NSString *identifier in self.items) {
-    NSDictionary *item = [self.items[identifier] dictionary];
-    [items addObject:item];
+  @synchronized (self) {
+    self.dirty = YES;
   }
   
-  // Create a dictionary to write to file.
-  NSMutableDictionary *store =
-  [NSMutableDictionary dictionaryWithObjectsAndKeys:
-   @(kCacheStoreVersion),
-   kKeyCacheStoreVersion,
-   items,
-   kKeyCacheStoreItems,
-   nil];
-  
-  // Write the dictionary to disk.
-  [store writeToFile:self.path
-          atomically:YES];
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+    
+    NSArray *items = nil;
+    @synchronized (self) {
+      if (self.dirty) {
+        items = [[self.items allValues] copy];
+        self.dirty = NO;
+      } else {
+        return;
+      }
+    }
+    
+    // Create a dictionary to write to file.
+    NSMutableDictionary *store =
+    [NSMutableDictionary dictionaryWithObjectsAndKeys:
+     @(kCacheStoreVersion),
+     kKeyCacheStoreVersion,
+     items,
+     kKeyCacheStoreItems,
+     nil];
+    
+    // Write the dictionary to disk.
+    [store writeToFile:self.path
+            atomically:YES];
+
+  });
 }
 
 

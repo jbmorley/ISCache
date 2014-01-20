@@ -40,9 +40,9 @@ static char *kCallbackCount = "callbackCount";
     // Cancel any outstanding load and then clear the identifier.
     if (self.cacheItem) {
       ISCache *defaultCache = [ISCache defaultCache];
-      if (defaultCache.debug) {
-        NSLog(@"cancelSetImageWithIdentifier (%@)", self.cacheItem.uid);
-      }
+      [defaultCache log:
+       @"cancelSetImageWithIdentifier (%@)",
+       self.cacheItem.uid];
       [defaultCache cancelItems:@[self.cacheItem]];
       self.cacheItem = nil;
       self.callbackCount++;
@@ -60,11 +60,10 @@ static char *kCallbackCount = "callbackCount";
   ISCache *defaultCache = [ISCache defaultCache];
   
   // Logging.
-  if (defaultCache.debug) {
-    NSLog(@"setImageWithIdentifier:%@ context:%@",
-          identifier,
-          context);
-  }
+  [defaultCache log:
+   @"setImageWithIdentifier:%@ context:%@",
+   identifier,
+   context];
   
   // Before proceeding, check to see if the requested item matches
   // the one we are already loading.
@@ -97,9 +96,7 @@ static char *kCallbackCount = "callbackCount";
   self.cacheItem = item;
   
   // Logging.
-  if (defaultCache.debug) {
-    NSLog(@"Start: %@", item.uid);
-  }
+  [defaultCache log:@"Start: %@", item.uid];
   
   
   // Increment the callback count to indicate that we are requesting a new image.
@@ -118,30 +115,29 @@ static char *kCallbackCount = "callbackCount";
                  UIImageView *strongSelf = weakSelf;
                  if (strongSelf == nil ||
                      strongSelf.callbackCount != callback) {
-                   if (defaultCache.debug) {
-                     NSLog(@"block:%@ -> lost interest",
-                           info.uid);
-                   }
+                   
+                   [defaultCache log:
+                    @"block:%@ -> lost interest",
+                    info.uid];
+                   
                    return ISCacheBlockStateDone;
                  }
                  
                  // Log any errors that are encountered.
                  // Erros are fatal so it is OK to give up here.
                  if (item.lastError) {
-                   if (defaultCache.debug) {
-                     NSLog(@"block:%@ -> cancelled with error %@",
-                           info.uid,
-                           item.lastError);
-                   }
+                   [defaultCache log:
+                    @"block:%@ -> cancelled with error %@",
+                    info.uid,
+                    item.lastError];
                    return ISCacheBlockStateDone;
                  }
                  
                  // Load the image if we are complete.
                  if (info.state == ISCacheItemStateFound) {
-                   if (defaultCache.debug) {
-                     NSLog(@"block:%@ -> item complete",
-                           info.uid);
-                   }
+                   [defaultCache log:
+                    @"block:%@ -> item complete",
+                    info.uid];
                    [self loadImageAsynchronously:info
                                         callback:callback];
                    return ISCacheBlockStateDone;

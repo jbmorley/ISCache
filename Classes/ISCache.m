@@ -127,6 +127,17 @@ static ISCache *sCache;
 }
 
 
+-(void)log:(NSString *)message, ...
+{
+  if (self.debug) {
+    va_list args;
+    va_start(args, message);
+    NSLogv(message, args);
+    va_end(args);
+  }
+}
+
+
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context
 {
@@ -214,9 +225,7 @@ static ISCache *sCache;
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
-  if (self.debug) {
-    NSLog(@"fetch: %@, context: %@", identifier, context);
-  }
+  [self log:@"fetch: %@, context: %@", identifier, context];
   
   // Get the relevant details for the item.
   ISCacheItem *cacheItem = [self cacheItem:identifier
@@ -374,10 +383,9 @@ static ISCache *sCache;
   if (item.state == ISCacheItemStateInProgress ||
       item.state == ISCacheItemStateNotFound) {
     
-    if (self.debug) {
-      NSLog(@"cancelItem:%@ -> item not found or in progress",
-            item.uid);
-    }
+    [self log:
+     @"cancelItem:%@ -> item not found or in progress",
+     item.uid];
     
     id<ISCacheHandler> handler = [self.active objectForKey:item.uid];
     [handler cancel];
@@ -400,10 +408,9 @@ static ISCache *sCache;
     
   } else {
     
-    if (self.debug) {
-      NSLog(@"cancelItem:%@ -> item already complete, ignoring",
-            item.uid);
-    }
+    [self log:
+     @"cancelItem:%@ -> item already complete, ignoring",
+     item.uid];
     
   }
   
@@ -465,20 +472,19 @@ static ISCache *sCache;
 - (void)addObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
-  if (self.debug) {
-    NSLog(@"+ observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count);
-  }
+  [self log:@"+ observers (%lu), active: %lu",
+   (unsigned long)self.notifier.count,
+   (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count];
 }
 
 
 - (void)removeObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
-  if (self.debug) {
-    NSLog(@"- observers (%lu)", (unsigned long)self.notifier.count);
-    NSLog(@"active: %lu", (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count);
-  }
+  [self log:
+   @"- observers (%lu), active: %lu",
+   (unsigned long)self.notifier.count,
+   (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count];
 }
 
 
@@ -519,6 +525,7 @@ static ISCache *sCache;
 {
   // Update the item info with the appropriate state.
   item.state = ISCacheItemStateFound;
+  item.lastError = nil;
   [item closeFile];
   
   // Delete the handler for the file.
@@ -539,9 +546,7 @@ static ISCache *sCache;
 - (void)item:(ISCacheItem *)item
 didFailWithError:(NSError *)error
 {
-  if (self.debug) {
-    NSLog(@"item:didFailWithError: %@", error);
-  }
+  [self log:@"item:didFailWithError: %@", error];
   
   // Since we are offering explicit support for KVO, we should
   // must ensure these modifications to the ISCacheItem are

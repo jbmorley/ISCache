@@ -51,6 +51,8 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 + (id)defaultCache;
 - (id)initWithPath:(NSString *)path;
 
+-(void)log:(NSString *)message, ...;
+
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 

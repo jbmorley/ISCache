@@ -263,6 +263,9 @@ static ISCache *sCache;
     
   } else {
     
+    // Reset the cache item to clear any previous errors.
+    [self resetItem:cacheItem];
+    
     // Set the state to in progress.
     cacheItem.state = ISCacheItemStateInProgress;
     cacheItem.created = [NSDate new];
@@ -382,14 +385,6 @@ static ISCache *sCache;
     // Delete the file.
     [item deleteFile];
     
-    // Remove the item.
-    // Update the cache.
-    // We do not remove the item during the life-time of the cache
-    // to ensure it remains a unique instance of that cache item
-    // during the running of the application.
-    // We do, however, save the store to cache its new state.
-    [self.store save];
-    
     // Set an appropriate error for the item.
     item.lastError = [NSError errorWithDomain:ISCacheErrorDomain
                                          code:ISCacheErrorCancelled
@@ -397,6 +392,9 @@ static ISCache *sCache;
     
     // Update the item state.
     item.state = ISCacheItemStateNotFound;
+    
+    // Save the cache state.
+    [self.store save];
 
     [self notifyObservers:item];
     

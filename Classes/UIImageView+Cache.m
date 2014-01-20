@@ -216,6 +216,8 @@ static char *kCallbackCount = "callbackCount";
       }
 
       strongSelf.image = image;
+      
+      [self.cleanup cancel];
     });
     
   });

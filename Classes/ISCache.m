@@ -206,7 +206,7 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)fetchItemForIdentifier:(NSString *)item
+- (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                                userInfo:(NSDictionary *)userInfo
                                   block:(ISCacheBlock)completionBlock
@@ -214,8 +214,12 @@ static ISCache *sCache;
   // Assert that we have a valid completion block.
   NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
   
+  if (self.debug) {
+    NSLog(@"fetch: %@, context: %@", identifier, context);
+  }
+  
   // Get the relevant details for the item.
-  ISCacheItem *cacheItem = [self cacheItem:item
+  ISCacheItem *cacheItem = [self cacheItem:identifier
                                    context:context
                                   userInfo:userInfo];
   

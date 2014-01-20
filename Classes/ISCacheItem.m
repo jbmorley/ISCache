@@ -141,29 +141,33 @@ static NSString *kKeyModified = @"modified";
 
 - (NSDictionary *)dictionary
 {
-  NSMutableDictionary *dictionary =
-  [NSMutableDictionary dictionaryWithObjectsAndKeys:
-   @(kCacheItemVersion), kKeyVersion,
-   self.identifier, kKeyIdentifier,
-   self.context, kKeyContext,
-   self.userInfo, kKeyUserInfo,
-   self.path, kKeyPath,
-   self.uid, kKeyUid,
-   @(self.state), kKeyState,
-   @(self.totalBytesRead), kKeyTotalBytesRead,
-   @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
-   nil];
-  
-  if (self.created) {
-    [dictionary setObject:self.created
-                   forKey:kKeyCreated];
+  @synchronized(self) {
+    
+    NSMutableDictionary *dictionary =
+    [NSMutableDictionary dictionaryWithObjectsAndKeys:
+     @(kCacheItemVersion), kKeyVersion,
+     self.identifier, kKeyIdentifier,
+     self.context, kKeyContext,
+     self.userInfo, kKeyUserInfo,
+     self.path, kKeyPath,
+     self.uid, kKeyUid,
+     @(self.state), kKeyState,
+     @(self.totalBytesRead), kKeyTotalBytesRead,
+     @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
+     nil];
+    
+    if (self.created != nil) {
+      [dictionary setObject:self.created
+                     forKey:kKeyCreated];
+    }
+    if (self.modified != nil) {
+      [dictionary setObject:self.modified
+                     forKey:kKeyModified];
+    }
+    
+    return dictionary;
+    
   }
-  if (self.modified) {
-    [dictionary setObject:self.modified
-                   forKey:kKeyModified];
-  }
-  
-  return dictionary;
 }
 
 

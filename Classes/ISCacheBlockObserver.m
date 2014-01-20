@@ -70,7 +70,7 @@ itemDidUpdate:(ISCacheItem *)item
     if (item.state == ISCacheItemStateFound ||
         result == ISCacheBlockStateDone ||
         item.lastError) {
-      [cache removeObserver:self];
+      [cache removeCacheObserver:self];
     }
   }
 }

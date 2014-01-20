@@ -268,7 +268,7 @@ static ISCache *sCache;
     = [ISCacheBlockObserver observerWithItem:cacheItem
                                        block:completionBlock];
     [self.observers addObject:observer];
-    [self addObserver:observer];
+    [self addCacheObserver:observer];
     
   } else {
     
@@ -295,7 +295,7 @@ static ISCache *sCache;
       = [ISCacheBlockObserver observerWithItem:cacheItem
                                          block:completionBlock];
       [self.observers addObject:observer];
-      [self addObserver:observer];
+      [self addCacheObserver:observer];
     }
     
     // Notify the delegates and begin the fetch operation
@@ -469,7 +469,7 @@ static ISCache *sCache;
 #pragma mark - Observer methods
 
 
-- (void)addObserver:(id<ISCacheObserver>)observer
+- (void)addCacheObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier addObserver:observer];
   [self log:@"+ observers (%lu), active: %lu",
@@ -478,7 +478,7 @@ static ISCache *sCache;
 }
 
 
-- (void)removeObserver:(id<ISCacheObserver>)observer
+- (void)removeCacheObserver:(id<ISCacheObserver>)observer
 {
   [self.notifier removeObserver:observer];
   [self log:

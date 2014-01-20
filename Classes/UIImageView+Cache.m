@@ -165,7 +165,7 @@ static char *kCallbackCount = "callbackCount";
                                          return block(info);
                                          
                                        }];
-    [defaultCache addObserver:observer];
+    [defaultCache addCacheObserver:observer];
   }
   
   return item;

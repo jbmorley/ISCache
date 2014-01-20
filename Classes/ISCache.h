@@ -70,8 +70,8 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (void)removeItems:(NSArray *)items;
 - (void)cancelItems:(NSArray *)items;
 
-- (void)addObserver:(id<ISCacheObserver>)observer;
-- (void)removeObserver:(id<ISCacheObserver>)observer;
+- (void)addCacheObserver:(id<ISCacheObserver>)observer;
+- (void)removeCacheObserver:(id<ISCacheObserver>)observer;
 
 
 @end

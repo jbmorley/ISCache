@@ -57,26 +57,20 @@ static char *kCallbackCount = "callbackCount";
                        placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheBlock)block
 {
+  ISCache *defaultCache = [ISCache defaultCache];
+  
+  // Logging.
+  if (defaultCache.debug) {
+    NSLog(@"setImageWithIdentifier:%@ context:%@",
+          identifier,
+          context);
+  }
+  
   // Before proceeding, check to see if the requested item matches
   // the one we are already loading.
-  ISCache *defaultCache = [ISCache defaultCache];
   ISCacheItem *item = [defaultCache itemForIdentifier:identifier
                                               context:context
                                              userInfo:userInfo];
-  if ([self.cacheItem isEqual:item]) {
-    
-    // If the cache item does exist, then we re-set the placeholder
-    // image just incase the user has requested a different one and
-    // then return.
-    if (placeholderImage) {
-      self.image = placeholderImage;
-    }
-    
-    return item;
-  }
-  
-  // The requested cache item is different, so we proceed in
-  // fetching the new one...
   
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is

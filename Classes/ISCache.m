@@ -157,7 +157,7 @@ static ISCache *sCache;
 // Creates a new item if one doesn't exist.
 - (ISCacheItem *)cacheItem:(NSString *)item
                    context:(NSString *)context
-                  userInfo:(NSDictionary *)userInfo
+               preferences:(NSDictionary *)preferences
 {
   // Check to see if we've already created a cache item info for the
   // requested item. If we have, then return that. If not, then look
@@ -166,7 +166,7 @@ static ISCache *sCache;
   
   NSString *identifier = [self identifierForItem:item
                                          context:context
-                                        userInfo:userInfo];
+                                     preferences:preferences];
   
   // Return a pre-existing cache item.
   ISCacheItem *cacheItem = [self.store item:identifier];
@@ -177,10 +177,10 @@ static ISCache *sCache;
   // Create a new info for the file.
   NSString *path = [self.documentsPath stringByAppendingPathComponent:identifier];
   cacheItem = [ISCacheItem itemWithIdentifier:item
-                                context:context
-                               userInfo:userInfo
-                                    uid:identifier
-                                   path:path];
+                                      context:context
+                                  preferences:preferences
+                                          uid:identifier
+                                         path:path];
   [self resetItem:cacheItem];
   
   [self.store addItem:cacheItem];
@@ -209,17 +209,17 @@ static ISCache *sCache;
 
 - (ISCacheItem *)itemForIdentifier:(NSString *)item
                            context:(NSString *)context
-                          userInfo:(NSDictionary *)userInfo;
+                       preferences:(NSDictionary *)preferences;
 {
   return [self cacheItem:item
-                            context:context
-                           userInfo:userInfo];
+                 context:context
+             preferences:preferences];
 }
 
 
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo
+                            preferences:(NSDictionary *)preferences
                                   block:(ISCacheBlock)completionBlock
 {
   // Assert that we have a valid completion block.
@@ -230,7 +230,7 @@ static ISCache *sCache;
   // Get the relevant details for the item.
   ISCacheItem *cacheItem = [self cacheItem:identifier
                                    context:context
-                                  userInfo:userInfo];
+                               preferences:preferences];
   
   // Before proceeding we check to see if, in the case of an
   // item which is present in the cache, the file has been removed
@@ -285,7 +285,7 @@ static ISCache *sCache;
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
-                                                userInfo:userInfo];
+                                             preferences:preferences];
 
     [self.active setObject:handler
                     forKey:cacheItem.uid];
@@ -446,7 +446,7 @@ static ISCache *sCache;
 // Check there is a handler factory registered for the context.
 // Throws an exception if no handler factory can be found.
 - (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo
+                            preferences:(NSDictionary *)preferences
 {
   id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
   if (factory == nil) {
@@ -454,7 +454,7 @@ static ISCache *sCache;
                                    reason:ISCacheExceptionMissingFactoryForContextReason
                                  userInfo:nil];
   }
-  return [factory createHandler:userInfo];
+  return [factory createHandler:preferences];
 }
 
 
@@ -490,14 +490,14 @@ static ISCache *sCache;
 
 - (NSString *)identifierForItem:(NSString *)item
                         context:(NSString *)context
-                       userInfo:(NSDictionary *)userInfo
+                    preferences:(NSDictionary *)preferences
 {
-  if (userInfo) {
+  if (preferences) {
     return [[NSString stringWithFormat:
              @"%@:%@(%@)",
              context,
              item,
-             userInfo] md5];
+             preferences] md5];
   } else {
     return [[NSString stringWithFormat:
              @"%@:%@",

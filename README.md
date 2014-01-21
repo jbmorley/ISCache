@@ -30,17 +30,17 @@ UIImage *placeholder = [UIImage imageNamed:@"placeholder.png"];
 
 [self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
                                context:ISCacheImageContext
-                              userInfo:nil
+                           preferences:nil
                       placeholderImage:placeholder
                                  block:NULL];
 ```
 
-Cached images can be resized by providing the resizing settings in the userInfo:
+Cached images can be resized by providing the resizing settings in the `preferences`:
 
 ```objc
 [self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
                                context:ISCacheImageContext
-                              userInfo:@{@"width": @152.0,
+                           preferences:@{@"width": @152.0,
                                          @"height": @152.0,
                                          @"scale": @(ISScalingCacheHandlerScaleAspectFill)}
                       placeholderImage:placeholder
@@ -49,7 +49,7 @@ Cached images can be resized by providing the resizing settings in the userInfo:
 
 #### Cancellation
 
-Repeated calls to `setImageWithIdentifier:context:userInfo:placeholderImage:completionBlock:` will cancel any previous fetches. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates. If the item fetch has already completed (and the item is in state `ISCacheItemStateFound`) the cancellation will have no effect and the item will remain in the cache.
+Repeated calls to `setImageWithIdentifier:context:preferences:placeholderImage:completionBlock:` will cancel any previous fetches. Fetches will also be cancelled when the UIImageView is dealloced. Once a fetch is cancelled the `ISCacheBlock` will receive no further updates. If the item fetch has already completed (and the item is in state `ISCacheItemStateFound`) the cancellation will have no effect and the item will remain in the cache.
 
 Fetches can also be explicitly cancelled as follows:
 
@@ -65,7 +65,7 @@ self.imageView.automaticallyCancelsFetches = NO;
 
 ### Management and observing
 
-Once an image has been set you are free to manage the item fetch lifecycle using the mechanisms introduced in the previous sections as `setImageWithIdentifier:context:userInfo:placeholderImage:block` offers the same mechanisms as the more general `fetchItem:context:userInfo:block:`.
+Once an image has been set you are free to manage the item fetch lifecycle using the mechanisms introduced in the previous sections as `setImageWithIdentifier:context:preferences:placeholderImage:block` offers the same mechanisms as the more general `fetchItem:context:preferences:block:`.
 
 For example, a simple image fetch which displays progress and hides and shows the UIProgressView and UIImageView might use the block mechanism as follows:
 
@@ -77,7 +77,7 @@ self.progressView.hidden = NO;
 // Set the image.
 [self.imageView setImageWithIdentifier:@"http://www.example.com/image.png"
                                context:ISCacheImageContext
-                              userInfo:nil
+                           preferences:nil
                       placeholderImage:placeholder
                                  block:^(ISCacheItem *item) {
        
@@ -129,7 +129,7 @@ if (item.state == ISCacheItemStateNotFound) {
 // Set the image.
 [self.imageView setImageWithIdentifier:url
                                context:ISCacheImageContext
-                              userInfo:userInfo
+                           preferences:preferences
                       placeholderImage:placeholder
                                  block:^(ISCacheItem *item) {
                                      ...

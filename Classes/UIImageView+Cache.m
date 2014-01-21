@@ -53,7 +53,7 @@ static char *kCallbackCount = "callbackCount";
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo
+                            preferences:(NSDictionary *)preferences
                        placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheBlock)block
 {
@@ -69,7 +69,7 @@ static char *kCallbackCount = "callbackCount";
   // the one we are already loading.
   ISCacheItem *item = [defaultCache itemForIdentifier:identifier
                                               context:context
-                                             userInfo:userInfo];
+                                          preferences:preferences];
   
   // Ensure there is a cleanup object to cancel any outstanding
   // image fetches. This will be called whenever the cleanup is
@@ -107,7 +107,7 @@ static char *kCallbackCount = "callbackCount";
   // Fetch the thumbnail from the cache and display it when ready.
   [defaultCache fetchItemForIdentifier:identifier
              context:context
-            userInfo:userInfo
+            preferences:preferences
                block:^(ISCacheItem *info) {
                  
                  // If the image has been deleted or the callback is now

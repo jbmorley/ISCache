@@ -43,7 +43,7 @@ static int kCacheItemVersion = 1;
 
 static NSString *kKeyIdentifier = @"identifier";
 static NSString *kKeyContext = @"context";
-static NSString *kKeyUserInfo = @"userInfo";
+static NSString *kKeyPreferences = @"preferences";
 static NSString *kKeyPath = @"path";
 static NSString *kKeyUid = @"uid";
 static NSString *kKeyVersion = @"version";
@@ -56,13 +56,13 @@ static NSString *kKeyModified = @"modified";
 
 + (id)itemWithIdentifier:(NSString *)identifier
                  context:(NSString *)context
-                userInfo:(NSDictionary *)userInfo
+             preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
                     path:(NSString *)path
 {
   return [[self alloc] initWithIdentifier:identifier
                                   context:context
-                                 userInfo:userInfo
+                              preferences:preferences
                                       uid:uid
                                      path:path];
 }
@@ -70,7 +70,7 @@ static NSString *kKeyModified = @"modified";
 
 - (id)initWithIdentifier:(NSString *)identifier
                  context:(NSString *)context
-                userInfo:(NSDictionary *)userInfo
+             preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
                     path:(NSString *)path
 {
@@ -78,7 +78,7 @@ static NSString *kKeyModified = @"modified";
   if (self) {
     _identifier = identifier;
     _context = context;
-    _userInfo = userInfo;
+    _preferences = preferences;
     _uid = uid;
     _path = path;
   }
@@ -126,7 +126,7 @@ static NSString *kKeyModified = @"modified";
     
     _identifier = dictionary[kKeyIdentifier];
     _context = dictionary[kKeyContext];
-    _userInfo = dictionary[kKeyUserInfo];
+    _preferences = dictionary[kKeyPreferences];
     _uid = dictionary[kKeyUid];
     _path = dictionary[kKeyPath];
     self.state = [dictionary[kKeyState] intValue];
@@ -148,7 +148,7 @@ static NSString *kKeyModified = @"modified";
      @(kCacheItemVersion), kKeyVersion,
      self.identifier, kKeyIdentifier,
      self.context, kKeyContext,
-     self.userInfo, kKeyUserInfo,
+     self.preferences, kKeyPreferences,
      self.path, kKeyPath,
      self.uid, kKeyUid,
      @(self.state), kKeyState,

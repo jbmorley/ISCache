@@ -42,7 +42,7 @@
       CGSize targetSize = CGSizeMake([userInfo[@"width"] floatValue],
                                      [userInfo[@"height"] floatValue]);
       
-      ISScalingCacheHandlerScale scale = [userInfo[@"scale"] integerValue];
+      ISScalingCacheHandlerScale scale = (ISScalingCacheHandlerScale)[userInfo[@"scale"] integerValue];
       
       // Calculate the appropriate dimensions.
       CGSize newSize = targetSize;

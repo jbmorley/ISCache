@@ -56,6 +56,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong) NSError *lastError;
 
 @property (readonly) CGFloat progress;
+@property (readonly) NSTimeInterval timeRemainingEstimate;
 
 + (id)itemWithIdentifier:(NSString *)identifier
                  context:(NSString *)context

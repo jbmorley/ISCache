@@ -293,4 +293,44 @@ static NSString *kKeyModified = @"modified";
 }
 
 
+- (NSTimeInterval)timeRemainingEstimate
+{
+  @synchronized(self) {
+    CGFloat totalBytesExpectedToRead = self.totalBytesExpectedToRead;
+    CGFloat totalBytesRead = self.totalBytesRead;
+
+    if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown || totalBytesExpectedToRead == 0) {
+      
+      return 0;
+      
+    } else if (totalBytesExpectedToRead ==
+               totalBytesRead) {
+      
+      return 0;
+      
+    } else {
+      
+      NSTimeInterval interval = [self.modified timeIntervalSinceNow] * -1;
+      
+      CGFloat remaining = (CGFloat)(totalBytesExpectedToRead - totalBytesRead) / (CGFloat)totalBytesExpectedToRead;
+      
+      return interval * remaining;
+      
+    }
+
+  }
+}
+
+
++ (NSSet *)keyPathsForValuesAffectingTimeRemainingEstimate
+{
+  return [NSSet setWithObjects:
+          @"totalBytesExpectedToRead",
+          @"totalBytesRead",
+          @"modified",
+          @"state",
+          nil];
+}
+
+
 @end

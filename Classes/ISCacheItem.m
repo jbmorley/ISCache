@@ -272,12 +272,14 @@ static NSString *kKeyModified = @"modified";
 
 - (CGFloat)progress
 {
-  CGFloat totalBytesExpectedToRead = self.totalBytesExpectedToRead;
-  CGFloat totalBytesRead = self.totalBytesRead;
-  if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown) {
-    return 0.0f;
-  } else {
-    return totalBytesRead / totalBytesExpectedToRead;
+  @synchronized(self) {
+    CGFloat totalBytesExpectedToRead = self.totalBytesExpectedToRead;
+    CGFloat totalBytesRead = self.totalBytesRead;
+    if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown) {
+      return 0.0f;
+    } else {
+      return totalBytesRead / totalBytesExpectedToRead;
+    }
   }
 }
 

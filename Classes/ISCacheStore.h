@@ -24,10 +24,14 @@
 #import "ISCacheItem.h"
 #import "ISCacheFilter.h"
 
+@class ISCache;
+
 @interface ISCacheStore : NSObject
 
-+ (id)storeWithPath:(NSString *)path;
-- (id)initWithPath:(NSString *)path;
++ (id)storeWithPath:(NSString *)path
+              cache:(ISCache *)cache;
+- (id)initWithPath:(NSString *)path
+             cache:(ISCache *)cache;
 - (void)save;
 
 - (ISCacheItem *)item:(NSString *)identifier;

@@ -22,6 +22,7 @@
 
 #import "ISCacheItem.h"
 #import "ISCacheExceptions.h"
+#import "ISCache.h"
 
 typedef enum {
   ISCacheItemInfoFileStateClosed,
@@ -32,6 +33,7 @@ typedef enum {
 
 @property (strong) NSFileHandle *fileHandle;
 @property ISCacheItemInfoFileState fileState;
+@property (strong) ISCache *cache;
 
 @end
 
@@ -59,12 +61,14 @@ static NSString *kKeyModified = @"modified";
              preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
                     path:(NSString *)path
+                   cache:(ISCache *)cache
 {
   return [[self alloc] initWithIdentifier:identifier
                                   context:context
                               preferences:preferences
                                       uid:uid
-                                     path:path];
+                                     path:path
+                                    cache:cache];
 }
 
 
@@ -73,6 +77,7 @@ static NSString *kKeyModified = @"modified";
              preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
                     path:(NSString *)path
+                   cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
@@ -81,6 +86,7 @@ static NSString *kKeyModified = @"modified";
     _preferences = preferences;
     _uid = uid;
     _path = path;
+    _cache = cache;
   }
   return self;
 }
@@ -92,8 +98,10 @@ static NSString *kKeyModified = @"modified";
 
 
 + (id)itemInfoWithDictionary:(NSDictionary *)dictionary
+                       cache:(ISCache *)cache
 {
-  return [[self alloc] initWithDictionary:dictionary];
+  return [[self alloc] initWithDictionary:dictionary
+                                    cache:cache];
 }
 
 
@@ -113,6 +121,7 @@ static NSString *kKeyModified = @"modified";
 
 
 - (id)initWithDictionary:(NSDictionary *)dictionary
+                   cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
@@ -134,6 +143,7 @@ static NSString *kKeyModified = @"modified";
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
     self.created = dictionary[kKeyCreated];
     self.modified = dictionary[kKeyModified];
+    self.cache = cache;
   }
   return self;
 }
@@ -319,6 +329,21 @@ static NSString *kKeyModified = @"modified";
     }
 
   }
+}
+
+
+- (void)fetch
+{
+  [self.cache fetchItemForIdentifier:self.identifier
+                             context:self.context
+                         preferences:self.preferences
+                               block:NULL];
+}
+
+
+- (void)cancel
+{
+  [self.cache cancelItems:@[self]];
 }
 
 

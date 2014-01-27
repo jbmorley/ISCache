@@ -39,6 +39,8 @@ static const int ISCacheItemStateAll = 7;
 
 static const int ISCacheItemTotalBytesUnknown = -1;
 
+@class ISCache;
+
 @interface ISCacheItem : NSObject
 
 @property (strong, readonly) NSString *identifier;
@@ -62,20 +64,26 @@ static const int ISCacheItemTotalBytesUnknown = -1;
                  context:(NSString *)context
              preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
-                    path:(NSString *)path;
+                    path:(NSString *)path
+                   cache:(ISCache *)cache;
 - (id)initWithIdentifier:(NSString *)identifier
                  context:(NSString *)context
              preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
-                    path:(NSString *)path;
+                    path:(NSString *)path
+                   cache:(ISCache *)cache;
 
-+ (id)itemInfoWithDictionary:(NSDictionary *)dictionary;
-- (id)initWithDictionary:(NSDictionary *)dictionary;
++ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
+                       cache:(ISCache *)cache;
+- (id)initWithDictionary:(NSDictionary *)dictionary
+                   cache:(ISCache *)cache;
 - (NSDictionary *)dictionary;
 
 - (void)openFile;
 - (void)closeFile;
 - (void)deleteFile;
 - (void)writeDataToFile:(NSData *)data;
+- (void)fetch;
+- (void)cancel;
 
 @end

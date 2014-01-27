@@ -188,7 +188,7 @@ static char *kCallbackCount = "callbackCount";
   UIImageView *__weak weakSelf = self;
   
   dispatch_queue_t queue =
-  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
+  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
   dispatch_async(queue, ^{
     
     // Do the work here.

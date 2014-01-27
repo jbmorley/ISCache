@@ -76,7 +76,8 @@ static ISCache *sCache;
     self.fileManager = [NSFileManager defaultManager];
     
     // Load the store.
-    self.store = [ISCacheStore storeWithPath:self.path];
+    self.store = [ISCacheStore storeWithPath:self.path
+                                       cache:self];
     
     // Clean up any partially downloaded files.
     NSArray *incompleteItems = [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
@@ -180,7 +181,8 @@ static ISCache *sCache;
                                       context:context
                                   preferences:preferences
                                           uid:identifier
-                                         path:path];
+                                         path:path
+                                        cache:self];
   [self resetItem:cacheItem];
   
   [self.store addItem:cacheItem];
@@ -225,9 +227,6 @@ static ISCache *sCache;
                             preferences:(NSDictionary *)preferences
                                   block:(ISCacheBlock)completionBlock
 {
-  // Assert that we have a valid completion block.
-  NSAssert(completionBlock != NULL, @"Completion block must be non-NULL.");
-  
   [self log:@"fetch: %@, context: %@", identifier, context];
   
   // Get the relevant details for the item.
@@ -262,16 +261,20 @@ static ISCache *sCache;
     [self.store save];
     
     // If the item exists, call back with the result.
-    completionBlock(cacheItem);
+    if (completionBlock) {
+      completionBlock(cacheItem);
+    }
     
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, attach a block observer.
-    ISCacheBlockObserver *observer
-    = [ISCacheBlockObserver observerWithItem:cacheItem
-                                       block:completionBlock];
-    [self.observers addObject:observer];
-    [self addCacheObserver:observer];
+    if (completionBlock) {
+      ISCacheBlockObserver *observer
+      = [ISCacheBlockObserver observerWithItem:cacheItem
+                                         block:completionBlock];
+      [self.observers addObject:observer];
+      [self addCacheObserver:observer];
+    }
     
   } else {
     

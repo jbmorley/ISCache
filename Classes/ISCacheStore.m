@@ -22,11 +22,13 @@
 
 #import "ISCacheStore.h"
 #import "ISCacheExceptions.h"
+#import "ISCache.h"
 
 @interface ISCacheStore ()
 
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) NSMutableDictionary *items;
+@property (nonatomic, strong) ISCache *cache;
 @property (nonatomic) BOOL dirty;
 
 @end
@@ -40,16 +42,20 @@ static NSInteger kCacheStoreVersion = 1;
 
 
 + (id)storeWithPath:(NSString *)path
+              cache:(ISCache *)cache
 {
-  return [[self alloc] initWithPath:path];
+  return [[self alloc] initWithPath:path
+                              cache:cache];
 }
 
 
 - (id)initWithPath:(NSString *)path
+             cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
     self.path = path;
+    self.cache = cache;
     self.items = [NSMutableDictionary dictionaryWithCapacity:3];
     
     // Load the cache items if present.
@@ -69,7 +75,8 @@ static NSInteger kCacheStoreVersion = 1;
       
       // Load the items.
       for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
-        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:dictionary];
+        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:dictionary
+                             cache:self.cache];
         [self.items setObject:item
                        forKey:item.uid];
       }

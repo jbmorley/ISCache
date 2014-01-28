@@ -23,10 +23,14 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheHandlerFactory.h"
 
+extern const NSString *ISCacheImageWidth;
+extern const NSString *ISCacheImageHeight;
+extern const NSString *ISCacheImageScaleMode;
+
 typedef enum {
-  ISScalingCacheHandlerScaleAspectFit,
-  ISScalingCacheHandlerScaleAspectFill,
-} ISScalingCacheHandlerScale;
+  ISCacheImageScaleAspectFit,
+  ISCacheImageScaleAspectFill,
+} ISCacheImageScale;
 
 @interface ISCacheScalingHandlerFactory : NSObject
 <ISCacheHandlerFactory>

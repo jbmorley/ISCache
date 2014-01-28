@@ -23,6 +23,10 @@
 #import "ISCacheScalingHandlerFactory.h"
 #import "ISCacheHTTPHandler.h"
 
+const NSString *ISCacheImageWidth = @"width";
+const NSString *ISCacheImageHeight = @"height";
+const NSString *ISCacheImageScaleMode = @"scale";
+
 @implementation ISCacheScalingHandlerFactory
 
 - (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo
@@ -39,15 +43,15 @@
       CGSize currentSize = image.size;
       
       // Get the target dimensions.
-      CGSize targetSize = CGSizeMake([userInfo[@"width"] floatValue],
-                                     [userInfo[@"height"] floatValue]);
+      CGSize targetSize = CGSizeMake([userInfo[ISCacheImageWidth] floatValue],
+                                     [userInfo[ISCacheImageHeight] floatValue]);
       
-      ISScalingCacheHandlerScale scale = (ISScalingCacheHandlerScale)[userInfo[@"scale"] integerValue];
+      ISCacheImageScale scale = (ISCacheImageScale)[userInfo[ISCacheImageScaleMode] integerValue];
       
       // Calculate the appropriate dimensions.
       CGSize newSize = targetSize;
       CGSize canvasSize = targetSize;
-      if (scale == ISScalingCacheHandlerScaleAspectFit) {
+      if (scale == ISCacheImageScaleAspectFit) {
         
         CGFloat targetRatio = targetSize.width/targetSize.height;
         CGFloat currentRatio = currentSize.width/currentSize.height;
@@ -62,7 +66,7 @@
         // will always be equal.
         canvasSize = newSize;
         
-      } else if (scale == ISScalingCacheHandlerScaleAspectFill) {
+      } else if (scale == ISCacheImageScaleAspectFill) {
         
         CGFloat targetRatio = targetSize.width/targetSize.height;
         CGFloat currentRatio = currentSize.width/currentSize.height;

@@ -336,8 +336,7 @@ static NSString *kKeyModified = @"modified";
 {
   [self.cache fetchItemForIdentifier:self.identifier
                              context:self.context
-                         preferences:self.preferences
-                               block:NULL];
+                         preferences:self.preferences];
 }
 
 

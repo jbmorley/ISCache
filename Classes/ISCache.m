@@ -225,7 +225,6 @@ static ISCache *sCache;
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences
-                                  block:(ISCacheBlock)completionBlock
 {
   [self log:@"fetch: %@, context: %@", identifier, context];
   
@@ -260,21 +259,7 @@ static ISCache *sCache;
     // Save the cache store to reflect the updated cache item.
     [self.store save];
     
-    // If the item exists, call back with the result.
-    if (completionBlock) {
-      completionBlock(cacheItem);
-    }
-    
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
-    
-    // If the item is in progress, attach a block observer.
-    if (completionBlock) {
-      ISCacheBlockObserver *observer
-      = [ISCacheBlockObserver observerWithItem:cacheItem
-                                         block:completionBlock];
-      [self.observers addObject:observer];
-      [self addCacheObserver:observer];
-    }
     
   } else {
     
@@ -295,14 +280,6 @@ static ISCache *sCache;
 
     [self.active setObject:handler
                     forKey:cacheItem.uid];
-    
-    if (completionBlock) {
-      ISCacheBlockObserver *observer
-      = [ISCacheBlockObserver observerWithItem:cacheItem
-                                         block:completionBlock];
-      [self.observers addObject:observer];
-      [self addCacheObserver:observer];
-    }
     
     // Notify the delegates and begin the fetch operation
     // asynchronously. This ensures that any calling code can

@@ -63,11 +63,6 @@
 {
   ISCache *defaultCache = [ISCache defaultCache];
   
-  // Cancel the previous fetch.
-  // TODO Compare the images and only cancel if they're
-  // different.
-  [self cancelSetImage];
-  
   // Logging.
   [defaultCache log:
    @"setImageWithIdentifier:%@ context:%@",
@@ -79,6 +74,15 @@
   ISCacheItem *item = [defaultCache itemForIdentifier:identifier
                                               context:context
                                           preferences:preferences];
+  
+  // Don't bother to do anything if we're already fetching
+  // the requested item.
+  if ([self.cacheItem isEqual:item]) {
+    return self.cacheItem;
+  }
+  
+  // Cancel the previous fetch.
+  [self cancelSetImage];
   
   // We always set the placeholder image as image loading is
   // performed asynchronously so may take some time to complete.

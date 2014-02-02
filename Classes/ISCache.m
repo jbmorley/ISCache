@@ -31,7 +31,6 @@
 @property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
-@property (nonatomic, strong) NSMutableArray *observers;
 @property (nonatomic, strong) NSString *documentsPath;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISCacheStore *store;
@@ -71,7 +70,6 @@ static ISCache *sCache;
     self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
-    self.observers = [NSMutableArray arrayWithCapacity:3];
     self.fileManager = [NSFileManager defaultManager];
     
     // Load the store.

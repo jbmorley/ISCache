@@ -54,7 +54,6 @@
 
 - (void)cancelSetImage
 {
-  NSLog(@"cancelSetImage");
   self.block = NULL;
   [self stopObservingCacheItem];
   if (self.automaticallyCancelsFetches) {

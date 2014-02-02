@@ -61,6 +61,7 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences;
+- (ISCacheItem *)itemForUid:(NSString *)uid;
 
 - (NSArray *)items:(id<ISCacheFilter>)filter;
 

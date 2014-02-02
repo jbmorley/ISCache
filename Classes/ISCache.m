@@ -221,6 +221,12 @@ static ISCache *sCache;
 }
 
 
+- (ISCacheItem *)itemForUid:(NSString *)uid
+{
+  return [self.store item:uid];
+}
+
+
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences

@@ -22,7 +22,6 @@
 
 #import <Foundation/Foundation.h>
 #import "ISCacheHandler.h"
-#import "ISCacheBlock.h"
 
 typedef NSError *(^ISCachePostProcessBlock)(ISCacheItem *info);
 

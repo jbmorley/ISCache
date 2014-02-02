@@ -30,6 +30,9 @@
 
 @property (nonatomic, strong) ISCacheItem *cacheItem;
 @property (nonatomic) NSInteger callbackCount;
+@property (nonatomic, copy) ISCacheCompletionBlock block;
+@property (nonatomic) BOOL initialized;
+@property (nonatomic) NSInteger fetchCount;
 
 @end
 
@@ -37,9 +40,22 @@
 @implementation ISCacheImageView
 
 
+@synthesize retries = _retries;
+
+
+- (void)initialize
+{
+  if (_initialized) {
+    _retries = 3;
+  }
+  _initialized = YES;
+}
+
+
 - (void)cancelSetImage
 {
   NSLog(@"cancelSetImage");
+  self.block = NULL;
   [self stopObservingCacheItem];
   if (self.automaticallyCancelsFetches) {
     [self.cacheItem cancel];
@@ -59,7 +75,7 @@
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences
                        placeholderImage:(UIImage *)placeholderImage
-                                  block:(ISCacheBlock)block
+                                  block:(ISCacheCompletionBlock)block
 {
   ISCache *defaultCache = [ISCache defaultCache];
   
@@ -92,20 +108,17 @@
     self.image = nil;
   }
   
-  // Increment the callback count.
+  // Initialize the state.
   self.callbackCount++;
+  self.fetchCount = 0;
   
   // Store the cache item and observe it.
+  self.block = block;
   self.cacheItem = item;
   [self startObservingCacheItem];
   
-  // Logging.
-  [defaultCache log:@"Start: %@", item.uid];
-  
-  // Fetch the item if neccessary.
-  if (self.cacheItem.state == ISCacheItemStateNotFound) {
-    [self.cacheItem fetch];
-  }
+  // We do not explicitly fetch the item here; this is done
+  // as a result of the initial property value observeration.
   
   return item;
 }
@@ -135,6 +148,10 @@
       }
 
       strongSelf.image = image;
+      
+      if (self.block) {
+        self.block(nil);
+      }
       
       // TODO Is this really necessary?
       [self stopObservingCacheItem];
@@ -173,8 +190,35 @@
   if ([keyPath isEqualToString:NSStringFromSelector(@selector(state))]) {
     if (self.cacheItem.state == ISCacheItemStateFound) {
       [self loadImageAsynchronously:self.callbackCount];
+    } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
+      if (self.retries == -1 ||
+          self.fetchCount < self.retries + 1) {
+        [self.cacheItem fetch];
+      } else {
+        if (self.block) {
+          ISCache *defaultCache = [ISCache defaultCache];
+          [defaultCache log:
+           @"Start: %@",
+           self.cacheItem.uid];
+          self.block(self.cacheItem.lastError);
+        }
+      }
     }
   }
+}
+
+
+- (NSInteger)retries
+{
+  [self initialize];
+  return _retries;
+}
+
+
+- (void)setRetries:(NSInteger)retries
+{
+  [self initialize];
+  _retries = retries;
 }
 
 

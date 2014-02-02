@@ -23,17 +23,19 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "ISCacheItem.h"
-#import "ISCacheBlock.h"
+
+typedef void (^ISCacheCompletionBlock)(NSError *error);
 
 @interface ISCacheImageView : UIImageView
 
 @property (nonatomic) BOOL automaticallyCancelsFetches;
+@property (nonatomic) NSInteger retries;
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences
                        placeholderImage:(UIImage *)placeholderImage
-                                  block:(ISCacheBlock)block;
+                                  block:(ISCacheCompletionBlock)block;
 - (void)cancelSetImage;
 
 @end

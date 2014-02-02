@@ -22,7 +22,6 @@
 
 #import "ISCache.h"
 #import "ISNotifier.h"
-#import "ISCacheBlockObserver.h"
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"

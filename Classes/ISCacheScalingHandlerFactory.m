@@ -85,8 +85,6 @@ const NSString *ISCacheImageScaleMode = @"scale";
         
       }
       
-      NSLog(@"canvasSize: %@", NSStringFromCGSize(canvasSize));
-      
       // Resize the image.
       CGFloat screenScale = [[UIScreen mainScreen] scale];
       UIGraphicsBeginImageContextWithOptions(canvasSize,
@@ -95,8 +93,6 @@ const NSString *ISCacheImageScaleMode = @"scale";
       [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
       UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
       UIGraphicsEndImageContext();
-      
-      NSLog(@"imageSize: %@", NSStringFromCGSize(newImage.size));
       
       // Save the image.
       [UIImagePNGRepresentation(newImage) writeToFile:info.path

@@ -33,7 +33,7 @@ typedef enum {
 
 @property (strong) NSFileHandle *fileHandle;
 @property ISCacheItemInfoFileState fileState;
-@property (strong) ISCache *cache;
+@property (weak) ISCache *cache;
 
 @end
 

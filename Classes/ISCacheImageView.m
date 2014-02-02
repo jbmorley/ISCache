@@ -90,12 +90,6 @@
                                               context:context
                                           preferences:preferences];
   
-  // Don't bother to do anything if we're already fetching
-  // the requested item.
-  if ([self.cacheItem isEqual:item]) {
-    return self.cacheItem;
-  }
-  
   // Cancel the previous fetch.
   [self cancelSetImage];
   

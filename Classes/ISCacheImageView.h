@@ -25,7 +25,7 @@
 #import "ISCacheItem.h"
 #import "ISCacheBlock.h"
 
-@interface UIImageView (Cache)
+@interface ISCacheImageView : UIImageView
 
 @property (nonatomic) BOOL automaticallyCancelsFetches;
 

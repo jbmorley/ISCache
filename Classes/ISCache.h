@@ -28,13 +28,14 @@
 #import "ISCacheBlockObserver.h"
 #import "ISCacheHandlerDelegate.h"
 #import "ISCacheHTTPHandler.h"
-#import "UIImageView+Cache.h"
+#import "ISCacheImageView.h"
 #import "ISCacheHandlerFactory.h"
 #import "ISCacheScalingHandlerFactory.h"
 #import "ISCacheExceptions.h"
 #import "ISCacheFilter.h"
 #import "ISCacheStateFilter.h"
 #import "ISCacheContextFilter.h"
+#import "ISCacheImageView.h"
 
 typedef enum {
   ISCacheErrorCancelled,

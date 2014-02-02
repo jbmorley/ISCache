@@ -57,9 +57,11 @@ const NSString *ISCacheImageScaleMode = @"scale";
         CGFloat currentRatio = currentSize.width/currentSize.height;
         
         if (currentRatio < targetRatio) {
-          newSize.height = targetSize.width / currentRatio;
-        } else {
+          // Current is narrower.
           newSize.width = targetSize.height * currentRatio;
+        } else {
+          // Current is wider.
+          newSize.height = targetSize.width / currentRatio;
         }
         
         // Since we're using a 'fit' the canvas size and new size
@@ -83,6 +85,8 @@ const NSString *ISCacheImageScaleMode = @"scale";
         
       }
       
+      NSLog(@"canvasSize: %@", NSStringFromCGSize(canvasSize));
+      
       // Resize the image.
       CGFloat screenScale = [[UIScreen mainScreen] scale];
       UIGraphicsBeginImageContextWithOptions(canvasSize,
@@ -91,6 +95,8 @@ const NSString *ISCacheImageScaleMode = @"scale";
       [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
       UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
       UIGraphicsEndImageContext();
+      
+      NSLog(@"imageSize: %@", NSStringFromCGSize(newImage.size));
       
       // Save the image.
       [UIImagePNGRepresentation(newImage) writeToFile:info.path

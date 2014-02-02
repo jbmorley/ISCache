@@ -135,6 +135,12 @@
     // Do the work here.
     UIImage *image =
     [UIImage imageWithData:[NSData dataWithContentsOfFile:cacheItem.path]];
+
+    // Account for platform scale.
+    CGFloat screenScale = [[UIScreen mainScreen] scale];
+    if (screenScale != 1.0) {
+      image = [UIImage imageWithCGImage:[image CGImage] scale:screenScale orientation:UIImageOrientationUp];
+    }
     
     // Actually set the image and notify the completion block.
     dispatch_async(dispatch_get_main_queue(), ^{

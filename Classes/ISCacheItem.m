@@ -158,13 +158,17 @@ static NSString *kKeyModified = @"modified";
      @(kCacheItemVersion), kKeyVersion,
      self.identifier, kKeyIdentifier,
      self.context, kKeyContext,
-     self.preferences, kKeyPreferences,
      self.path, kKeyPath,
      self.uid, kKeyUid,
      @(self.state), kKeyState,
      @(self.totalBytesRead), kKeyTotalBytesRead,
      @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
      nil];
+    
+    if (self.preferences != nil) {
+      [dictionary setObject:self.preferences
+                     forKey:kKeyPreferences];
+    }
     
     if (self.created != nil) {
       [dictionary setObject:self.created

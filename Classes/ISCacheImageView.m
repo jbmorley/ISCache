@@ -33,6 +33,7 @@
 @property (nonatomic, copy) ISCacheCompletionBlock block;
 @property (nonatomic) BOOL initialized;
 @property (nonatomic) NSInteger fetchCount;
+@property (nonatomic) BOOL observing;
 
 @end
 
@@ -151,9 +152,6 @@
       if (self.block) {
         self.block(nil);
       }
-      
-      // TODO Is this really necessary?
-      [self stopObservingCacheItem];
     });
     
   });
@@ -163,6 +161,7 @@
 
 - (void)startObservingCacheItem
 {
+  self.observing = YES;
   [self.cacheItem addObserver:self
                    forKeyPath:NSStringFromSelector(@selector(state))
                       options:NSKeyValueObservingOptionInitial
@@ -172,11 +171,13 @@
 
 - (void)stopObservingCacheItem
 {
-  @try {
-    [self.cacheItem removeObserver:self
-                        forKeyPath:NSStringFromSelector(@selector(state))];
+  if (self.observing) {
+    @try {
+      [self.cacheItem removeObserver:self
+                          forKeyPath:NSStringFromSelector(@selector(state))];
+    }
+    @catch (NSException *exception) {}
   }
-  @catch (NSException *exception) {}
 }
 
 

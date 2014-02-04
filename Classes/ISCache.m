@@ -25,18 +25,13 @@
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"
+#import "ISCache+Private.h"
 
-@interface ISCache ()
 
-@property (nonatomic, strong) ISNotifier *notifier;
-@property (nonatomic, strong) NSMutableDictionary *factories;
-@property (nonatomic, strong) NSMutableDictionary *active;
-@property (nonatomic, strong) NSString *documentsPath;
-@property (nonatomic, strong) NSString *path;
-@property (nonatomic, strong) ISCacheStore *store;
-@property (nonatomic, strong) NSFileManager *fileManager;
+NSString *const ISCacheURLContext = @"URL";
+NSString *const ISCacheImageContext = @"Image";
+NSString *const ISCacheErrorDomain = @"ISCacheErrorDomain";
 
-@end
 
 @implementation ISCache
 

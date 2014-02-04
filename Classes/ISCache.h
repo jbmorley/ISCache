@@ -39,9 +39,9 @@ typedef enum {
   ISCacheErrorCancelled,
 } ISCacheError;
 
-static NSString *ISCacheURLContext = @"URL";
-static NSString *ISCacheImageContext = @"Image";
-static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
+extern NSString *const ISCacheURLContext;
+extern NSString *const ISCacheImageContext;
+extern NSString *const ISCacheErrorDomain;
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
@@ -50,21 +50,15 @@ static NSString *ISCacheErrorDomain = @"ISCacheErrorDomain";
 + (id)defaultCache;
 - (id)initWithPath:(NSString *)path;
 
--(void)log:(NSString *)message, ...;
-
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
 
 - (ISCacheItem *)itemForIdentifier:(NSString *)identifier
                            context:(NSString *)context
                        preferences:(NSDictionary *)preferences;
-- (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
-                                context:(NSString *)context
-                            preferences:(NSDictionary *)preferences;
 - (ISCacheItem *)itemForUid:(NSString *)uid;
 
 - (NSArray *)items:(id<ISCacheFilter>)filter;
-
 
 - (void)removeItems:(NSArray *)items;
 - (void)cancelItems:(NSArray *)items;

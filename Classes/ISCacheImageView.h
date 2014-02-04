@@ -24,6 +24,8 @@
 #import <UIKit/UIKit.h>
 #import "ISCacheItem.h"
 
+const NSInteger ISCacheUnlimitedRetries = -1;
+
 typedef void (^ISCacheCompletionBlock)(NSError *error);
 
 @interface ISCacheImageView : UIImageView

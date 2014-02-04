@@ -25,7 +25,6 @@
 #import "ISCleanup.h"
 #import <objc/runtime.h>
 
-
 @interface ISCacheImageView ()
 
 @property (nonatomic, strong) ISCacheItem *cacheItem;
@@ -191,7 +190,7 @@
     if (self.cacheItem.state == ISCacheItemStateFound) {
       [self loadImageAsynchronously:self.callbackCount];
     } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
-      if (self.retries == -1 ||
+      if (self.retries == ISCacheUnlimitedRetries ||
           self.fetchCount < self.retries + 1) {
         [self.cacheItem fetch];
       } else {

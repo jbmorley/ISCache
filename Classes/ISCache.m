@@ -209,11 +209,13 @@ static ISCache *sCache;
 }
 
 
-- (ISCacheItem *)itemForIdentifier:(NSString *)item
+- (ISCacheItem *)itemForIdentifier:(NSString *)identifier
                            context:(NSString *)context
                        preferences:(NSDictionary *)preferences;
 {
-  return [self cacheItem:item
+  assert(identifier != nil);
+  assert(context != nil);
+  return [self cacheItem:identifier
                  context:context
              preferences:preferences];
 }

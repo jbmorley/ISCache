@@ -284,11 +284,11 @@ static NSString *kKeyModified = @"modified";
 }
 
 
-- (CGFloat)progress
+- (float)progress
 {
   @synchronized(self) {
-    CGFloat totalBytesExpectedToRead = self.totalBytesExpectedToRead;
-    CGFloat totalBytesRead = self.totalBytesRead;
+    float totalBytesExpectedToRead = self.totalBytesExpectedToRead;
+    float totalBytesRead = self.totalBytesRead;
     if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown) {
       return 0.0f;
     } else {
@@ -338,9 +338,11 @@ static NSString *kKeyModified = @"modified";
 
 - (void)fetch
 {
-  [self.cache fetchItemForIdentifier:self.identifier
-                             context:self.context
-                         preferences:self.preferences];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.cache fetchItemForIdentifier:self.identifier
+                               context:self.context
+                           preferences:self.preferences];
+  });
 }
 
 

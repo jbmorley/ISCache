@@ -353,6 +353,12 @@ static NSString *kKeyModified = @"modified";
 }
 
 
+- (void)remove
+{
+  [self.cache removeItems:@[self]];
+}
+
+
 + (NSSet *)keyPathsForValuesAffectingTimeRemainingEstimate
 {
   return [NSSet setWithObjects:

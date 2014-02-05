@@ -84,6 +84,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)deleteFile;
 - (void)writeDataToFile:(NSData *)data;
 - (void)fetch;
+- (void)remove;
 - (void)cancel;
 
 @end

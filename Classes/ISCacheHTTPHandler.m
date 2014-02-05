@@ -29,6 +29,10 @@
 @property (nonatomic, strong) ISCacheItem *info;
 @property (nonatomic, strong) NSURLConnection *connection;
 @property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
+@property (nonatomic) BOOL supportsResume;
+@property (nonatomic) NSInteger requestCount;
+@property (nonatomic) long long totalBytesExpectedToRead;
+@property (nonatomic) long long totalBytesRead;
 
 @end
 
@@ -44,6 +48,7 @@
   self = [super init];
   if (self) {
     self.completionBlock = completionBlock;
+    self.requestCount = 0;
   }
   return self;
 }
@@ -54,10 +59,28 @@
 {
   self.delegate = delegate;
   self.info = info;
+  [self start];
+}
+
+
+- (void)start
+{
+  self.requestCount++;
+  NSMutableURLRequest *request =
+  [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self.info.identifier]];
   
-  self.connection = [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:info.identifier]] delegate:self];
+  if (self.totalBytesExpectedToRead > 0 &&
+      self.supportsResume) {
+    [request setValue:[NSString stringWithFormat:
+                       @"bytes=%llu-",
+                       self.totalBytesRead]
+   forHTTPHeaderField:@"Range"];
+  }
+  
+  self.connection = [NSURLConnection connectionWithRequest:request
+                                                  delegate:self];
+  
   [self.connection start];
-  
 }
 
 
@@ -73,17 +96,46 @@
 - (void)connection:(NSURLConnection *)connection
 didReceiveResponse:(NSURLResponse *)response
 {
-  self.info.totalBytesExpectedToRead = response.expectedContentLength;
+  // If the request count is greater than 1 we are attempting a resume
+  // meaning that the content length is not guaranteed to be the full size.
+  if (self.requestCount == 1) {
+    self.info.totalBytesExpectedToRead = response.expectedContentLength;
+    self.totalBytesExpectedToRead = response.expectedContentLength;
+  }
+  
+  NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+  if ([response respondsToSelector:@selector(allHeaderFields)]) {
+    NSDictionary *dictionary = [httpResponse allHeaderFields];
+    [self.delegate log:@"Headers: %@", dictionary];
+    if ([dictionary[@"Accept-Ranges"] isEqualToString:@"bytes"]) {
+      self.supportsResume = YES;
+    }
+  }
+  
   [self.delegate itemDidUpdate:self.info];
+  [self.delegate log:
+   @"totalBytesExpectedToRead: %llu",
+   self.totalBytesExpectedToRead];
 }
 
 
 - (void)connection:(NSURLConnection *)connection
     didReceiveData:(NSData *)data
 {
+  [self.delegate log:@"connection:didReceiveData:"];
+  
   self.info.totalBytesRead += [data length];
+  self.totalBytesRead += [data length];
   [self.info writeDataToFile:data];
   [self.delegate itemDidUpdate:self.info];
+}
+
+
+- (void)connectionDidResumeDownloading:(NSURLConnection *)connection
+                     totalBytesWritten:(long long)totalBytesWritten
+                    expectedTotalBytes:(long long)expectedTotalBytes
+{
+  [self.delegate log:@"connectionDidResumeDownloading:"];
 }
 
 
@@ -120,8 +172,27 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
-  [self.delegate item:self.info
-     didFailWithError:error];
+  [self.delegate log:@"connection:didFailWithError:"];
+  if (self.supportsResume) {
+    
+    // TODO Is this the right check?
+    if (self.totalBytesRead ==
+        self.totalBytesExpectedToRead) {
+      [self.delegate itemDidFinish:self.info];
+    } else {
+
+      // TODO Only resume when it makes sense.
+      [self.delegate log:
+       @"resuming: read %llu, expected %llu",
+       self.totalBytesRead,
+       self.totalBytesExpectedToRead];
+      [self start];
+    }
+    
+  } else {
+    [self.delegate item:self.info
+       didFailWithError:error];
+  }
 }
 
 

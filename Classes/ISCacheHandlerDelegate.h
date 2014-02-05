@@ -29,5 +29,6 @@
 - (void)itemDidFinish:(ISCacheItem *)info;
 - (void)item:(ISCacheItem *)info
 didFailWithError:(NSError *)error;
+-(void)log:(NSString *)message, ...;
 
 @end

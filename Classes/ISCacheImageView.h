@@ -24,7 +24,7 @@
 #import <UIKit/UIKit.h>
 #import "ISCacheItem.h"
 
-const NSInteger ISCacheUnlimitedRetries = -1;
+extern const NSInteger ISCacheUnlimitedRetries;
 
 typedef void (^ISCacheCompletionBlock)(NSError *error);
 

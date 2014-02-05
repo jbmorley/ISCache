@@ -37,6 +37,8 @@
 
 @end
 
+const NSInteger ISCacheUnlimitedRetries = -1;
+
 
 @implementation ISCacheImageView
 

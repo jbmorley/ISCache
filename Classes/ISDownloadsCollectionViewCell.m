@@ -24,6 +24,7 @@
 - (void)awakeFromNib
 {
   [super awakeFromNib];
+  _state = -1; // Force initialization
   self.button.enabled = NO;
   UIImage *image = [UIImage imageNamed:@"Stop.imageasset"];
   [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
@@ -58,12 +59,12 @@
     _state = state;
     
     if (_state == ISCacheItemStateInProgress) {
-      UIImage *image = [UIImage imageNamed:@"Stop.imageasset"];
+      UIImage *image = [UIImage imageNamed:@"ISCache.bundle/stop.png"];
       [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                    forState:UIControlStateNormal];
       self.button.enabled = YES;
     } else if (_state == ISCacheItemStateNotFound) {
-      UIImage *image = [UIImage imageNamed:@"Refresh.imageasset"];
+      UIImage *image = [UIImage imageNamed:@"ISCache.bundle/refresh.png"];
       [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                    forState:UIControlStateNormal];
       self.button.enabled = YES;

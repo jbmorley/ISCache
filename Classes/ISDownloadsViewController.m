@@ -41,7 +41,8 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
 
 + (id)downloadsViewController
 {
-  return [[self alloc] initWithNibName:@"ISDownloadsViewController" bundle:nil];
+  NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
+  return [[self alloc] initWithNibName:@"ISDownloadsViewController" bundle:bundle];
 }
 
 
@@ -66,8 +67,9 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
   [self.adapter addAdapterObserver:self.connector];
   
   // Register the download cell.
+  NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
   UINib *nib = [UINib nibWithNibName:@"ISDownloadsCollectionViewCell"
-                              bundle:nil];
+                              bundle:bundle];
   [self.collectionView registerNib:nib
         forCellWithReuseIdentifier:kDownloadsViewCellReuseIdentifier];
   

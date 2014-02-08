@@ -112,7 +112,6 @@ didReceiveResponse:(NSURLResponse *)response
     }
   }
   
-  [self.delegate itemDidUpdate:self.info];
   [self.delegate log:
    @"totalBytesExpectedToRead: %llu",
    self.totalBytesExpectedToRead];
@@ -127,7 +126,6 @@ didReceiveResponse:(NSURLResponse *)response
   self.info.totalBytesRead += [data length];
   self.totalBytesRead += [data length];
   [self.info writeDataToFile:data];
-  [self.delegate itemDidUpdate:self.info];
 }
 
 

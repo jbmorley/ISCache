@@ -28,6 +28,8 @@
 @interface ISCacheItem ()
 
 @property (weak) ISCache *cache;
+@property (nonatomic, strong) NSMutableDictionary *fileDict;
+@property (nonatomic, strong) NSString *path;
 
 @end
 
@@ -37,17 +39,18 @@
 
 static int kCacheItemVersion = 1;
 
-static NSString *kKeyIdentifier = @"identifier";
-static NSString *kKeyContext = @"context";
-static NSString *kKeyPreferences = @"preferences";
-static NSString *kKeyPath = @"path";
-static NSString *kKeyUid = @"uid";
-static NSString *kKeyVersion = @"version";
-static NSString *kKeyState = @"state";
-static NSString *kKeyTotalBytesRead = @"totalBytesRead";
-static NSString *kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
-static NSString *kKeyCreated = @"created";
-static NSString *kKeyModified = @"modified";
+static NSString *const kKeyIdentifier = @"identifier";
+static NSString *const kKeyContext = @"context";
+static NSString *const kKeyPreferences = @"preferences";
+static NSString *const kKeyPath = @"path";
+static NSString *const kKeyFiles = @"files";
+static NSString *const kKeyUid = @"uid";
+static NSString *const kKeyVersion = @"version";
+static NSString *const kKeyState = @"state";
+static NSString *const kKeyTotalBytesRead = @"totalBytesRead";
+static NSString *const kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
+static NSString *const kKeyCreated = @"created";
+static NSString *const kKeyModified = @"modified";
 
 
 + (id)itemWithIdentifier:(NSString *)identifier
@@ -79,8 +82,9 @@ static NSString *kKeyModified = @"modified";
     _context = context;
     _preferences = preferences;
     _uid = uid;
-    _file = [[ISCacheFile alloc] initWithPath:path];
+    _path = path;
     _cache = cache;
+    _fileDict = [NSMutableDictionary dictionaryWithCapacity:3];
   }
   return self;
 }
@@ -101,6 +105,7 @@ static NSString *kKeyModified = @"modified";
 
 - (id)init
 {
+  assert(false);
   self = [super init];
   if (self) {
     self.created = nil;
@@ -120,6 +125,8 @@ static NSString *kKeyModified = @"modified";
   self = [super init];
   if (self) {
     
+    _fileDict = [NSMutableDictionary dictionaryWithCapacity:3];
+    
     // Check the cache item version.
     int version = [dictionary[kKeyVersion] intValue];
     if (version != kCacheItemVersion) {
@@ -131,7 +138,17 @@ static NSString *kKeyModified = @"modified";
     _context = dictionary[kKeyContext];
     _preferences = dictionary[kKeyPreferences];
     _uid = dictionary[kKeyUid];
-    _file = [[ISCacheFile alloc] initWithPath:dictionary[kKeyPath]];
+    _path = dictionary[kKeyPath];
+    NSDictionary *files = dictionary[kKeyFiles];
+    if (files) {
+      for (NSString *filename in files) {
+        ISCacheFile *file =
+        [[ISCacheFile alloc] initWithDirectory:_path
+                                      filename:filename];
+        [_fileDict setObject:file
+                      forKey:filename];
+      }
+    }
     self.state = [dictionary[kKeyState] intValue];
     self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
@@ -152,12 +169,21 @@ static NSString *kKeyModified = @"modified";
      @(kCacheItemVersion), kKeyVersion,
      self.identifier, kKeyIdentifier,
      self.context, kKeyContext,
-     self.file.path, kKeyPath,
+     self.path, kKeyPath,
      self.uid, kKeyUid,
      @(self.state), kKeyState,
      @(self.totalBytesRead), kKeyTotalBytesRead,
      @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
      nil];
+    
+    NSMutableArray *files =
+    [NSMutableArray arrayWithCapacity:3];
+    for (NSString *filename in self.fileDict) {
+      ISCacheFile *file = self.fileDict[filename];
+      [files addObject:file.filename];
+    }
+    [dictionary setObject:files
+                   forKey:kKeyFiles];
     
     if (self.preferences != nil) {
       [dictionary setObject:self.preferences
@@ -271,13 +297,44 @@ static NSString *kKeyModified = @"modified";
 
 - (void)closeFiles
 {
-  [self.file close];
+  [self.fileDict enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
+     [file close];
+   }];
 }
 
 
 - (void)removeFiles
 {
-  [self.file remove];
+  [self.fileDict enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
+     [file remove];
+  }];
+}
+
+
+- (NSArray *)files
+{
+  return [self.fileDict allKeys];
+}
+
+
+- (ISCacheFile *)file:(NSString *)name
+{
+  ISCacheFile *file = [self.fileDict objectForKey:name];
+  if (file == nil) {
+    file = [[ISCacheFile alloc] initWithDirectory:self.path
+                                         filename:name];
+    [self.fileDict setObject:file
+                      forKey:name];
+  }
+  return file;
+}
+
+
+- (ISCacheFile *)defaultFile
+{
+  return [self.fileDict allValues][0];
 }
 
 
@@ -311,6 +368,17 @@ static NSString *kKeyModified = @"modified";
           @"modified",
           @"state",
           nil];
+}
+
+
+- (BOOL)filesExist
+{
+  __block BOOL result;
+  [self.fileDict enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
+     result &= [file exists];
+   }];
+  return result;
 }
 
 

@@ -28,6 +28,7 @@
 @property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
 @property (nonatomic, strong) ISCacheItem *info;
 @property (nonatomic, strong) NSURLConnection *connection;
+@property (nonatomic, strong) NSString *filename;
 @property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
 @property (nonatomic) BOOL supportsResume;
 @property (nonatomic) NSInteger requestCount;
@@ -103,6 +104,9 @@ didReceiveResponse:(NSURLResponse *)response
     self.totalBytesExpectedToRead = response.expectedContentLength;
   }
   
+  NSLog(@"Suggested filename: %@", response.suggestedFilename);
+  self.filename = response.suggestedFilename;
+  
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
   if ([response respondsToSelector:@selector(allHeaderFields)]) {
     NSDictionary *dictionary = [httpResponse allHeaderFields];
@@ -125,7 +129,7 @@ didReceiveResponse:(NSURLResponse *)response
   
   self.info.totalBytesRead += [data length];
   self.totalBytesRead += [data length];
-  [self.info.file appendData:data];
+  [[self.info file:self.filename] appendData:data];
 }
 
 
@@ -139,7 +143,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  [self.info.file close];
+  [[self.info file:self.filename] close];
   
   // Schedule the post-processing if neccessary.
   // Otherwise, simply call the final block.

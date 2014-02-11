@@ -186,18 +186,20 @@ static ISCache *sCache;
   // If there isn't an active cache entry and something exists
   // on the file system, it represents a partial download and
   // should be cleaned up.
-  BOOL isDirectory = NO;
-  if ([self.fileManager fileExistsAtPath:cacheItem.file.path
-                             isDirectory:&isDirectory]) {
-    NSError *error;
-    [self.fileManager removeItemAtPath:cacheItem.file.path
-                                 error:&error];
-    if (error != nil) {
-      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
-                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
-                                   userInfo:nil];
-    }
-  }
+  // TODO This clean up code needs to be restored for a given
+  // cache item.
+//  BOOL isDirectory = NO;
+//  if ([self.fileManager fileExistsAtPath:cacheItem.file.path
+//                             isDirectory:&isDirectory]) {
+//    NSError *error;
+//    [self.fileManager removeItemAtPath:cacheItem.file.path
+//                                 error:&error];
+//    if (error != nil) {
+//      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
+//                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
+//                                   userInfo:nil];
+//    }
+//  }
   
   return cacheItem;
   
@@ -240,9 +242,7 @@ static ISCache *sCache;
   if (cacheItem.state == ISCacheItemStateFound) {
     
     // Check that there is a file on disk matching the cache item.
-    BOOL isDirectory = NO;
-    if (![self.fileManager fileExistsAtPath:cacheItem.file.path
-                                isDirectory:&isDirectory]) {
+    if (![cacheItem filesExist]) {
       [self resetItem:cacheItem];
     }
     

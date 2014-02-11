@@ -29,13 +29,16 @@ typedef enum {
 
 @interface ISCacheFile : NSObject
 
-@property (nonatomic, strong) NSString *path;
+@property (nonatomic, readonly) NSString *path;
+@property (nonatomic, strong) NSString *filename;
 
-- (id)initWithPath:(NSString *)path;
+- (id)initWithDirectory:(NSString *)directory
+               filename:(NSString *)filename;
 - (void)open;
 - (void)close;
 - (void)appendData:(NSData *)data;
 - (NSData *)data;
 - (void)remove;
+- (BOOL)exists;
 
 @end

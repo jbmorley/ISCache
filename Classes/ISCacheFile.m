@@ -24,7 +24,8 @@
 
 @interface ISCacheFile ()
 
-@property (strong) NSFileHandle *fileHandle;
+@property (nonatomic, strong) NSFileHandle *fileHandle;
+@property (nonatomic, strong) NSString *directory;
 @property ISCacheFileState fileState;
 
 @end
@@ -32,11 +33,13 @@
 @implementation ISCacheFile
 
 
-- (id)initWithPath:(NSString *)path
+- (id)initWithDirectory:(NSString *)directory
+               filename:(NSString *)filename
 {
   self = [super init];
   if (self) {
-    self.path = path;
+    self.directory = directory;
+    self.filename = filename;
   }
   return self;
 }
@@ -49,9 +52,25 @@
     self.fileHandle
     = [NSFileHandle fileHandleForWritingAtPath:self.path];
     if (self.fileHandle == nil) {
-      [[NSFileManager defaultManager] createFileAtPath:self.path
-                                              contents:nil
-                                            attributes:nil];
+      
+      NSFileManager *fileManager = [NSFileManager defaultManager];
+      
+      // Create the directory if neccessary.
+      NSString *parent = [self.path stringByDeletingLastPathComponent];
+      BOOL isDirectory;
+      NSError *error;
+      if (![fileManager fileExistsAtPath:parent
+                             isDirectory:&isDirectory]) {
+        [fileManager createDirectoryAtPath:parent
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:&error];
+      }
+      
+      // Create the file.
+      [fileManager createFileAtPath:self.path
+                           contents:nil
+                         attributes:nil];
       self.fileHandle
       = [NSFileHandle fileHandleForWritingAtPath:self.path];
     }
@@ -94,6 +113,21 @@
                           error:&error];
   if (error) {
   }
+}
+
+
+- (BOOL)exists
+{
+  BOOL isDirectory = NO;
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  return [fileManager fileExistsAtPath:self.path
+                           isDirectory:&isDirectory];
+}
+
+
+- (NSString *)path
+{
+  return [self.directory stringByAppendingPathComponent:self.filename];
 }
 
 

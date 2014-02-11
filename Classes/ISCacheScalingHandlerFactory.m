@@ -37,7 +37,7 @@ const NSString *ISCacheImageScaleMode = @"scale";
     // provided with the required dimensions.
     if (userInfo) {
       
-      UIImage *image = [UIImage imageWithData:info.file.data];
+      UIImage *image = [UIImage imageWithData:info.defaultFile.data];
       
       // Get the current image dimensions.
       CGSize currentSize = image.size;
@@ -95,7 +95,7 @@ const NSString *ISCacheImageScaleMode = @"scale";
       UIGraphicsEndImageContext();
       
       // Save the image.
-      [UIImagePNGRepresentation(newImage) writeToFile:info.file.path
+      [UIImagePNGRepresentation(newImage) writeToFile:info.defaultFile.path
                                            atomically:YES];
       
     }

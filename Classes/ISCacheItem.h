@@ -48,7 +48,6 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, readonly) NSString *context;
 @property (strong, readonly) NSDictionary *preferences;
 @property (strong, readonly) NSString *uid;
-@property (nonatomic, strong) ISCacheFile *file;
 @property (strong) NSDictionary *userInfo;
 
 @property ISCacheItemState state;
@@ -82,9 +81,14 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 - (void)closeFiles;
 - (void)removeFiles;
+- (NSArray *)files;
+- (ISCacheFile *)file:(NSString *)name;
+- (ISCacheFile *)defaultFile;
 
 - (void)fetch;
 - (void)remove;
 - (void)cancel;
+
+- (BOOL)filesExist;
 
 @end

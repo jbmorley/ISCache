@@ -21,6 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ISCacheFile.h"
 
 typedef enum {
   
@@ -47,7 +48,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, readonly) NSString *context;
 @property (strong, readonly) NSDictionary *preferences;
 @property (strong, readonly) NSString *uid;
-@property (strong, readonly) NSString *path;
+@property (nonatomic, strong) ISCacheFile *file;
 @property (strong) NSDictionary *userInfo;
 
 @property ISCacheItemState state;
@@ -79,10 +80,9 @@ static const int ISCacheItemTotalBytesUnknown = -1;
                    cache:(ISCache *)cache;
 - (NSDictionary *)dictionary;
 
-- (void)openFile;
-- (void)closeFile;
-- (void)deleteFile;
-- (void)writeDataToFile:(NSData *)data;
+- (void)closeFiles;
+- (void)removeFiles;
+
 - (void)fetch;
 - (void)remove;
 - (void)cancel;

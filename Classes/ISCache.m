@@ -75,7 +75,7 @@ static ISCache *sCache;
     NSArray *incompleteItems = [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
     if (incompleteItems.count > 0) {
       for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]]) {
-        [item deleteFile];
+        [item removeFiles];
         [self.store removeItem:item];
       }
       [self.store save];
@@ -187,10 +187,10 @@ static ISCache *sCache;
   // on the file system, it represents a partial download and
   // should be cleaned up.
   BOOL isDirectory = NO;
-  if ([self.fileManager fileExistsAtPath:cacheItem.path
+  if ([self.fileManager fileExistsAtPath:cacheItem.file.path
                              isDirectory:&isDirectory]) {
     NSError *error;
-    [self.fileManager removeItemAtPath:cacheItem.path
+    [self.fileManager removeItemAtPath:cacheItem.file.path
                                  error:&error];
     if (error != nil) {
       @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
@@ -241,7 +241,7 @@ static ISCache *sCache;
     
     // Check that there is a file on disk matching the cache item.
     BOOL isDirectory = NO;
-    if (![self.fileManager fileExistsAtPath:cacheItem.path
+    if (![self.fileManager fileExistsAtPath:cacheItem.file.path
                                 isDirectory:&isDirectory]) {
       [self resetItem:cacheItem];
     }
@@ -323,7 +323,7 @@ static ISCache *sCache;
     // and notify any cache observers.
     
     // Remove the file.
-    [item deleteFile];
+    [item removeFiles];
     
     // Reset the cache item state.
     [self resetItem:item];
@@ -374,7 +374,7 @@ static ISCache *sCache;
     [handler cancel];
     
     // Delete the file.
-    [item deleteFile];
+    [item removeFiles];
     
     // Set an appropriate error for the item.
     item.lastError = [NSError errorWithDomain:ISCacheErrorDomain
@@ -518,7 +518,7 @@ static ISCache *sCache;
   // Update the item info with the appropriate state.
   item.state = ISCacheItemStateFound;
   item.lastError = nil;
-  [item closeFile];
+  [item closeFiles];
   
   // Delete the handler for the file.
   [self.active removeObjectForKey:item.uid];
@@ -547,7 +547,7 @@ didFailWithError:(NSError *)error
   // the ISCacheItem to support setting these states 'atomically'.
   
   // Delete the partially downloaded file.
-  [item deleteFile];
+  [item removeFiles];
   
   // Cache the last error.
   item.lastError = error;

@@ -131,7 +131,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
     
     // Do the work here.
     UIImage *image =
-    [UIImage imageWithData:[NSData dataWithContentsOfFile:cacheItem.path]];
+    [UIImage imageWithData:cacheItem.file.data];
 
     // Account for platform scale.
     CGFloat screenScale = [[UIScreen mainScreen] scale];

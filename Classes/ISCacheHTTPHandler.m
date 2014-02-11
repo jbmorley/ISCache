@@ -125,7 +125,7 @@ didReceiveResponse:(NSURLResponse *)response
   
   self.info.totalBytesRead += [data length];
   self.totalBytesRead += [data length];
-  [self.info writeDataToFile:data];
+  [self.info.file appendData:data];
 }
 
 
@@ -139,7 +139,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  [self.info closeFile];
+  [self.info.file close];
   
   // Schedule the post-processing if neccessary.
   // Otherwise, simply call the final block.

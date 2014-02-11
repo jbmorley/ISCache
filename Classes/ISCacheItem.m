@@ -25,15 +25,8 @@
 #import "ISCache.h"
 #import "ISCache+Private.h"
 
-typedef enum {
-  ISCacheItemInfoFileStateClosed,
-  ISCacheItemInfoFileStateOpen,
-} ISCacheItemInfoFileState;
-
 @interface ISCacheItem ()
 
-@property (strong) NSFileHandle *fileHandle;
-@property ISCacheItemInfoFileState fileState;
 @property (weak) ISCache *cache;
 
 @end
@@ -86,7 +79,7 @@ static NSString *kKeyModified = @"modified";
     _context = context;
     _preferences = preferences;
     _uid = uid;
-    _path = path;
+    _file = [[ISCacheFile alloc] initWithPath:path];
     _cache = cache;
   }
   return self;
@@ -138,7 +131,7 @@ static NSString *kKeyModified = @"modified";
     _context = dictionary[kKeyContext];
     _preferences = dictionary[kKeyPreferences];
     _uid = dictionary[kKeyUid];
-    _path = dictionary[kKeyPath];
+    _file = [[ISCacheFile alloc] initWithPath:dictionary[kKeyPath]];
     self.state = [dictionary[kKeyState] intValue];
     self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
@@ -159,7 +152,7 @@ static NSString *kKeyModified = @"modified";
      @(kCacheItemVersion), kKeyVersion,
      self.identifier, kKeyIdentifier,
      self.context, kKeyContext,
-     self.path, kKeyPath,
+     self.file.path, kKeyPath,
      self.uid, kKeyUid,
      @(self.state), kKeyState,
      @(self.totalBytesRead), kKeyTotalBytesRead,
@@ -182,67 +175,6 @@ static NSString *kKeyModified = @"modified";
     
     return dictionary;
     
-  }
-}
-
-
-- (void)openFile
-{
-  @synchronized(self) {
-    if (self.fileState == ISCacheItemInfoFileStateClosed) {
-      
-      self.fileHandle
-      = [NSFileHandle fileHandleForWritingAtPath:self.path];
-      if (self.fileHandle == nil) {
-        [[NSFileManager defaultManager] createFileAtPath:self.path
-                                                contents:nil
-                                              attributes:nil];
-        self.fileHandle
-        = [NSFileHandle fileHandleForWritingAtPath:self.path];
-      }
-      
-      [self.fileHandle seekToEndOfFile];
-      self.fileState = ISCacheItemInfoFileStateOpen;
-    }
-  }
-}
-
-
-- (void)closeFile
-{
-  @synchronized(self) {
-    if (self.fileState == ISCacheItemInfoFileStateOpen) {
-      [self.fileHandle closeFile];
-      self.fileState = ISCacheItemInfoFileStateClosed;
-    }
-  }
-}
-
-
-- (void)deleteFile
-{
-  @synchronized(self) {
-    
-    // Close the file.
-    [self closeFile];
-    
-    // Delete the file.
-    NSError *error;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:self.path
-                            error:&error];
-    if (error) {
-    }
-
-  }
-}
-
-
-- (void)writeDataToFile:(NSData *)data
-{
-  @synchronized(self) {
-    [self openFile];
-    [self.fileHandle writeData:data];
   }
 }
 
@@ -337,6 +269,18 @@ static NSString *kKeyModified = @"modified";
 }
 
 
+- (void)closeFiles
+{
+  [self.file close];
+}
+
+
+- (void)removeFiles
+{
+  [self.file remove];
+}
+
+
 - (void)fetch
 {
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -347,15 +291,15 @@ static NSString *kKeyModified = @"modified";
 }
 
 
-- (void)cancel
-{
-  [self.cache cancelItems:@[self]];
-}
-
-
 - (void)remove
 {
   [self.cache removeItems:@[self]];
+}
+
+
+- (void)cancel
+{
+  [self.cache cancelItems:@[self]];
 }
 
 

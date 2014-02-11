@@ -173,17 +173,10 @@ didReceiveResponse:(NSURLResponse *)response
   [self.delegate log:@"connection:didFailWithError:"];
   if (self.supportsResume) {
     
-    // TODO Is this the right check?
     if (self.totalBytesRead ==
         self.totalBytesExpectedToRead) {
       [self.delegate itemDidFinish:self.info];
     } else {
-
-      // TODO Only resume when it makes sense.
-      [self.delegate log:
-       @"resuming: read %llu, expected %llu",
-       self.totalBytesRead,
-       self.totalBytesExpectedToRead];
       [self start];
     }
     

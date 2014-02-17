@@ -76,7 +76,7 @@
       UIImage *image = [UIImage imageNamed:@"ISCache.bundle/stop.png"];
       [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                    forState:UIControlStateNormal];
-      self.button.enabled = NO;
+      self.button.enabled = YES;
     }
     
     [UIView animateWithDuration:0.3
@@ -85,9 +85,8 @@
        if (_state ==
            ISCacheItemStateInProgress) {
          self.backgroundColor =
-//         [UIColor colorWithWhite:0.95
-//                           alpha:1.0];
-         [UIColor magentaColor];
+         [UIColor colorWithWhite:0.95
+                           alpha:1.0];
        } else if (_state ==
                   ISCacheItemStateNotFound) {
          self.backgroundColor =
@@ -190,10 +189,19 @@
     
     if (self.cacheItem.state ==
         ISCacheItemStateInProgress) {
+      
       [self.cacheItem cancel];
+      
     } else if (self.cacheItem.state ==
                ISCacheItemStateNotFound) {
+      
       [self.cacheItem fetch];
+      
+    } else if (self.cacheItem.state ==
+               ISCacheItemStateFound) {
+      
+      [self.cacheItem remove];
+      
     }
   }
 }

@@ -4,43 +4,23 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ISDownloadsViewController">
-            <connections>
-                <outlet property="collectionView" destination="yrq-Sd-Tjm" id="kbh-h9-akq"/>
-                <outlet property="view" destination="1" id="gFo-jH-Gq4"/>
-            </connections>
-        </placeholder>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view contentMode="scaleToFill" id="1">
-            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <subviews>
-                <collectionView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" minimumZoomScale="0.0" maximumZoomScale="0.0" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="yrq-Sd-Tjm">
-                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                    <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                    <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="foa-Fg-y1E">
-                        <size key="itemSize" width="50" height="50"/>
-                        <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                        <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                        <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                    </collectionViewFlowLayout>
-                    <cells/>
-                    <connections>
-                        <outlet property="dataSource" destination="-1" id="ecn-fD-afN"/>
-                        <outlet property="delegate" destination="-1" id="cbj-X7-tIy"/>
-                    </connections>
-                </collectionView>
-            </subviews>
-            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-            <constraints>
-                <constraint firstAttribute="trailing" secondItem="yrq-Sd-Tjm" secondAttribute="trailing" id="0P6-GD-CVS"/>
-                <constraint firstItem="yrq-Sd-Tjm" firstAttribute="leading" secondItem="1" secondAttribute="leading" id="KRl-7C-h52"/>
-                <constraint firstItem="yrq-Sd-Tjm" firstAttribute="top" secondItem="1" secondAttribute="top" id="NMn-Ck-6Qv"/>
-                <constraint firstAttribute="bottom" secondItem="yrq-Sd-Tjm" secondAttribute="bottom" id="kYg-Ku-sPj"/>
-            </constraints>
+        <viewController id="SdJ-VM-kqv" customClass="ISDownloadsViewController">
+            <layoutGuides>
+                <viewControllerLayoutGuide type="top" id="zyR-3R-LqI"/>
+                <viewControllerLayoutGuide type="bottom" id="e0N-5P-MOT"/>
+            </layoutGuides>
+            <view key="view" contentMode="scaleToFill" id="Ewa-by-HLF">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            </view>
             <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <simulatedOrientationMetrics key="simulatedOrientationMetrics"/>
             <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
-        </view>
+        </viewController>
     </objects>
 </document>

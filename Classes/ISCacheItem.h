@@ -48,7 +48,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, readonly) NSString *context;
 @property (strong, readonly) NSDictionary *preferences;
 @property (strong, readonly) NSString *uid;
-@property (strong) NSDictionary *userInfo;
+@property (strong, nonatomic) NSDictionary *userInfo;
 
 @property ISCacheItemState state;
 @property long long totalBytesRead;

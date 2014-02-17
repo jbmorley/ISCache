@@ -24,6 +24,7 @@
 #import "ISCache.h"
 #import "ISCache+Private.h"
 #import "ISCleanup.h"
+#import "ISImage.h"
 #import <objc/runtime.h>
 
 @interface ISCacheImageView ()
@@ -63,7 +64,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
     [self.cacheItem cancel];
   }
   self.cacheItem = nil;
-  self.callbackCount++;
+  self.callbackCount = 0;
 }
 
 
@@ -105,7 +106,6 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   }
   
   // Initialize the state.
-  self.callbackCount++;
   self.fetchCount = 0;
   
   // Store the cache item and observe it.
@@ -124,40 +124,27 @@ const NSInteger ISCacheUnlimitedRetries = -1;
 {
   ISCacheImageView *__weak weakSelf = self;
   ISCacheItem *cacheItem = self.cacheItem;
-  
-  dispatch_queue_t queue =
-  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-  dispatch_async(queue, ^{
-    
-    // Do the work here.
-    UIImage *image =
-    [UIImage imageWithData:cacheItem.defaultFile.data];
-
-    // Account for platform scale.
-    CGFloat screenScale = [[UIScreen mainScreen] scale];
-    if (screenScale != 1.0) {
-      image = [UIImage imageWithCGImage:[image CGImage] scale:screenScale orientation:UIImageOrientationUp];
-    }
-    
-    // Actually set the image and notify the completion block.
-    dispatch_async(dispatch_get_main_queue(), ^{
-      
-      // Check that it is still valid to set the image.
-      ISCacheImageView *strongSelf = weakSelf;
-      if (strongSelf == nil ||
-          strongSelf.callbackCount != callback) {
-        return;
-      }
-
-      strongSelf.image = image;
-      
-      if (self.block) {
-        self.block(nil);
-      }
-    });
-    
-  });
-  
+  self.callbackCount =
+  [ISImage loadImage:cacheItem.defaultFile.path
+          completion:
+   ^(NSUInteger identifier, UIImage *image) {
+     ISCacheImageView *strongSelf = weakSelf;
+     
+     // Guard against expired requests.
+     if (strongSelf == nil ||
+         identifier != self.callbackCount) {
+       return;
+     }
+     
+     // Set the image.
+     strongSelf.image = image;
+     
+     // Notify the client of the success.
+     if (self.block) {
+       self.block(nil);
+     }
+     
+   }];
 }
 
 
@@ -195,6 +182,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
     } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
       if (self.retries == ISCacheUnlimitedRetries ||
           self.fetchCount < self.retries + 1) {
+        self.cacheItem.userInfo = @{@"name": @"Cached image"};
         [self.cacheItem fetch];
       } else {
         if (self.block) {

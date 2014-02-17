@@ -32,8 +32,7 @@
 @property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
 @property (nonatomic) BOOL supportsResume;
 @property (nonatomic) NSInteger requestCount;
-@property (nonatomic) long long totalBytesExpectedToRead;
-@property (nonatomic) long long totalBytesRead;
+@property (nonatomic) int statusCode;
 
 @end
 
@@ -70,17 +69,17 @@
   NSMutableURLRequest *request =
   [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self.info.identifier]];
   
-  if (self.totalBytesExpectedToRead > 0 &&
+  if (self.info.totalBytesExpectedToRead > 0 &&
       self.supportsResume) {
     [request setValue:[NSString stringWithFormat:
                        @"bytes=%llu-",
-                       self.totalBytesRead]
+                       self.info.totalBytesRead]
    forHTTPHeaderField:@"Range"];
   }
   
-  self.connection = [NSURLConnection connectionWithRequest:request
-                                                  delegate:self];
-  
+  self.connection =
+  [NSURLConnection connectionWithRequest:request
+                                delegate:self];
   [self.connection start];
 }
 
@@ -97,28 +96,36 @@
 - (void)connection:(NSURLConnection *)connection
 didReceiveResponse:(NSURLResponse *)response
 {
+  
+  // Check for error responses.
+  // TODO What other errors do I need to check for.
+  self.statusCode = [((NSHTTPURLResponse *)response) statusCode];
+  if (self.statusCode == 404)
+  {
+    [connection cancel];
+    [self.delegate item:self.info
+       didFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
+    NSLog(@"didReceiveResponse statusCode with %i", self.statusCode);
+    return;
+  }
+  
   // If the request count is greater than 1 we are attempting a resume
   // meaning that the content length is not guaranteed to be the full size.
   if (self.requestCount == 1) {
     self.info.totalBytesExpectedToRead = response.expectedContentLength;
-    self.totalBytesExpectedToRead = response.expectedContentLength;
   }
   
-  NSLog(@"Suggested filename: %@", response.suggestedFilename);
   self.filename = response.suggestedFilename;
   
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
   if ([response respondsToSelector:@selector(allHeaderFields)]) {
     NSDictionary *dictionary = [httpResponse allHeaderFields];
+    NSLog(@"Headers: %@", dictionary);
     [self.delegate log:@"Headers: %@", dictionary];
     if ([dictionary[@"Accept-Ranges"] isEqualToString:@"bytes"]) {
       self.supportsResume = YES;
     }
   }
-  
-  [self.delegate log:
-   @"totalBytesExpectedToRead: %llu",
-   self.totalBytesExpectedToRead];
 }
 
 
@@ -126,23 +133,19 @@ didReceiveResponse:(NSURLResponse *)response
     didReceiveData:(NSData *)data
 {
   [self.delegate log:@"connection:didReceiveData:"];
-  
   self.info.totalBytesRead += [data length];
-  self.totalBytesRead += [data length];
   [[self.info file:self.filename] appendData:data];
-}
-
-
-- (void)connectionDidResumeDownloading:(NSURLConnection *)connection
-                     totalBytesWritten:(long long)totalBytesWritten
-                    expectedTotalBytes:(long long)expectedTotalBytes
-{
-  [self.delegate log:@"connectionDidResumeDownloading:"];
 }
 
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+  if(self.info.totalBytesRead !=
+     self.info.totalBytesExpectedToRead) {
+    [self restartOrFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
+    return;
+  }
+  
   [[self.info file:self.filename] close];
   
   // Schedule the post-processing if neccessary.
@@ -175,20 +178,18 @@ didReceiveResponse:(NSURLResponse *)response
   didFailWithError:(NSError *)error
 {
   [self.delegate log:@"connection:didFailWithError:"];
+  [self restartOrFailWithError:error];
+}
+
+- (void)restartOrFailWithError:(NSError *)error
+{
+  NSLog(@"Trying to restart...");
   if (self.supportsResume) {
-    
-    if (self.totalBytesRead ==
-        self.totalBytesExpectedToRead) {
-      [self.delegate itemDidFinish:self.info];
-    } else {
-      [self start];
-    }
-    
+    [self start];
   } else {
     [self.delegate item:self.info
        didFailWithError:error];
   }
 }
-
 
 @end

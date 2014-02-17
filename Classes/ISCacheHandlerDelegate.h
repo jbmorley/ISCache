@@ -25,7 +25,6 @@
 
 @protocol ISCacheHandlerDelegate <NSObject>
 
-- (void)itemDidUpdate:(ISCacheItem *)info;
 - (void)itemDidFinish:(ISCacheItem *)info;
 - (void)item:(ISCacheItem *)info
 didFailWithError:(NSError *)error;

@@ -24,13 +24,17 @@
 #import "ISDownloadsCollectionViewCell.h"
 #import "ISRotatingFlowLayout.h"
 #import <ISUtilities/ISDevice.h>
+#import "ISCacheFile.h"
+#import "ISCacheStateFilter.h"
+#import "ISCacheUserInfoFilter.h"
 
 @interface ISDownloadsViewController ()
 
-@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+@property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) ISListViewAdapter *adapter;
 @property (nonatomic, strong) ISListViewAdapterConnector *connector;
 @property (nonatomic, strong) ISRotatingFlowLayout *flowLayout;
+@property (nonatomic, strong) id<ISCacheFilter> filter;
 
 @end
 
@@ -39,11 +43,11 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
 @implementation ISDownloadsViewController
 
 
-+ (id)downloadsViewController
-{
-  NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
-  return [[self alloc] initWithNibName:@"ISDownloadsViewController" bundle:bundle];
-}
+//+ (id)downloadsViewController
+//{
+//  NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
+//  return [[self alloc] initWithNibName:@"ISDownloadsViewController" bundle:bundle];
+//}
 
 
 - (id)initWithNibName:(NSString *)nibNameOrNil
@@ -52,15 +56,43 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
   self = [super initWithNibName:nibNameOrNil
                          bundle:nibBundleOrNil];
   if (self) {
-    self.title = @"Downloads";
   }
   return self;
+}
+
+
+- (void)awakeFromNib
+{
+  [super awakeFromNib];
+  self.filter = [ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress];
+  self.filter = [[ISCacheUserInfoFilter alloc] initWithUserInfo:@{@"type": @"video"}];
 }
 
 
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+  
+  self.title = @"Downloads";
+  
+  // Create and configure the flow layout.
+  self.flowLayout = [ISRotatingFlowLayout new];
+  self.flowLayout.adjustsItemSize = YES;
+  self.flowLayout.spacing = 2.0f;
+  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    self.flowLayout.minimumItemSize = CGSizeMake(283.0, 72.0);
+  } else {
+    self.flowLayout.minimumItemSize = CGSizeMake(283.0, 72.0);
+  }
+  
+  self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:self.flowLayout];
+  self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  self.collectionView.alwaysBounceVertical = YES;
+  self.collectionView.delegate = self;
+  self.collectionView.dataSource = self;
+  [self.view addSubview:self.collectionView];
+  
+  self.collectionView.backgroundColor = [UIColor whiteColor];
   
   self.adapter = [[ISListViewAdapter alloc] initWithDataSource:self];
   self.connector = [ISListViewAdapterConnector connectorWithCollectionView:self.collectionView];
@@ -73,20 +105,9 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
   [self.collectionView registerNib:nib
         forCellWithReuseIdentifier:kDownloadsViewCellReuseIdentifier];
   
-  // Create and configure the flow layout.
-  self.flowLayout = [ISRotatingFlowLayout new];
-  self.flowLayout.adjustsItemSize = YES;
-  self.flowLayout.spacing = 2.0f;
-  if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-    self.flowLayout.minimumItemSize = CGSizeMake(283.0, 72.0);
-  } else {
-    self.flowLayout.minimumItemSize = CGSizeMake(283.0, 72.0);
-  }
-  self.collectionView.collectionViewLayout = self.flowLayout;
-
   // Buttons.
-  self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneClicked:)];
-  self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel All" style:UIBarButtonItemStylePlain target:self action:@selector(cancelClicked:)];
+//  self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneClicked:)];
+//  self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel All" style:UIBarButtonItemStylePlain target:self action:@selector(cancelClicked:)];
   
 }
 
@@ -95,6 +116,7 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
 {
   [super viewWillAppear:animated];
   [[ISCache defaultCache] addCacheObserver:self];
+  [self.adapter invalidate];
 }
 
 
@@ -162,7 +184,7 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
         completionBlock:(ISListViewAdapterBlock)completionBlock
 {
   ISCache *defaultCache = [ISCache defaultCache];
-  NSArray *items = [defaultCache items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
+  NSArray *items = [defaultCache items:self.filter];
   completionBlock(items);
 }
 
@@ -194,14 +216,7 @@ completionBlock:(ISListViewAdapterBlock)completionBlock
 #pragma mark - ISCacheObserver
 
 
-- (void)cache:(ISCache *)cache
-itemDidUpdate:(ISCacheItem *)item
-{
-}
-
-
-- (void)cache:(ISCache *)cache
-      newItem:(ISCacheItem *)item
+- (void)cacheDidUpdate:(ISCache *)cache
 {
   [self.adapter invalidate];
 }

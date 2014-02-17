@@ -72,12 +72,13 @@ static ISCache *sCache;
                                        cache:self];
     
     // Clean up any partially downloaded files.
-    NSArray *incompleteItems = [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
-    if (incompleteItems.count > 0) {
-      for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]]) {
-        [item removeFiles];
-        [self.store removeItem:item];
-      }
+    BOOL needsSave = NO;
+    for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress | ISCacheItemStateNotFound]]) {
+      needsSave = YES;
+      [self resetItem:item];
+      [self.store removeItem:item];
+    }
+    if (needsSave) {
       [self.store save];
     }
 
@@ -291,9 +292,6 @@ static ISCache *sCache;
     dispatch_queue_t mainQueue = dispatch_get_main_queue();
     dispatch_async(mainQueue, ^{
       
-      // Notify the delegates.
-      [self notifyObservers:cacheItem];
-      
       // Begin the fetch.
       [handler fetchItem:cacheItem
                 delegate:self];
@@ -322,9 +320,6 @@ static ISCache *sCache;
     // If the item exists, simply delete the file at the path
     // and notify any cache observers.
     
-    // Remove the file.
-    [item removeFiles];
-    
     // Reset the cache item state.
     [self resetItem:item];
     
@@ -334,9 +329,6 @@ static ISCache *sCache;
     // during the running of the application.
     // We do, however, save the store to cache its new state.
     [self.store save];
-    
-    // Notify the observers that the item has been removed.
-    [self notifyObservers:item];
     
   } else if (item.state == ISCacheItemStateInProgress) {
     
@@ -386,8 +378,6 @@ static ISCache *sCache;
     
     // Save the cache state.
     [self.store save];
-
-    [self notifyObservers:item];
     
   } else {
     
@@ -417,6 +407,7 @@ static ISCache *sCache;
 
 - (void)resetItem:(ISCacheItem *)item
 {
+  [item removeFiles];
   item.state = ISCacheItemStateNotFound;
   item.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
   item.totalBytesRead = 0;
@@ -441,19 +432,11 @@ static ISCache *sCache;
 }
 
 
-- (void)notifyObservers:(ISCacheItem *)item
-{
-  [self.notifier notify:@selector(cache:itemDidUpdate:)
-             withObject:self
-             withObject:item];
-}
-
 - (void)notifyNewItem:(ISCacheItem *)item
 {
   dispatch_async(dispatch_get_main_queue(), ^{
-    [self.notifier notify:@selector(cache:newItem:)
-               withObject:self
-               withObject:item];
+    [self.notifier notify:@selector(cacheDidUpdate:)
+               withObject:self];
   });
 }
 
@@ -503,13 +486,7 @@ static ISCache *sCache;
 // Should not be used internally as a notification mechanism.
 - (void)itemDidUpdate:(ISCacheItem *)item
 {
-  // Upgrade the item state to 'in progress' if
-  // the number of expected bytes has been set.
-  if (item.totalBytesExpectedToRead
-      != ISCacheItemTotalBytesUnknown) {
-    item.state = ISCacheItemStateInProgress;
-  }
-  [self notifyObservers:item];
+  [self.store save];
 }
 
 
@@ -520,18 +497,20 @@ static ISCache *sCache;
   item.lastError = nil;
   [item closeFiles];
   
+  if (item.totalBytesExpectedToRead !=
+      ISCacheItemTotalBytesUnknown) {
+    NSLog(@"Size mis-match for '%@': %.02f kB, %.02f kB",
+          item.identifier,
+          (item.totalBytesExpectedToRead / 1024.0f),
+          (item.totalBytesRead / 1024.0f));
+//    assert(item.totalBytesExpectedToRead == item.totalBytesRead);
+  }
+  
   // Delete the handler for the file.
   [self.active removeObjectForKey:item.uid];
   
   // Save the store as the state of one of the items has changed.
   [self.store save];
-
-  // Notify our observers.
-  [self notifyObservers:item];
-  
-  // Block delegates will delete themselves when they encounter
-  // an ISCacheItemStateFound for the item. This means there is
-  // no further cleanup required here.
 }
 
 
@@ -556,13 +535,6 @@ didFailWithError:(NSError *)error
   // If people are making use of KVO they are highly likely to be
   // observing the state property.
   item.state = ISCacheItemStateNotFound;
-  
-  // Notify the observers of the error.
-  // We do this via the normal notification mechanism and require
-  // clients to inspect the item when in the
-  // ISCacheItemStateNotFound state to see if an error has been
-  // encountered.
-  [self notifyObservers:item];
   
   // Update the state of the item.
   [self.store save];

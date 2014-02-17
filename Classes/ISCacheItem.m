@@ -36,6 +36,7 @@
 @implementation ISCacheItem
 
 @synthesize state = _state;
+@synthesize userInfo = _userInfo;
 
 static int kCacheItemVersion = 1;
 
@@ -51,6 +52,7 @@ static NSString *const kKeyTotalBytesRead = @"totalBytesRead";
 static NSString *const kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
 static NSString *const kKeyCreated = @"created";
 static NSString *const kKeyModified = @"modified";
+static NSString *const kKeyUserInfo = @"userInfo";
 
 
 + (id)itemWithIdentifier:(NSString *)identifier
@@ -154,6 +156,7 @@ static NSString *const kKeyModified = @"modified";
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
     self.created = dictionary[kKeyCreated];
     self.modified = dictionary[kKeyModified];
+    self.userInfo = dictionary[kKeyUserInfo];
     self.cache = cache;
   }
   return self;
@@ -198,9 +201,32 @@ static NSString *const kKeyModified = @"modified";
       [dictionary setObject:self.modified
                      forKey:kKeyModified];
     }
+    if (self.userInfo != nil) {
+      [dictionary setObject:self.userInfo
+                     forKey:kKeyUserInfo];
+    }
     
     return dictionary;
     
+  }
+}
+
+
+- (void)setUserInfo:(NSDictionary *)userInfo
+{
+  @synchronized (self) {
+    if (_userInfo != userInfo) {
+      _userInfo = userInfo;
+      [self.cache itemDidUpdate:self];
+    }
+  }
+}
+
+
+- (NSDictionary *)userInfo
+{
+  @synchronized (self) {
+    return _userInfo;
   }
 }
 
@@ -284,7 +310,8 @@ static NSString *const kKeyModified = @"modified";
     } else {
       
       NSTimeInterval interval = [self.modified timeIntervalSinceNow] * -1;
-      
+
+      // TODO This calculation is wrong.
       CGFloat remaining = (CGFloat)(totalBytesExpectedToRead - totalBytesRead) / (CGFloat)totalBytesExpectedToRead;
       
       return interval * remaining;

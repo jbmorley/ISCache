@@ -27,12 +27,6 @@
 
 @protocol ISCacheObserver <NSObject>
 
-- (void)cache:(ISCache *)cache
-itemDidUpdate:(ISCacheItem *)item;
-
-@optional
-
-- (void)cache:(ISCache *)cache
-      newItem:(ISCacheItem *)item;
+- (void)cacheDidUpdate:(ISCache *)cache;
 
 @end

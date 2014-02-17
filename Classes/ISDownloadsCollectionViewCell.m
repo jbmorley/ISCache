@@ -24,11 +24,8 @@
 - (void)awakeFromNib
 {
   [super awakeFromNib];
-  _state = -1; // Force initialization
   self.button.enabled = NO;
-  UIImage *image = [UIImage imageNamed:@"Stop.imageasset"];
-  [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
-               forState:UIControlStateNormal];
+  self.state = -1;
 }
 
 
@@ -46,7 +43,14 @@
     if (_cacheItem) {
       self.button.enabled = YES;
       // TODO Use a formal description.
-      self.label.text = _cacheItem.userInfo[@"name"];
+      NSString *title = _cacheItem.userInfo[@"name"];
+      if (title) {
+        self.label.text = title;
+        self.label.textColor = [UIColor darkGrayColor];
+      } else {
+        self.label.text = @"Untitled item";
+        self.label.textColor = [UIColor lightGrayColor];
+      }
       [self startObservingCacheItem];
     }
   }
@@ -69,6 +73,9 @@
                    forState:UIControlStateNormal];
       self.button.enabled = YES;
     } else if (_state == ISCacheItemStateFound) {
+      UIImage *image = [UIImage imageNamed:@"ISCache.bundle/stop.png"];
+      [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
+                   forState:UIControlStateNormal];
       self.button.enabled = NO;
     }
     
@@ -78,8 +85,9 @@
        if (_state ==
            ISCacheItemStateInProgress) {
          self.backgroundColor =
-         [UIColor colorWithWhite:0.95
-                           alpha:1.0];
+//         [UIColor colorWithWhite:0.95
+//                           alpha:1.0];
+         [UIColor magentaColor];
        } else if (_state ==
                   ISCacheItemStateNotFound) {
          self.backgroundColor =
@@ -134,32 +142,43 @@
                        context:(void *)context
 {
   if (object == self.cacheItem) {
-    if ([keyPath isEqualToString:NSStringFromSelector(@selector(progress))]) {
-      CGFloat progress = self.cacheItem.progress;
-      self.progressView.progress = progress;
-    } else if ([keyPath isEqualToString:NSStringFromSelector(@selector(state))]) {
-      self.state = self.cacheItem.state;
-    } else if ([keyPath isEqualToString:NSStringFromSelector(@selector(timeRemainingEstimate))]) {
+    
+    self.state = self.cacheItem.state;
+    self.progressView.progress = self.cacheItem.progress;
+    
+    if (self.cacheItem.state ==
+        ISCacheItemStateNotFound) {
+      
+      if (self.cacheItem.lastError) {
+        if (self.cacheItem.lastError.domain ==
+            ISCacheErrorDomain &&
+            self.cacheItem.lastError.code ==
+            ISCacheErrorCancelled) {
+          self.detailLabel.text = @"Download cancelled";
+        } else {
+          self.detailLabel.text = @"Download failed";
+        }
+      } else {
+        self.detailLabel.text = @"Download missing";
+      }
+    
+    } else if (self.cacheItem.state ==
+               ISCacheItemStateInProgress) {
+      
       NSTimeInterval timeRemainingEstimate = self.cacheItem.timeRemainingEstimate;
       if (timeRemainingEstimate != 0) {
         self.detailLabel.text = [NSString stringWithFormat:
                                  @"%d seconds remaining...",
                                  (int)self.cacheItem.timeRemainingEstimate];
       } else {
-        if (self.cacheItem.state ==
-            ISCacheItemStateFound) {
-          self.detailLabel.text = @"Download complete";
-        } else if (self.cacheItem.lastError) {
-          if (self.cacheItem.lastError.domain ==
-              ISCacheErrorDomain &&
-              self.cacheItem.lastError.code ==
-              ISCacheErrorCancelled) {
-            self.detailLabel.text = @"Download cancelled";
-          } else {
-            self.detailLabel.text = @"Download failed";
-          }
-        }
+        self.detailLabel.text = @"Remaining time unknown";
       }
+      
+    } else if (self.cacheItem.state ==
+               ISCacheItemStateFound) {
+      
+      self.detailLabel.text = @"Download complete";
+      
     }
   }
 }

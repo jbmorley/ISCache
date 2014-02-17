@@ -38,6 +38,7 @@
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences;
--(void)log:(NSString *)message, ...;
+- (void)log:(NSString *)message, ...;
+- (void)itemDidUpdate:(ISCacheItem *)item;
 
 @end

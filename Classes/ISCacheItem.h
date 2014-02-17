@@ -41,6 +41,13 @@ static const int ISCacheItemStateAll = 7;
 static const int ISCacheItemTotalBytesUnknown = -1;
 
 @class ISCache;
+@class ISCacheItem;
+
+@protocol ISCacheItemObserver <NSObject>
+
+- (void)cacheItemDidChange:(ISCacheItem *)cacheItem;
+
+@end
 
 @interface ISCacheItem : NSObject
 
@@ -90,5 +97,8 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)cancel;
 
 - (BOOL)filesExist;
+
+- (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer;
+- (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer;
 
 @end

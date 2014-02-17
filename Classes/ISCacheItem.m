@@ -20,6 +20,7 @@
 // SOFTWARE.
 //
 
+#import <ISUtilities/ISNotifier.h>
 #import "ISCacheItem.h"
 #import "ISCacheExceptions.h"
 #import "ISCache.h"
@@ -30,6 +31,7 @@
 @property (weak) ISCache *cache;
 @property (nonatomic, strong) NSMutableDictionary *fileDict;
 @property (nonatomic, strong) NSString *path;
+@property (nonatomic, strong) ISNotifier *notifier;
 
 @end
 
@@ -78,8 +80,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
                     path:(NSString *)path
                    cache:(ISCache *)cache
 {
-  self = [super init];
+  self = [self init];
   if (self) {
+    _notifier = [ISNotifier new];
     _identifier = identifier;
     _context = context;
     _preferences = preferences;
@@ -107,7 +110,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (id)init
 {
-  assert(false);
   self = [super init];
   if (self) {
     self.created = nil;
@@ -124,7 +126,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (id)initWithDictionary:(NSDictionary *)dictionary
                    cache:(ISCache *)cache
 {
-  self = [super init];
+  self = [self init];
   if (self) {
     
     _fileDict = [NSMutableDictionary dictionaryWithCapacity:3];
@@ -266,6 +268,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
     _state = state;
     [self didChangeValueForKey:NSStringFromSelector(@selector(state))];
   }
+  // TODO Threading.
+  [self _notifyObservers];
 }
 
 
@@ -406,6 +410,24 @@ static NSString *const kKeyUserInfo = @"userInfo";
      result &= [file exists];
    }];
   return result;
+}
+
+
+- (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
+{
+  [self.notifier addObserver:observer];
+}
+
+
+- (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer
+{
+  [self.notifier removeObserver:observer];
+}
+
+- (void)_notifyObservers
+{
+  [self.notifier notify:@selector(cacheItemDidChange:)
+             withObject:self];
 }
 
 

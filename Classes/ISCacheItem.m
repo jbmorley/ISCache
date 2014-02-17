@@ -404,11 +404,11 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (BOOL)filesExist
 {
-  __block BOOL result;
-  [self.fileDict enumerateKeysAndObjectsUsingBlock:
-   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
-     result &= [file exists];
-   }];
+  BOOL result = YES;
+  for (NSString *name in self.fileDict) {
+    ISCacheFile *file = [self.fileDict objectForKey:name];
+    result &= [file exists];
+  }
   return result;
 }
 

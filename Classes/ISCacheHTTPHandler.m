@@ -105,7 +105,7 @@ didReceiveResponse:(NSURLResponse *)response
     [connection cancel];
     [self.delegate item:self.info
        didFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
-    NSLog(@"didReceiveResponse statusCode with %i", self.statusCode);
+    [self.delegate log:@"didReceiveResponse statusCode with %i", self.statusCode];
     return;
   }
   
@@ -120,7 +120,6 @@ didReceiveResponse:(NSURLResponse *)response
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
   if ([response respondsToSelector:@selector(allHeaderFields)]) {
     NSDictionary *dictionary = [httpResponse allHeaderFields];
-    NSLog(@"Headers: %@", dictionary);
     [self.delegate log:@"Headers: %@", dictionary];
     if ([dictionary[@"Accept-Ranges"] isEqualToString:@"bytes"]) {
       self.supportsResume = YES;
@@ -183,7 +182,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)restartOrFailWithError:(NSError *)error
 {
-  NSLog(@"Trying to restart...");
+  [self.delegate log:@"Restarting download..."];
   if (self.supportsResume) {
     [self start];
   } else {

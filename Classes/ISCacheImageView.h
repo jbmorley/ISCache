@@ -29,6 +29,7 @@ extern const NSInteger ISCacheUnlimitedRetries;
 typedef void (^ISCacheCompletionBlock)(NSError *error);
 
 @interface ISCacheImageView : UIImageView
+<ISCacheItemObserver>
 
 @property (nonatomic) BOOL automaticallyCancelsFetches;
 @property (nonatomic) NSInteger retries;

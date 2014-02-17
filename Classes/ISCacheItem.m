@@ -216,20 +216,12 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setUserInfo:(NSDictionary *)userInfo
 {
-  @synchronized (self) {
-    if (_userInfo != userInfo) {
-      _userInfo = userInfo;
-      [self.cache itemDidUpdate:self];
-    }
+  if (_userInfo == userInfo) {
+    return;
   }
-}
-
-
-- (NSDictionary *)userInfo
-{
-  @synchronized (self) {
-    return _userInfo;
-  }
+  _userInfo = userInfo;
+  [self.cache itemDidUpdate:self];
+  [self _notifyObservers];
 }
 
 
@@ -243,32 +235,13 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-- (BOOL)automaticallyNotifiesObserversForState
-{
-  return NO;
-}
-
-
-- (ISCacheItemState)state
-{
-  @synchronized(self) {
-    return _state;
-  }
-}
-
-
 - (void)setState:(ISCacheItemState)state
 {
-  @synchronized(self) {
-    if (_state == state) {
-      return;
-    }
-    
-    [self willChangeValueForKey:NSStringFromSelector(@selector(state))];
-    _state = state;
-    [self didChangeValueForKey:NSStringFromSelector(@selector(state))];
+  if (_state == state) {
+    return;
   }
-  // TODO Threading.
+  _state = state;
+  [self.cache itemDidUpdate:self];
   [self _notifyObservers];
 }
 
@@ -284,15 +257,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
       return totalBytesRead / totalBytesExpectedToRead;
     }
   }
-}
-
-
-+ (NSSet *)keyPathsForValuesAffectingProgress
-{
-  return [NSSet setWithObjects:
-          @"totalBytesExpectedToRead",
-          @"totalBytesRead",
-          nil];
 }
 
 
@@ -402,6 +366,38 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
+- (void)setModified:(NSDate *)modified
+{
+  if ([_modified isEqual:modified]) {
+    return;
+  }
+  _modified = modified;
+  [self.cache itemDidUpdate:self];
+  [self _notifyObservers];
+}
+
+
+- (void)setTotalBytesExpectedToRead:(long long)totalBytesExpectedToRead
+{
+  if (_totalBytesExpectedToRead ==
+      totalBytesExpectedToRead) {
+    return;
+  }
+  _totalBytesExpectedToRead = totalBytesExpectedToRead;
+  [self _notifyObservers];
+}
+
+
+- (void)setTotalBytesRead:(long long)totalBytesRead
+{
+  if (_totalBytesRead == totalBytesRead) {
+    return;
+  }
+  _totalBytesRead = totalBytesRead;
+  [self _notifyObservers];
+}
+
+
 - (BOOL)filesExist
 {
   BOOL result = YES;
@@ -414,8 +410,12 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
+                     options:(ISCacheItemObserverOptions)options
 {
   [self.notifier addObserver:observer];
+  if ((options & ISCacheItemObserverOptionsInitial) > 0) {
+    [observer cacheItemDidChange:self];
+  }
 }
 
 
@@ -423,6 +423,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   [self.notifier removeObserver:observer];
 }
+
 
 - (void)_notifyObservers
 {

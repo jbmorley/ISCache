@@ -59,7 +59,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
 - (void)cancelSetImage
 {
   self.block = NULL;
-  [self stopObservingCacheItem];
+  [self.cacheItem removeCacheItemObserver:self];
   if (self.automaticallyCancelsFetches) {
     [self.cacheItem cancel];
   }
@@ -70,6 +70,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
 
 - (void)dealloc
 {
+  [self.cacheItem removeCacheItemObserver:self];
   [self cancelSetImage];
 }
 
@@ -111,7 +112,8 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   // Store the cache item and observe it.
   self.block = block;
   self.cacheItem = item;
-  [self startObservingCacheItem];
+  [self.cacheItem addCacheItemObserver:self
+                               options:ISCacheItemObserverOptionsInitial];
   
   // We do not explicitly fetch the item here; this is done
   // as a result of the initial property value observeration.
@@ -148,50 +150,22 @@ const NSInteger ISCacheUnlimitedRetries = -1;
 }
 
 
-- (void)startObservingCacheItem
+- (void)cacheItemDidChange:(ISCacheItem *)cacheItem
 {
-  self.observing = YES;
-  [self.cacheItem addObserver:self
-                   forKeyPath:NSStringFromSelector(@selector(state))
-                      options:NSKeyValueObservingOptionInitial
-                      context:NULL];
-}
-
-
-- (void)stopObservingCacheItem
-{
-  if (self.observing) {
-    @try {
-      [self.cacheItem removeObserver:self
-                          forKeyPath:NSStringFromSelector(@selector(state))];
-    }
-    @catch (NSException *exception) {}
-  }
-}
-
-
-
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary *)change
-                       context:(void *)context
-{
-  if ([keyPath isEqualToString:NSStringFromSelector(@selector(state))]) {
-    if (self.cacheItem.state == ISCacheItemStateFound) {
-      [self loadImageAsynchronously:self.callbackCount];
-    } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
-      if (self.retries == ISCacheUnlimitedRetries ||
-          self.fetchCount < self.retries + 1) {
-        self.cacheItem.userInfo = @{@"name": @"Cached image"};
-        [self.cacheItem fetch];
-      } else {
-        if (self.block) {
-          ISCache *defaultCache = [ISCache defaultCache];
-          [defaultCache log:
-           @"Start: %@",
-           self.cacheItem.uid];
-          self.block(self.cacheItem.lastError);
-        }
+  if (self.cacheItem.state == ISCacheItemStateFound) {
+    [self loadImageAsynchronously:self.callbackCount];
+  } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
+    if (self.retries == ISCacheUnlimitedRetries ||
+        self.fetchCount < self.retries + 1) {
+      self.cacheItem.userInfo = @{@"name": @"Cached image"};
+      [self.cacheItem fetch];
+    } else {
+      if (self.block) {
+        ISCache *defaultCache = [ISCache defaultCache];
+        [defaultCache log:
+         @"Start: %@",
+         self.cacheItem.uid];
+        self.block(self.cacheItem.lastError);
       }
     }
   }

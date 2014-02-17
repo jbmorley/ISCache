@@ -10,6 +10,7 @@
 #import <ISCache/ISCache.h>
 
 @interface ISDownloadsCollectionViewCell : UICollectionViewCell
+<ISCacheItemObserver>
 
 @property (nonatomic, strong) ISCacheItem *cacheItem;
 

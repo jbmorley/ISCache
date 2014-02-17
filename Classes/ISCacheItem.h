@@ -24,17 +24,18 @@
 #import "ISCacheFile.h"
 
 typedef enum {
-  
   // The item is not present in the cache.
   ISCacheItemStateNotFound = 0,
-
   // The item has been requested and is in progress.
   ISCacheItemStateInProgress = 1,
-  
   // The item is present in the cache.
   ISCacheItemStateFound = 2,
-  
 } ISCacheItemState;
+
+enum {
+  ISCacheItemObserverOptionsInitial = 1,
+};
+typedef NSUInteger ISCacheItemObserverOptions;
 
 static const int ISCacheItemStateAll = 7;
 
@@ -57,11 +58,11 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, readonly) NSString *uid;
 @property (strong, nonatomic) NSDictionary *userInfo;
 
-@property ISCacheItemState state;
-@property long long totalBytesRead;
-@property long long totalBytesExpectedToRead;
-@property (strong) NSDate *created;
-@property (strong) NSDate *modified;
+@property (nonatomic) ISCacheItemState state;
+@property (nonatomic) long long totalBytesRead;
+@property (nonatomic) long long totalBytesExpectedToRead;
+@property (strong, nonatomic) NSDate *created;
+@property (strong, nonatomic) NSDate *modified;
 @property (strong) NSError *lastError;
 
 @property (readonly) float progress;
@@ -98,7 +99,8 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 - (BOOL)filesExist;
 
-- (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer;
+- (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
+                     options:(ISCacheItemObserverOptions)options;
 - (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer;
 
 @end

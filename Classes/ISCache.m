@@ -257,9 +257,6 @@ static ISCache *sCache;
     // indicate that it has been accessed.
     cacheItem.modified = [NSDate new];
     
-    // Save the cache store to reflect the updated cache item.
-    [self.store save];
-    
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
   } else {
@@ -271,9 +268,6 @@ static ISCache *sCache;
     cacheItem.state = ISCacheItemStateInProgress;
     cacheItem.created = [NSDate new];
     cacheItem.modified = cacheItem.created;
-
-    // Save the cache store to reflect this state change.
-    [self.store save];
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -317,18 +311,8 @@ static ISCache *sCache;
 {
   if (item.state == ISCacheItemStateFound) {
     
-    // If the item exists, simply delete the file at the path
-    // and notify any cache observers.
-    
     // Reset the cache item state.
     [self resetItem:item];
-    
-    // Update the cache.
-    // We do not remove the item during the life-time of the cache
-    // to ensure it remains a unique instance of that cache item
-    // during the running of the application.
-    // We do, however, save the store to cache its new state.
-    [self.store save];
     
   } else if (item.state == ISCacheItemStateInProgress) {
     

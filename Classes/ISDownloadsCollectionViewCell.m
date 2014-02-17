@@ -31,14 +31,14 @@
 
 - (void)dealloc
 {
-  [self stopObservingCacheItem];
+  [self.cacheItem removeCacheItemObserver:self];
 }
 
 
 - (void)setCacheItem:(ISCacheItem *)cacheItem
 {
   if (_cacheItem != cacheItem) {
-    [self stopObservingCacheItem];
+    [_cacheItem removeCacheItemObserver:self];
     _cacheItem = cacheItem;
     if (_cacheItem) {
       self.button.enabled = YES;
@@ -51,7 +51,7 @@
         self.label.text = @"Untitled item";
         self.label.textColor = [UIColor lightGrayColor];
       }
-      [self startObservingCacheItem];
+      [_cacheItem addCacheItemObserver:self options:ISCacheItemObserverOptionsInitial];
     }
   }
 }
@@ -103,82 +103,44 @@
 }
 
 
-- (void)startObservingCacheItem
+- (void)cacheItemDidChange:(ISCacheItem *)cacheItem
 {
-  [_cacheItem addObserver:self
-               forKeyPath:NSStringFromSelector(@selector(progress))
-                  options:NSKeyValueObservingOptionInitial
-                  context:NULL];
-  [_cacheItem addObserver:self
-               forKeyPath:NSStringFromSelector(@selector(state))
-                  options:NSKeyValueObservingOptionInitial
-                  context:NULL];
-  [_cacheItem addObserver:self
-               forKeyPath:NSStringFromSelector(@selector(timeRemainingEstimate))
-                  options:NSKeyValueObservingOptionInitial
-                  context:NULL];
-}
-
-
-- (void)stopObservingCacheItem
-{
-  @try {
-    [_cacheItem removeObserver:self
-                    forKeyPath:NSStringFromSelector(@selector(progress))];
-    [_cacheItem removeObserver:self
-                    forKeyPath:NSStringFromSelector(@selector(state))];
-    [_cacheItem removeObserver:self
-                    forKeyPath:NSStringFromSelector(@selector(timeRemainingEstimate))];
-  }
-  @catch (NSException *exception) {}
-}
-
-
-
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary *)change
-                       context:(void *)context
-{
-  if (object == self.cacheItem) {
+  self.state = self.cacheItem.state;
+  self.progressView.progress = self.cacheItem.progress;
+  
+  if (self.cacheItem.state ==
+      ISCacheItemStateNotFound) {
     
-    self.state = self.cacheItem.state;
-    self.progressView.progress = self.cacheItem.progress;
-    
-    if (self.cacheItem.state ==
-        ISCacheItemStateNotFound) {
-      
-      if (self.cacheItem.lastError) {
-        if (self.cacheItem.lastError.domain ==
-            ISCacheErrorDomain &&
-            self.cacheItem.lastError.code ==
-            ISCacheErrorCancelled) {
-          self.detailLabel.text = @"Download cancelled";
-        } else {
-          self.detailLabel.text = @"Download failed";
-        }
+    if (self.cacheItem.lastError) {
+      if (self.cacheItem.lastError.domain ==
+          ISCacheErrorDomain &&
+          self.cacheItem.lastError.code ==
+          ISCacheErrorCancelled) {
+        self.detailLabel.text = @"Download cancelled";
       } else {
-        self.detailLabel.text = @"Download missing";
+        self.detailLabel.text = @"Download failed";
       }
-    
-    } else if (self.cacheItem.state ==
-               ISCacheItemStateInProgress) {
-      
-      NSTimeInterval timeRemainingEstimate = self.cacheItem.timeRemainingEstimate;
-      if (timeRemainingEstimate != 0) {
-        self.detailLabel.text = [NSString stringWithFormat:
-                                 @"%d seconds remaining...",
-                                 (int)self.cacheItem.timeRemainingEstimate];
-      } else {
-        self.detailLabel.text = @"Remaining time unknown";
-      }
-      
-    } else if (self.cacheItem.state ==
-               ISCacheItemStateFound) {
-      
-      self.detailLabel.text = @"Download complete";
-      
+    } else {
+      self.detailLabel.text = @"Download missing";
     }
+  
+  } else if (self.cacheItem.state ==
+             ISCacheItemStateInProgress) {
+    
+    NSTimeInterval timeRemainingEstimate = self.cacheItem.timeRemainingEstimate;
+    if (timeRemainingEstimate != 0) {
+      self.detailLabel.text = [NSString stringWithFormat:
+                               @"%d seconds remaining...",
+                               (int)self.cacheItem.timeRemainingEstimate];
+    } else {
+      self.detailLabel.text = @"Remaining time unknown";
+    }
+    
+  } else if (self.cacheItem.state ==
+             ISCacheItemStateFound) {
+    
+    self.detailLabel.text = @"Download complete";
+    
   }
 }
 

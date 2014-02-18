@@ -156,7 +156,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _userInfo = userInfo;
-  [self _notifyStateChange];
+  [self _notifyObservers];
+  [self _notifySave];
 }
 
 
@@ -251,13 +252,17 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)remove
 {
-  [self.cache removeItems:@[self]];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.cache removeItems:@[self]];
+  });
 }
 
 
 - (void)cancel
 {
-  [self.cache cancelItems:@[self]];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.cache cancelItems:@[self]];
+  });
 }
 
 
@@ -293,7 +298,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   [self.notifier addObserver:observer];
   if ((options & ISCacheItemObserverOptionsInitial) > 0) {
-    [observer cacheItemDidChange:self];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [observer cacheItemDidChange:self];
+    });
   }
 }
 
@@ -357,7 +364,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   _state = ISCacheItemStateInProgress;
   _created = [NSDate new];
   _modified = _created;
-  [self _notifyStateChange];
+  [self _notifyObservers];
 }
 
 
@@ -366,14 +373,14 @@ static NSString *const kKeyUserInfo = @"userInfo";
   [self _closeFiles];
   _lastError = nil;
   _state = ISCacheItemStateFound;
-  [self _notifyStateChange];
+  [self _notifyObservers];
 }
 
 
 - (void)_transitionToNotFound
 {
   [self _resetState];
-  [self _notifyStateChange];
+  [self _notifyObservers];
 }
 
 
@@ -381,27 +388,18 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   [self _resetState];
   _lastError = error;
-  [self _notifyStateChange];
+  [self _notifyObservers];
 }
 
 
 - (void)_updateModified
 {
   _modified = [NSDate new];
-  [self _notifyStateChange];
+  [self _notifyObservers];
 }
 
 
 #pragma mark - Notifications
-
-
-- (void)_notifyStateChange
-{
-  // When changing state, we notify both our observers and our
-  // save delegate as we wish the state to be persisted.
-  [self _notifyObservers];
-  [self _notifySave];
-}
 
 
 - (void)_notifySave

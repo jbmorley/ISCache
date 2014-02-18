@@ -245,6 +245,7 @@ static ISCache *sCache;
     // Check that there is a file on disk matching the cache item.
     if (![cacheItem _filesExist]) {
       [cacheItem _transitionToNotFound];
+      [self.store save];
     }
     
   }
@@ -256,6 +257,7 @@ static ISCache *sCache;
     // The item exists, but we update the modified date to
     // indicate that it has been accessed.
     [cacheItem _updateModified];
+    [self.store save];
     
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
@@ -263,6 +265,7 @@ static ISCache *sCache;
     
     // Transition the cache item.
     [cacheItem _transitionToInProgress];
+    [self.store save];
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -308,6 +311,7 @@ static ISCache *sCache;
     
     // Reset the cache item state.
     [item _transitionToNotFound];
+    [self.store save];
     
   } else if (item.state == ISCacheItemStateInProgress) {
     
@@ -351,6 +355,7 @@ static ISCache *sCache;
                         code:ISCacheErrorCancelled
                     userInfo:nil];
     [item _transitionToError:error];
+    [self.store save];
     
   } else {
     
@@ -455,6 +460,7 @@ static ISCache *sCache;
 {
   // Update the item info with the appropriate state.
   [item _transitionToFound];
+  [self.store save];
   
   // Delete the handler for the file.
   [self.active removeObjectForKey:item.uid];
@@ -466,6 +472,7 @@ didFailWithError:(NSError *)error
 {
   [self log:@"item:didFailWithError: %@", error];
   [item _transitionToError:error];
+  [self.store save];
 }
 
 

@@ -23,6 +23,7 @@
 #import "ISCacheStore.h"
 #import "ISCacheExceptions.h"
 #import "ISCache.h"
+#import "ISCacheItemPrivate.h"
 
 @interface ISCacheStore ()
 
@@ -75,8 +76,9 @@ static NSInteger kCacheStoreVersion = 1;
       
       // Load the items.
       for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
-        ISCacheItem *item = [ISCacheItem itemInfoWithDictionary:dictionary
-                             cache:self.cache];
+        ISCacheItem *item =
+        [ISCacheItem _itemInfoWithDictionary:dictionary
+                                       cache:self.cache];
         [self.items setObject:item
                        forKey:item.uid];
       }
@@ -141,7 +143,7 @@ static NSInteger kCacheStoreVersion = 1;
     NSMutableArray *dictionaries =
     [NSMutableArray arrayWithCapacity:items.count];
     for (ISCacheItem *item in items) {
-      [dictionaries addObject:[item dictionary]];
+      [dictionaries addObject:[item _dictionary]];
     }
     
     // Create a dictionary to write to file.

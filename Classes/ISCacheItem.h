@@ -72,26 +72,6 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (readonly) float progress;
 @property (readonly) NSTimeInterval timeRemainingEstimate;
 
-+ (id)itemWithIdentifier:(NSString *)identifier
-                 context:(NSString *)context
-             preferences:(NSDictionary *)preferences
-                     uid:(NSString *)uid
-                    path:(NSString *)path
-                   cache:(ISCache *)cache;
-+ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
-                       cache:(ISCache *)cache;
-
-- (id)initWithIdentifier:(NSString *)identifier
-                 context:(NSString *)context
-             preferences:(NSDictionary *)preferences
-                     uid:(NSString *)uid
-                    path:(NSString *)path
-                   cache:(ISCache *)cache;
-- (id)initWithDictionary:(NSDictionary *)dictionary
-                   cache:(ISCache *)cache;
-
-- (NSDictionary *)dictionary;
-
 - (NSArray *)files;
 - (ISCacheFile *)file:(NSString *)name;
 - (ISCacheFile *)defaultFile;

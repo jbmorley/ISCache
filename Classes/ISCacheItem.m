@@ -49,27 +49,27 @@ static NSString *const kKeyModified = @"modified";
 static NSString *const kKeyUserInfo = @"userInfo";
 
 
-+ (id)itemWithIdentifier:(NSString *)identifier
-                 context:(NSString *)context
-             preferences:(NSDictionary *)preferences
-                     uid:(NSString *)uid
-                    path:(NSString *)path
-                   cache:(ISCache *)cache
++ (id)_itemWithIdentifier:(NSString *)identifier
+                  context:(NSString *)context
+              preferences:(NSDictionary *)preferences
+                      uid:(NSString *)uid
+                     path:(NSString *)path
+                    cache:(ISCache *)cache
 {
-  return [[self alloc] initWithIdentifier:identifier
-                                  context:context
-                              preferences:preferences
-                                      uid:uid
-                                     path:path
-                                    cache:cache];
+  return [[self alloc] _initWithIdentifier:identifier
+                                   context:context
+                               preferences:preferences
+                                       uid:uid
+                                      path:path
+                                     cache:cache];
 }
 
 
-+ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
-                       cache:(ISCache *)cache
++ (id)_itemInfoWithDictionary:(NSDictionary *)dictionary
+                        cache:(ISCache *)cache
 {
-  return [[self alloc] initWithDictionary:dictionary
-                                    cache:cache];
+  return [[self alloc] _initWithDictionary:dictionary
+                                     cache:cache];
 }
 
 
@@ -83,12 +83,12 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-- (id)initWithIdentifier:(NSString *)identifier
-                 context:(NSString *)context
-             preferences:(NSDictionary *)preferences
-                     uid:(NSString *)uid
-                    path:(NSString *)path
-                   cache:(ISCache *)cache
+- (id)_initWithIdentifier:(NSString *)identifier
+                  context:(NSString *)context
+              preferences:(NSDictionary *)preferences
+                      uid:(NSString *)uid
+                     path:(NSString *)path
+                    cache:(ISCache *)cache
 {
   self = [self init];
   if (self) {
@@ -108,8 +108,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
 // Serialization to and from a dictionary.
 // A future implementation should probably take advatnage of
 // NSCoding.
-- (id)initWithDictionary:(NSDictionary *)dictionary
-                   cache:(ISCache *)cache
+- (id)_initWithDictionary:(NSDictionary *)dictionary
+                    cache:(ISCache *)cache
 {
   self = [self init];
   if (self) {
@@ -147,55 +147,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     self.cache = cache;
   }
   return self;
-}
-
-
-- (NSDictionary *)dictionary
-{
-  @synchronized(self) {
-    
-    NSMutableDictionary *dictionary =
-    [NSMutableDictionary dictionaryWithObjectsAndKeys:
-     @(kCacheItemVersion), kKeyVersion,
-     self.identifier, kKeyIdentifier,
-     self.context, kKeyContext,
-     self.path, kKeyPath,
-     self.uid, kKeyUid,
-     @(self.state), kKeyState,
-     @(self.totalBytesRead), kKeyTotalBytesRead,
-     @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
-     nil];
-    
-    NSMutableArray *files =
-    [NSMutableArray arrayWithCapacity:3];
-    for (NSString *filename in self.fileDict) {
-      ISCacheFile *file = self.fileDict[filename];
-      [files addObject:file.filename];
-    }
-    [dictionary setObject:files
-                   forKey:kKeyFiles];
-    
-    if (self.preferences != nil) {
-      [dictionary setObject:self.preferences
-                     forKey:kKeyPreferences];
-    }
-    
-    if (self.created != nil) {
-      [dictionary setObject:self.created
-                     forKey:kKeyCreated];
-    }
-    if (self.modified != nil) {
-      [dictionary setObject:self.modified
-                     forKey:kKeyModified];
-    }
-    if (self.userInfo != nil) {
-      [dictionary setObject:self.userInfo
-                     forKey:kKeyUserInfo];
-    }
-    
-    return dictionary;
-    
-  }
 }
 
 
@@ -466,6 +417,58 @@ static NSString *const kKeyUserInfo = @"userInfo";
     [self.notifier notify:@selector(cacheItemDidChange:)
                withObject:self];
   });
+}
+
+
+#pragma mark - Serialization
+
+
+- (NSDictionary *)_dictionary
+{
+  @synchronized(self) {
+    
+    NSMutableDictionary *dictionary =
+    [NSMutableDictionary dictionaryWithObjectsAndKeys:
+     @(kCacheItemVersion), kKeyVersion,
+     self.identifier, kKeyIdentifier,
+     self.context, kKeyContext,
+     self.path, kKeyPath,
+     self.uid, kKeyUid,
+     @(self.state), kKeyState,
+     @(self.totalBytesRead), kKeyTotalBytesRead,
+     @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
+     nil];
+    
+    NSMutableArray *files =
+    [NSMutableArray arrayWithCapacity:3];
+    for (NSString *filename in self.fileDict) {
+      ISCacheFile *file = self.fileDict[filename];
+      [files addObject:file.filename];
+    }
+    [dictionary setObject:files
+                   forKey:kKeyFiles];
+    
+    if (self.preferences != nil) {
+      [dictionary setObject:self.preferences
+                     forKey:kKeyPreferences];
+    }
+    
+    if (self.created != nil) {
+      [dictionary setObject:self.created
+                     forKey:kKeyCreated];
+    }
+    if (self.modified != nil) {
+      [dictionary setObject:self.modified
+                     forKey:kKeyModified];
+    }
+    if (self.userInfo != nil) {
+      [dictionary setObject:self.userInfo
+                     forKey:kKeyUserInfo];
+    }
+    
+    return dictionary;
+    
+  }
 }
 
 

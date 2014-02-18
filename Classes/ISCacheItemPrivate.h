@@ -21,6 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <ISUtilities/ISNotifier.h>
 
 @interface ISCacheItem ()
 
@@ -28,6 +29,24 @@
 @property (nonatomic, strong) NSMutableDictionary *fileDict;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISNotifier *notifier;
+
++ (id)_itemWithIdentifier:(NSString *)identifier
+                  context:(NSString *)context
+              preferences:(NSDictionary *)preferences
+                      uid:(NSString *)uid
+                     path:(NSString *)path
+                    cache:(ISCache *)cache;
++ (id)_itemInfoWithDictionary:(NSDictionary *)dictionary
+                        cache:(ISCache *)cache;
+
+- (id)_initWithIdentifier:(NSString *)identifier
+                  context:(NSString *)context
+              preferences:(NSDictionary *)preferences
+                      uid:(NSString *)uid
+                     path:(NSString *)path
+                    cache:(ISCache *)cache;
+- (id)_initWithDictionary:(NSDictionary *)dictionary
+                    cache:(ISCache *)cache;
 
 - (void)_transitionToInProgress;
 - (void)_transitionToFound;
@@ -37,5 +56,7 @@
 - (void)_updateModified;
 
 - (BOOL)_filesExist;
+
+- (NSDictionary *)_dictionary;
 
 @end

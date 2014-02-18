@@ -173,12 +173,12 @@ static ISCache *sCache;
   
   // Create a new info for the file.
   NSString *path = [self.documentsPath stringByAppendingPathComponent:identifier];
-  cacheItem = [ISCacheItem itemWithIdentifier:item
-                                      context:context
-                                  preferences:preferences
-                                          uid:identifier
-                                         path:path
-                                        cache:self];
+  cacheItem = [ISCacheItem _itemWithIdentifier:item
+                                       context:context
+                                   preferences:preferences
+                                           uid:identifier
+                                          path:path
+                                         cache:self];
   [self.store addItem:cacheItem];
   
   // Notify the observers of the new item.

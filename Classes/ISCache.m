@@ -26,6 +26,7 @@
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"
 #import "ISCache+Private.h"
+#import "ISCacheItemPrivate.h"
 
 
 NSString *const ISCacheURLContext = @"URL";
@@ -75,12 +76,14 @@ static ISCache *sCache;
     BOOL needsSave = NO;
     for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress | ISCacheItemStateNotFound]]) {
       needsSave = YES;
-      [self resetItem:item];
+      [item _transitionToNotFound];
       [self.store removeItem:item];
     }
     if (needsSave) {
       [self.store save];
     }
+    
+    // TODO New items do not have their delegates set.
 
     // Generate a unique path for the cache items.
     self.documentsPath
@@ -176,10 +179,7 @@ static ISCache *sCache;
                                           uid:identifier
                                          path:path
                                         cache:self];
-  [self resetItem:cacheItem];
-  
   [self.store addItem:cacheItem];
-  [self.store save];
   
   // Notify the observers of the new item.
   [self notifyNewItem:cacheItem];
@@ -243,8 +243,8 @@ static ISCache *sCache;
   if (cacheItem.state == ISCacheItemStateFound) {
     
     // Check that there is a file on disk matching the cache item.
-    if (![cacheItem filesExist]) {
-      [self resetItem:cacheItem];
+    if (![cacheItem _filesExist]) {
+      [cacheItem _transitionToNotFound];
     }
     
   }
@@ -255,19 +255,14 @@ static ISCache *sCache;
     
     // The item exists, but we update the modified date to
     // indicate that it has been accessed.
-    cacheItem.modified = [NSDate new];
+    [cacheItem _updateModified];
     
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
   } else {
     
-    // Reset the cache item to clear any previous errors.
-    [self resetItem:cacheItem];
-    
-    // Set the state to in progress.
-    cacheItem.state = ISCacheItemStateInProgress;
-    cacheItem.created = [NSDate new];
-    cacheItem.modified = cacheItem.created;
+    // Transition the cache item.
+    [cacheItem _transitionToInProgress];
     
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
@@ -312,7 +307,7 @@ static ISCache *sCache;
   if (item.state == ISCacheItemStateFound) {
     
     // Reset the cache item state.
-    [self resetItem:item];
+    [item _transitionToNotFound];
     
   } else if (item.state == ISCacheItemStateInProgress) {
     
@@ -349,19 +344,13 @@ static ISCache *sCache;
     id<ISCacheHandler> handler = [self.active objectForKey:item.uid];
     [handler cancel];
     
-    // Delete the file.
-    [item removeFiles];
-    
-    // Set an appropriate error for the item.
-    item.lastError = [NSError errorWithDomain:ISCacheErrorDomain
-                                         code:ISCacheErrorCancelled
-                                     userInfo:nil];
-    
-    // Update the item state.
-    item.state = ISCacheItemStateNotFound;
-    
-    // Save the cache state.
-    [self.store save];
+    // Transition the cache item.
+    // This will close and clean up any partial files.
+    NSError *error =
+    [NSError errorWithDomain:ISCacheErrorDomain
+                        code:ISCacheErrorCancelled
+                    userInfo:nil];
+    [item _transitionToError:error];
     
   } else {
     
@@ -387,18 +376,6 @@ static ISCache *sCache;
 
 
 #pragma mark - Utility methods
-
-
-- (void)resetItem:(ISCacheItem *)item
-{
-  [item removeFiles];
-  item.state = ISCacheItemStateNotFound;
-  item.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
-  item.totalBytesRead = 0;
-  item.lastError = nil;
-  item.created = nil;
-  item.modified = nil;
-}
 
 
 // Check there is a handler factory registered for the context.
@@ -477,24 +454,10 @@ static ISCache *sCache;
 - (void)itemDidFinish:(ISCacheItem *)item
 {
   // Update the item info with the appropriate state.
-  item.state = ISCacheItemStateFound;
-  item.lastError = nil;
-  [item closeFiles];
-  
-  if (item.totalBytesExpectedToRead !=
-      ISCacheItemTotalBytesUnknown) {
-    NSLog(@"Size mis-match for '%@': %.02f kB, %.02f kB",
-          item.identifier,
-          (item.totalBytesExpectedToRead / 1024.0f),
-          (item.totalBytesRead / 1024.0f));
-//    assert(item.totalBytesExpectedToRead == item.totalBytesRead);
-  }
+  [item _transitionToFound];
   
   // Delete the handler for the file.
   [self.active removeObjectForKey:item.uid];
-  
-  // Save the store as the state of one of the items has changed.
-  [self.store save];
 }
 
 
@@ -502,26 +465,7 @@ static ISCache *sCache;
 didFailWithError:(NSError *)error
 {
   [self log:@"item:didFailWithError: %@", error];
-  
-  // Since we are offering explicit support for KVO, we should
-  // must ensure these modifications to the ISCacheItem are
-  // performed in the correct order.
-  // In the future, it may be appropriate to add selectors to
-  // the ISCacheItem to support setting these states 'atomically'.
-  
-  // Delete the partially downloaded file.
-  [item removeFiles];
-  
-  // Cache the last error.
-  item.lastError = error;
-  
-  // Update the state of the cached item.
-  // If people are making use of KVO they are highly likely to be
-  // observing the state property.
-  item.state = ISCacheItemStateNotFound;
-  
-  // Update the state of the item.
-  [self.store save];
+  [item _transitionToError:error];
 }
 
 

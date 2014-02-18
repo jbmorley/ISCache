@@ -25,15 +25,7 @@
 #import "ISCacheExceptions.h"
 #import "ISCache.h"
 #import "ISCache+Private.h"
-
-@interface ISCacheItem ()
-
-@property (weak) ISCache *cache;
-@property (nonatomic, strong) NSMutableDictionary *fileDict;
-@property (nonatomic, strong) NSString *path;
-@property (nonatomic, strong) ISNotifier *notifier;
-
-@end
+#import "ISCacheItemPrivate.h"
 
 @implementation ISCacheItem
 
@@ -73,6 +65,24 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
++ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
+                       cache:(ISCache *)cache
+{
+  return [[self alloc] initWithDictionary:dictionary
+                                    cache:cache];
+}
+
+
+- (id)init
+{
+  self = [super init];
+  if (self) {
+    [self _resetState];
+  }
+  return self;
+}
+
+
 - (id)initWithIdentifier:(NSString *)identifier
                  context:(NSString *)context
              preferences:(NSDictionary *)preferences
@@ -98,31 +108,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 // Serialization to and from a dictionary.
 // A future implementation should probably take advatnage of
 // NSCoding.
-
-
-+ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
-                       cache:(ISCache *)cache
-{
-  return [[self alloc] initWithDictionary:dictionary
-                                    cache:cache];
-}
-
-
-- (id)init
-{
-  self = [super init];
-  if (self) {
-    self.created = nil;
-    self.modified = nil;
-    self.lastError = nil;
-    self.totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
-    self.totalBytesRead = 0;
-    self.state = ISCacheItemStateNotFound;
-  }
-  return self;
-}
-
-
 - (id)initWithDictionary:(NSDictionary *)dictionary
                    cache:(ISCache *)cache
 {
@@ -153,11 +138,11 @@ static NSString *const kKeyUserInfo = @"userInfo";
                       forKey:filename];
       }
     }
-    self.state = [dictionary[kKeyState] intValue];
+    _state = [dictionary[kKeyState] intValue];
     self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
     self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
-    self.created = dictionary[kKeyCreated];
-    self.modified = dictionary[kKeyModified];
+    _created = dictionary[kKeyCreated];
+    _modified = dictionary[kKeyModified];
     self.userInfo = dictionary[kKeyUserInfo];
     self.cache = cache;
   }
@@ -220,8 +205,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _userInfo = userInfo;
-  [self.cache itemDidUpdate:self];
-  [self _notifyObservers];
+  [self _notifyStateChange];
 }
 
 
@@ -232,17 +216,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return ([self.uid isEqualToString:otherItem.uid]);
   }
   return [super isEqual:object];
-}
-
-
-- (void)setState:(ISCacheItemState)state
-{
-  if (_state == state) {
-    return;
-  }
-  _state = state;
-  [self.cache itemDidUpdate:self];
-  [self _notifyObservers];
 }
 
 
@@ -287,24 +260,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     }
 
   }
-}
-
-
-- (void)closeFiles
-{
-  [self.fileDict enumerateKeysAndObjectsUsingBlock:
-   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
-     [file close];
-   }];
-}
-
-
-- (void)removeFiles
-{
-  [self.fileDict enumerateKeysAndObjectsUsingBlock:
-   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
-     [file remove];
-  }];
 }
 
 
@@ -355,27 +310,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-+ (NSSet *)keyPathsForValuesAffectingTimeRemainingEstimate
-{
-  return [NSSet setWithObjects:
-          @"totalBytesExpectedToRead",
-          @"totalBytesRead",
-          @"modified",
-          @"state",
-          nil];
-}
-
-
-- (void)setModified:(NSDate *)modified
-{
-  if ([_modified isEqual:modified]) {
-    return;
-  }
-  _modified = modified;
-  [self.cache itemDidUpdate:self];
-  [self _notifyObservers];
-}
-
+// TODO Work out a better mechanism for updating these
+// and notifying our observers.
 
 - (void)setTotalBytesExpectedToRead:(long long)totalBytesExpectedToRead
 {
@@ -398,15 +334,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-- (BOOL)filesExist
-{
-  BOOL result = YES;
-  for (NSString *name in self.fileDict) {
-    ISCacheFile *file = [self.fileDict objectForKey:name];
-    result &= [file exists];
-  }
-  return result;
-}
+#pragma mark - Observers
 
 
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
@@ -425,10 +353,119 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
+#pragma mark - Utilities
+
+
+- (void)_resetState
+{
+  [self _removeFiles];
+  _state = ISCacheItemStateNotFound;
+  _totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+  _totalBytesRead = 0;
+  _lastError = nil;
+  _created = nil;
+  _modified = nil;
+}
+
+
+- (BOOL)_filesExist
+{
+  BOOL result = YES;
+  for (NSString *name in self.fileDict) {
+    ISCacheFile *file = [self.fileDict objectForKey:name];
+    result &= [file exists];
+  }
+  return result;
+}
+
+
+- (void)_closeFiles
+{
+  [self.fileDict enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
+     [file close];
+   }];
+}
+
+
+- (void)_removeFiles
+{
+  [self.fileDict enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
+     [file remove];
+   }];
+}
+
+
+#pragma mark - Transitions
+
+
+- (void)_transitionToInProgress
+{
+  [self _resetState];
+  _state = ISCacheItemStateInProgress;
+  _created = [NSDate new];
+  _modified = _created;
+  [self _notifyStateChange];
+}
+
+
+- (void)_transitionToFound
+{
+  [self _closeFiles];
+  _lastError = nil;
+  _state = ISCacheItemStateFound;
+  [self _notifyStateChange];
+}
+
+
+- (void)_transitionToNotFound
+{
+  [self _resetState];
+  [self _notifyStateChange];
+}
+
+
+- (void)_transitionToError:(NSError *)error
+{
+  [self _resetState];
+  _lastError = error;
+  [self _notifyStateChange];
+}
+
+
+- (void)_updateModified
+{
+  _modified = [NSDate new];
+  [self _notifyStateChange];
+}
+
+
+#pragma mark - Notifications
+
+
+- (void)_notifyStateChange
+{
+  // When changing state, we notify both our observers and our
+  // save delegate as we wish the state to be persisted.
+  [self _notifyObservers];
+  [self _notifySave];
+}
+
+
+- (void)_notifySave
+{
+  [self.cache itemDidUpdate:self];
+}
+
+
 - (void)_notifyObservers
 {
-  [self.notifier notify:@selector(cacheItemDidChange:)
-             withObject:self];
+  // Notification always happens on the main thread.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.notifier notify:@selector(cacheItemDidChange:)
+               withObject:self];
+  });
 }
 
 

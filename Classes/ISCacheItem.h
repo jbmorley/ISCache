@@ -52,19 +52,23 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 @interface ISCacheItem : NSObject
 
-@property (strong, readonly) NSString *identifier;
-@property (strong, readonly) NSString *context;
-@property (strong, readonly) NSDictionary *preferences;
-@property (strong, readonly) NSString *uid;
-@property (strong, nonatomic) NSDictionary *userInfo;
+// Read-only properties.
+@property (strong, nonatomic, readonly) NSString *identifier;
+@property (strong, nonatomic, readonly) NSString *context;
+@property (strong, nonatomic, readonly) NSDictionary *preferences;
+@property (strong, nonatomic, readonly) NSString *uid;
+@property (nonatomic, readonly) ISCacheItemState state;
+@property (strong, nonatomic, readonly) NSDate *created;
+@property (strong, nonatomic, readonly) NSDate *modified;
+@property (strong, nonatomic, readonly) NSError *lastError;
 
-@property (nonatomic) ISCacheItemState state;
+// Read-write properties.
+// TODO These should not be read-write for the normal clients.
 @property (nonatomic) long long totalBytesRead;
 @property (nonatomic) long long totalBytesExpectedToRead;
-@property (strong, nonatomic) NSDate *created;
-@property (strong, nonatomic) NSDate *modified;
-@property (strong) NSError *lastError;
+@property (strong, nonatomic) NSDictionary *userInfo;
 
+// Calculated properties.
 @property (readonly) float progress;
 @property (readonly) NSTimeInterval timeRemainingEstimate;
 
@@ -74,21 +78,20 @@ static const int ISCacheItemTotalBytesUnknown = -1;
                      uid:(NSString *)uid
                     path:(NSString *)path
                    cache:(ISCache *)cache;
++ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
+                       cache:(ISCache *)cache;
+
 - (id)initWithIdentifier:(NSString *)identifier
                  context:(NSString *)context
              preferences:(NSDictionary *)preferences
                      uid:(NSString *)uid
                     path:(NSString *)path
                    cache:(ISCache *)cache;
-
-+ (id)itemInfoWithDictionary:(NSDictionary *)dictionary
-                       cache:(ISCache *)cache;
 - (id)initWithDictionary:(NSDictionary *)dictionary
                    cache:(ISCache *)cache;
+
 - (NSDictionary *)dictionary;
 
-- (void)closeFiles;
-- (void)removeFiles;
 - (NSArray *)files;
 - (ISCacheFile *)file:(NSString *)name;
 - (ISCacheFile *)defaultFile;
@@ -96,8 +99,6 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)fetch;
 - (void)remove;
 - (void)cancel;
-
-- (BOOL)filesExist;
 
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
                      options:(ISCacheItemObserverOptions)options;

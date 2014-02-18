@@ -109,6 +109,7 @@ static NSInteger kCacheStoreVersion = 1;
 {
   [self.items setObject:item
                  forKey:item.uid];
+  [self save];
 }
 
 

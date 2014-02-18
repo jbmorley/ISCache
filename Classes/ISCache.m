@@ -25,7 +25,7 @@
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"
-#import "ISCache+Private.h"
+#import "ISCachePrivate.h"
 #import "ISCacheItemPrivate.h"
 
 

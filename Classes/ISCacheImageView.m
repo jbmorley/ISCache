@@ -22,7 +22,7 @@
 
 #import "ISCacheImageView.h"
 #import "ISCache.h"
-#import "ISCache+Private.h"
+#import "ISCachePrivate.h"
 #import "ISCleanup.h"
 #import "ISImage.h"
 #import <objc/runtime.h>

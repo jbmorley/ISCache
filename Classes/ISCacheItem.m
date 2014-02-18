@@ -24,7 +24,7 @@
 #import "ISCacheItem.h"
 #import "ISCacheExceptions.h"
 #import "ISCache.h"
-#import "ISCache+Private.h"
+#import "ISCachePrivate.h"
 #import "ISCacheItemPrivate.h"
 
 @implementation ISCacheItem

@@ -157,7 +157,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   }
   _userInfo = userInfo;
   [self _notifyObservers];
-  [self _notifySave];
+  [self _notifyExternalUpdate];
 }
 
 
@@ -402,7 +402,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 #pragma mark - Notifications
 
 
-- (void)_notifySave
+- (void)_notifyExternalUpdate
 {
   [self.cache itemDidUpdate:self];
 }

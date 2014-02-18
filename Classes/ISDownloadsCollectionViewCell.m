@@ -73,7 +73,7 @@
                    forState:UIControlStateNormal];
       self.button.enabled = YES;
     } else if (_state == ISCacheItemStateFound) {
-      UIImage *image = [UIImage imageNamed:@"ISCache.bundle/stop.png"];
+      UIImage *image = [UIImage imageNamed:@"ISCache.bundle/trash.png"];
       [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                    forState:UIControlStateNormal];
       self.button.enabled = YES;

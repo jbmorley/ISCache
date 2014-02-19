@@ -60,18 +60,12 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
   return self;
 }
 
-
-- (void)awakeFromNib
-{
-  [super awakeFromNib];
-  self.filter = [ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress];
-  self.filter = [[ISCacheUserInfoFilter alloc] initWithUserInfo:@{@"type": @"video"}];
-}
-
-
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+  
+  self.filter = [ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress];
+  self.filter = [[ISCacheUserInfoFilter alloc] initWithUserInfo:@{@"type": @"video"}];
   
   self.title = @"Downloads";
   

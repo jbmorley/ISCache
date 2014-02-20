@@ -51,7 +51,8 @@
         self.label.text = @"Untitled item";
         self.label.textColor = [UIColor lightGrayColor];
       }
-      [_cacheItem addCacheItemObserver:self options:ISCacheItemObserverOptionsInitial];
+      [_cacheItem addCacheItemObserver:self
+                               options:ISCacheItemObserverOptionsInitial];
     }
   }
 }

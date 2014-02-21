@@ -88,8 +88,6 @@ static ISCache *sCache;
     if (needsSave) {
       [self.store save];
     }
-    
-    // TODO New items do not have their delegates set.
 
     // Generate a unique path for the cache items.
     self.documentsPath

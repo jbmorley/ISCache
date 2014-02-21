@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <ISCache/ISCache.h>
 
-@interface ISDownloadsCollectionViewCell : UICollectionViewCell
+@interface ISCacheCollectionViewCell : UICollectionViewCell
 <ISCacheItemObserver>
 
 @property (nonatomic, strong) ISCacheItem *cacheItem;

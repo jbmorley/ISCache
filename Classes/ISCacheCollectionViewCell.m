@@ -6,9 +6,9 @@
 //  Copyright (c) 2014 InSeven Limited. All rights reserved.
 //
 
-#import "ISDownloadsCollectionViewCell.h"
+#import "ISCacheCollectionViewCell.h"
 
-@interface ISDownloadsCollectionViewCell ()
+@interface ISCacheCollectionViewCell ()
 
 @property (nonatomic, weak) IBOutlet UIProgressView *progressView;
 @property (nonatomic, weak) IBOutlet UILabel *label;
@@ -18,7 +18,7 @@
 
 @end
 
-@implementation ISDownloadsCollectionViewCell
+@implementation ISCacheCollectionViewCell
 
 
 - (void)awakeFromNib

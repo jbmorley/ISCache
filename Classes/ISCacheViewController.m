@@ -20,15 +20,15 @@
 // SOFTWARE.
 //
 
-#import "ISDownloadsViewController.h"
-#import "ISDownloadsCollectionViewCell.h"
+#import "ISCacheViewController.h"
+#import "ISCacheCollectionViewCell.h"
 #import "ISRotatingFlowLayout.h"
 #import <ISUtilities/ISDevice.h>
 #import "ISCacheFile.h"
 #import "ISCacheStateFilter.h"
 #import "ISCacheUserInfoFilter.h"
 
-@interface ISDownloadsViewController ()
+@interface ISCacheViewController ()
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) ISListViewAdapter *adapter;
@@ -38,28 +38,10 @@
 
 @end
 
-static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
+static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
 
-@implementation ISDownloadsViewController
+@implementation ISCacheViewController
 
-
-// TODO
-//+ (id)downloadsViewController
-//{
-//  NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
-//  return [[self alloc] initWithNibName:@"ISDownloadsViewController" bundle:bundle];
-//}
-
-
-- (id)initWithNibName:(NSString *)nibNameOrNil
-               bundle:(NSBundle *)nibBundleOrNil
-{
-  self = [super initWithNibName:nibNameOrNil
-                         bundle:nibBundleOrNil];
-  if (self) {
-  }
-  return self;
-}
 
 - (void)viewDidLoad
 {
@@ -95,10 +77,10 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
   
   // Register the download cell.
   NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
-  UINib *nib = [UINib nibWithNibName:@"ISDownloadsCollectionViewCell"
+  UINib *nib = [UINib nibWithNibName:@"ISCacheCollectionViewCell"
                               bundle:bundle];
   [self.collectionView registerNib:nib
-        forCellWithReuseIdentifier:kDownloadsViewCellReuseIdentifier];
+        forCellWithReuseIdentifier:kCacheCollectionViewCellReuseIdentifier];
   
   // Buttons.
 //  self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneClicked:)];
@@ -135,12 +117,6 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
 }
 
 
-- (IBAction)doneClicked:(id)sender
-{
-  [self.delegate downloadsViewControllerDidFinish:self];
-}
-
-
 #pragma mark - UICollectionViewDataSource
 
 
@@ -154,14 +130,14 @@ static NSString *kDownloadsViewCellReuseIdentifier = @"DownloadsCell";
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-  ISDownloadsCollectionViewCell *cell
-  = [collectionView dequeueReusableCellWithReuseIdentifier:kDownloadsViewCellReuseIdentifier forIndexPath:indexPath];
+  ISCacheCollectionViewCell *cell
+  = [collectionView dequeueReusableCellWithReuseIdentifier:kCacheCollectionViewCellReuseIdentifier forIndexPath:indexPath];
 
   ISListViewAdapterItem *item = [self.adapter itemForIndex:indexPath.item];
   [item fetch:^(ISCacheItem *item) {
     
     // Re-fetch the cell.
-    ISDownloadsCollectionViewCell *cell = (ISDownloadsCollectionViewCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
+    ISCacheCollectionViewCell *cell = (ISCacheCollectionViewCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
     if (cell) {
       cell.cacheItem = item;
     }

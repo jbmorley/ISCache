@@ -24,15 +24,15 @@
 #import <ISListViewAdapter/ISListViewAdapter.h>
 #import <ISCache/ISCache.h>
 
-@class ISDownloadsViewController;
+@class ISCacheViewController;
 
 @protocol ISDownloadsViewControllerDelegate <NSObject>
 
-- (void)downloadsViewControllerDidFinish:(ISDownloadsViewController *)downloadsViewController;
+- (void)cacheViewController:(ISCacheViewController *)cacheViewController didSelectCacheItem:(ISCacheItem *)cacheItem;
 
 @end
 
-@interface ISDownloadsViewController : UIViewController
+@interface ISCacheViewController : UIViewController
 <UICollectionViewDataSource
 ,UICollectionViewDelegate
 ,ISListViewAdapterDataSource
@@ -40,7 +40,5 @@
 ,UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic, weak) id<ISDownloadsViewControllerDelegate> delegate;
-
-+ (id)downloadsViewController;
 
 @end

@@ -22,6 +22,7 @@
 
 #import "ISCacheHTTPHandler.h"
 #import "ISCache.h"
+#import <ISUtilities/UIApplication+Activity.h>
 
 @interface ISCacheHTTPHandler ()
 
@@ -65,6 +66,7 @@
 
 - (void)start
 {
+  [[UIApplication sharedApplication] beginNetworkActivity];
   self.requestCount++;
   NSMutableURLRequest *request =
   [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self.info.identifier]];
@@ -87,6 +89,7 @@
 - (void)cancel
 {
   [self.connection cancel];
+  [[UIApplication sharedApplication] endNetworkActivity];
 }
 
 
@@ -139,6 +142,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+  [[UIApplication sharedApplication] endNetworkActivity];
   if(self.info.totalBytesRead !=
      self.info.totalBytesExpectedToRead) {
     [self restartOrFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
@@ -176,6 +180,7 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
+  [[UIApplication sharedApplication] endNetworkActivity];
   [self.delegate log:@"connection:didFailWithError:"];
   [self restartOrFailWithError:error];
 }

@@ -77,6 +77,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   self = [super init];
   if (self) {
+    self.notifier = [ISNotifier new];
     [self _resetState];
   }
   return self;
@@ -271,6 +272,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setTotalBytesExpectedToRead:(long long)totalBytesExpectedToRead
 {
+  [self.cache log:
+   @"ISCacheItem setTotalBytesExpectedToRead:%llu",
+   totalBytesExpectedToRead];
   if (_totalBytesExpectedToRead ==
       totalBytesExpectedToRead) {
     return;
@@ -282,6 +286,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setTotalBytesRead:(long long)totalBytesRead
 {
+  [self.cache log:
+   @"ISCacheItem setTotalBytesRead:%llu",
+   totalBytesRead];
   if (_totalBytesRead == totalBytesRead) {
     return;
   }

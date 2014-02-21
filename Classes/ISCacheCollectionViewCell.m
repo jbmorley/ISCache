@@ -51,8 +51,7 @@
         self.label.text = @"Untitled item";
         self.label.textColor = [UIColor lightGrayColor];
       }
-      [_cacheItem addCacheItemObserver:self
-                               options:ISCacheItemObserverOptionsInitial];
+      [_cacheItem addCacheItemObserver:self options:ISCacheItemObserverOptionsInitial];
     }
   }
 }
@@ -104,6 +103,33 @@
 }
 
 
+- (IBAction)buttonClicked:(id)sender
+{
+  if (self.cacheItem) {
+    
+    if (self.cacheItem.state ==
+        ISCacheItemStateInProgress) {
+      
+      [self.cacheItem cancel];
+      
+    } else if (self.cacheItem.state ==
+               ISCacheItemStateNotFound) {
+      
+      [self.cacheItem fetch];
+      
+    } else if (self.cacheItem.state ==
+               ISCacheItemStateFound) {
+      
+      [self.cacheItem remove];
+      
+    }
+  }
+}
+
+
+#pragma mark - ISCacheItemObserver
+
+
 - (void)cacheItemDidChange:(ISCacheItem *)cacheItem
 {
   self.state = self.cacheItem.state;
@@ -144,30 +170,5 @@
     
   }
 }
-
-
-- (IBAction)buttonClicked:(id)sender
-{
-  if (self.cacheItem) {
-    
-    if (self.cacheItem.state ==
-        ISCacheItemStateInProgress) {
-      
-      [self.cacheItem cancel];
-      
-    } else if (self.cacheItem.state ==
-               ISCacheItemStateNotFound) {
-      
-      [self.cacheItem fetch];
-      
-    } else if (self.cacheItem.state ==
-               ISCacheItemStateFound) {
-      
-      [self.cacheItem remove];
-      
-    }
-  }
-}
-
 
 @end

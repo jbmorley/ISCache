@@ -26,7 +26,7 @@
 
 @class ISCacheViewController;
 
-@protocol ISDownloadsViewControllerDelegate <NSObject>
+@protocol ISCacheViewControllerDelegate <NSObject>
 
 - (void)cacheViewController:(ISCacheViewController *)cacheViewController didSelectCacheItem:(ISCacheItem *)cacheItem;
 
@@ -39,6 +39,6 @@
 ,ISCacheObserver
 ,UICollectionViewDelegateFlowLayout>
 
-@property (nonatomic, weak) id<ISDownloadsViewControllerDelegate> delegate;
+@property (nonatomic, weak) id<ISCacheViewControllerDelegate> delegate;
 
 @end

@@ -193,4 +193,18 @@ completionBlock:(ISListViewAdapterBlock)completionBlock
 }
 
 
+#pragma mark - UICollectionViewDelegate
+
+
+- (void)collectionView:(UICollectionView *)collectionView
+didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+  ISListViewAdapterItem *item =
+  [self.adapter itemForIndex:indexPath.item];
+  [item fetch:^(ISCacheItem *item) {
+    [self.delegate cacheViewController:self
+                    didSelectCacheItem:item];
+  }];
+}
+
 @end

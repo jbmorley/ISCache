@@ -77,8 +77,8 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
   self.collectionView.backgroundColor = [UIColor whiteColor];
   
   self.adapter = [[ISListViewAdapter alloc] initWithDataSource:self];
-  self.connector = [ISListViewAdapterConnector connectorWithCollectionView:self.collectionView];
-  [self.adapter addAdapterObserver:self.connector];
+  self.connector = [ISListViewAdapterConnector connectorWithAdapter:self.adapter collectionView:self.collectionView];
+
   
   // Register the download cell.
   NSBundle* bundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"ISCache" withExtension:@"bundle"]];
@@ -116,7 +116,7 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
 - (NSInteger)collectionView:(UICollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section
 {
-  return self.adapter.count;
+  return self.connector.count;
 }
 
 

@@ -42,8 +42,7 @@
     _cacheItem = cacheItem;
     if (_cacheItem) {
       self.button.enabled = YES;
-      // TODO Use a formal description.
-      NSString *title = _cacheItem.userInfo[@"name"];
+      NSString *title = _cacheItem.userInfo[ISCacheItemDescription];
       if (title) {
         self.label.text = title;
         self.label.textColor = [UIColor darkGrayColor];
@@ -156,9 +155,26 @@
     
     NSTimeInterval timeRemainingEstimate = self.cacheItem.timeRemainingEstimate;
     if (timeRemainingEstimate != 0) {
-      self.detailLabel.text = [NSString stringWithFormat:
-                               @"%d seconds remaining...",
-                               (int)self.cacheItem.timeRemainingEstimate];
+
+      NSString *duration;
+      NSUInteger seconds = self.cacheItem.timeRemainingEstimate;
+      if (timeRemainingEstimate > 60*60) {
+        NSUInteger hours = floor(seconds/(60*60));
+        duration = [NSString stringWithFormat:
+                    @"%d hours remaining...",
+                    hours];
+      } else if (timeRemainingEstimate > 60) {
+        NSUInteger minutes = floor(seconds/60);
+        duration = [NSString stringWithFormat:
+                    @"%d minutes remaining...",
+                    minutes];
+      } else {
+        duration = [NSString stringWithFormat:
+                    @"%d seconds remaining...",
+                    seconds];
+      }
+      self.detailLabel.text = duration;
+      
     } else {
       self.detailLabel.text = @"Remaining time unknown";
     }

@@ -40,8 +40,15 @@ typedef enum {
   ISCacheErrorCancelled,
 } ISCacheError;
 
+// Informal properties.
+extern NSString *const ISCacheItemDescription;
+extern NSString *const ISCacheItemThumbnail;
+
+// Contexts.
 extern NSString *const ISCacheURLContext;
 extern NSString *const ISCacheImageContext;
+
+// Errors.
 extern NSString *const ISCacheErrorDomain;
 
 @interface ISCache : NSObject <ISCacheHandlerDelegate>

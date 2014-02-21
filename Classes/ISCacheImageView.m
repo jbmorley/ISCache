@@ -157,7 +157,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
     if (self.retries == ISCacheUnlimitedRetries ||
         self.fetchCount < self.retries + 1) {
-      self.cacheItem.userInfo = @{@"name": @"Cached image"};
+      self.cacheItem.userInfo = @{ISCacheItemDescription: @"Cached image"};
       [self.cacheItem fetch];
     } else {
       if (self.block) {

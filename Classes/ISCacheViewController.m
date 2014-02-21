@@ -34,7 +34,6 @@
 @property (nonatomic, strong) ISListViewAdapter *adapter;
 @property (nonatomic, strong) ISListViewAdapterConnector *connector;
 @property (nonatomic, strong) ISRotatingFlowLayout *flowLayout;
-@property (nonatomic, strong) id<ISCacheFilter> filter;
 
 @end
 
@@ -43,12 +42,18 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
 @implementation ISCacheViewController
 
 
+- (id)init
+{
+  self = [super init];
+  if (self) {
+  }
+  return self;
+}
+
+
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  
-  self.filter = [ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress];
-  self.filter = [[ISCacheUserInfoFilter alloc] initWithUserInfo:@{@"type": @"video"}];
   
   self.title = @"Downloads";
   
@@ -82,10 +87,6 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
   [self.collectionView registerNib:nib
         forCellWithReuseIdentifier:kCacheCollectionViewCellReuseIdentifier];
   
-  // Buttons.
-//  self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneClicked:)];
-//  self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel All" style:UIBarButtonItemStylePlain target:self action:@selector(cancelClicked:)];
-  
 }
 
 
@@ -106,14 +107,6 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
 - (void)didReceiveMemoryWarning
 {
   [super didReceiveMemoryWarning];
-}
-
-
-- (IBAction)cancelClicked:(id)sender
-{
-  ISCache *defaultCache = [ISCache defaultCache];
-  NSArray *items = [defaultCache items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]];
-  [defaultCache cancelItems:items];
 }
 
 
@@ -155,7 +148,11 @@ static NSString *kCacheCollectionViewCellReuseIdentifier = @"CacheCell";
         completionBlock:(ISListViewAdapterBlock)completionBlock
 {
   ISCache *defaultCache = [ISCache defaultCache];
-  NSArray *items = [defaultCache items:self.filter];
+  ISCacheStateFilter *filter = self.filter;
+  if (filter == nil) {
+    filter = [ISCacheStateFilter filterWithStates:ISCacheItemStateAll];
+  }
+  NSArray *items = [defaultCache items:filter];
   completionBlock(items);
 }
 

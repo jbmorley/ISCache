@@ -33,6 +33,7 @@
 #import "ISCacheFilter.h"
 #import "ISCacheStateFilter.h"
 #import "ISCacheContextFilter.h"
+#import "ISCacheUserInfoFilter.h"
 #import "ISCacheImageView.h"
 
 typedef enum {

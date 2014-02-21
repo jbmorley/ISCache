@@ -40,5 +40,6 @@
 ,UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic, weak) id<ISCacheViewControllerDelegate> delegate;
+@property (nonatomic, strong) id<ISCacheFilter> filter;
 
 @end

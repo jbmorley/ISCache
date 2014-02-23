@@ -267,9 +267,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-// TODO Work out a better mechanism for updating these
-// and notifying our observers.
-
 - (void)setTotalBytesExpectedToRead:(long long)totalBytesExpectedToRead
 {
   [self.cache log:

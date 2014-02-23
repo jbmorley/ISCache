@@ -29,6 +29,22 @@
 }
 
 
+- (void)drawRect:(CGRect)rect
+{
+  CGFloat spacing = 4.0;
+  CGContextRef context = UIGraphicsGetCurrentContext();
+  UIColor *black = [UIColor colorWithRed:0.8
+                                   green:0.8f
+                                    blue:0.8f
+                                   alpha:1.0f];
+  CGContextSetStrokeColor(context, CGColorGetComponents([black CGColor]));
+  CGContextBeginPath(context);
+  CGContextMoveToPoint(context, spacing, CGRectGetHeight(self.bounds));
+  CGContextAddLineToPoint(context, CGRectGetWidth(self.bounds) - (2 * spacing), CGRectGetHeight(self.bounds));
+  CGContextStrokePath(context);
+}
+
+
 - (void)dealloc
 {
   [self.cacheItem removeCacheItemObserver:self];
@@ -76,28 +92,7 @@
       [self.button setImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                    forState:UIControlStateNormal];
       self.button.enabled = YES;
-    }
-    
-    [UIView animateWithDuration:0.3
-                     animations:
-     ^{
-       if (_state ==
-           ISCacheItemStateInProgress) {
-         self.backgroundColor =
-         [UIColor colorWithWhite:0.95
-                           alpha:1.0];
-       } else if (_state ==
-                  ISCacheItemStateNotFound) {
-         self.backgroundColor =
-         [UIColor colorWithWhite:0.93
-                           alpha:1.0];
-       } else if (_state ==
-                  ISCacheItemStateFound) {
-         self.backgroundColor =
-         [UIColor colorWithWhite:0.98
-                           alpha:1.0];
-       }
-     }];
+    }    
   }
 }
 

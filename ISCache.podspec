@@ -12,8 +12,6 @@ Pod::Spec.new do |s|
 
   s.private_header_files = "Classes/*Private.h"
 
-  s.ios.resource_bundle = { 'ISCache' => 'Resources/*.{xib,png}' }
-
   s.requires_arc = true
 
   s.platform = :ios, "6.0", :osx, "10.8"

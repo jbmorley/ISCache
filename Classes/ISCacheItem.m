@@ -237,6 +237,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (ISCacheFile *)defaultFile
 {
+  if (self.fileDict.count == 0) {
+    return nil;
+  }
   return [self.fileDict allValues][0];
 }
 

@@ -235,11 +235,16 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-- (ISCacheFile *)defaultFile
+- (ISCacheFile *)file
 {
   if (self.fileDict.count == 0) {
     return nil;
   }
+  
+  // Guard against unexpected behaviour when there are
+  // multiple files.
+  assert(self.fileDict.count == 1);
+  
   return [self.fileDict allValues][0];
 }
 

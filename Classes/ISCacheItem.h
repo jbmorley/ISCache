@@ -74,7 +74,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 - (NSArray *)files;
 - (ISCacheFile *)file:(NSString *)name;
-- (ISCacheFile *)defaultFile;
+- (ISCacheFile *)file;
 
 - (void)fetch;
 - (void)remove;

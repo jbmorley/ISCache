@@ -127,7 +127,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   ISCacheImageView *__weak weakSelf = self;
   ISCacheItem *cacheItem = self.cacheItem;
   self.callbackCount =
-  [UIImage loadImage:cacheItem.defaultFile.path
+  [UIImage loadImage:cacheItem.file.path
           completion:
    ^(NSUInteger identifier, UIImage *image) {
      ISCacheImageView *strongSelf = weakSelf;

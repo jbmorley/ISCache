@@ -24,7 +24,7 @@
 #import "ISCache.h"
 #import "ISCachePrivate.h"
 #import "ISCleanup.h"
-#import "ISImage.h"
+#import "UIImage+Utilities.h"
 #import <objc/runtime.h>
 
 @interface ISCacheImageView ()
@@ -127,7 +127,7 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   ISCacheImageView *__weak weakSelf = self;
   ISCacheItem *cacheItem = self.cacheItem;
   self.callbackCount =
-  [ISImage loadImage:cacheItem.defaultFile.path
+  [UIImage loadImage:cacheItem.defaultFile.path
           completion:
    ^(NSUInteger identifier, UIImage *image) {
      ISCacheImageView *strongSelf = weakSelf;

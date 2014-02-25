@@ -34,6 +34,7 @@
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISCacheStore *store;
 @property (nonatomic, strong) NSFileManager *fileManager;
+@property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTask;
 
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context

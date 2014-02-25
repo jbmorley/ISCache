@@ -25,8 +25,14 @@
 
 @protocol ISCacheHandler <NSObject>
 
+@required
+
 - (void)fetchItem:(ISCacheItem *)info
          delegate:(id<ISCacheHandlerDelegate>)delegate;
 - (void)cancel;
+
+@optional
+
+- (BOOL)supportsBackgroundFetch;
 
 @end

@@ -196,4 +196,9 @@ didReceiveResponse:(NSURLResponse *)response
   }
 }
 
+- (BOOL)supportsBackgroundFetch
+{
+  return YES;
+}
+
 @end

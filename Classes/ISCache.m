@@ -122,9 +122,22 @@ static ISCache *sCache;
     ISCacheScalingHandlerFactory *scalingHttpfactory = [ISCacheScalingHandlerFactory new];
     [self registerFactory:scalingHttpfactory
                forContext:ISCacheImageContext];
+    
+    // Register for application notifications.
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter addObserver:self
+                           selector:@selector(applicationWillResignActive:)
+                               name:UIApplicationWillResignActiveNotification object:nil];
 
   }
   return self;
+}
+
+
+- (void)dealloc
+{
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter removeObserver:self];
 }
 
 
@@ -411,6 +424,51 @@ static ISCache *sCache;
 }
 
 
+- (void)cleanupForItem:(ISCacheItem *)item
+{
+  [self.active removeObjectForKey:item.uid];
+  [self endBackgroundTask];
+}
+
+
+- (BOOL)activeHandlersSupportBackgroundFetch
+{
+  __block BOOL supportsBackground = NO;
+  [self.active enumerateKeysAndObjectsUsingBlock:
+   ^(NSString *uid, id<ISCacheHandler> handler, BOOL *stop) {
+     if ([handler respondsToSelector:@selector(supportsBackgroundFetch)] && [handler supportsBackgroundFetch]) {
+       supportsBackground = YES;
+       *stop = YES;
+     }
+   }];
+  return supportsBackground;
+}
+
+
+- (void)beginBackgroundTask
+{
+  if ([self activeHandlersSupportBackgroundFetch]) {
+    self.backgroundTask =
+    [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+      NSLog(@"Background task expired.");
+    }];
+    NSLog(@"Background task started.");
+  };
+}
+
+
+- (void)endBackgroundTask
+{
+  if (self.backgroundTask != 0) {
+    if (![self activeHandlersSupportBackgroundFetch]) {
+      [[UIApplication sharedApplication] endBackgroundTask:self.backgroundTask];
+      self.backgroundTask = 0;
+      NSLog(@"Background task complete.");
+    }
+  }
+}
+
+
 #pragma mark - Observer methods
 
 
@@ -462,21 +520,29 @@ static ISCache *sCache;
 
 - (void)itemDidFinish:(ISCacheItem *)item
 {
-  // Update the item info with the appropriate state.
+  [self log:@"itemDidFinish:%@", item.uid];
   [item _transitionToFound];
   [self.store save];
-  
-  // Delete the handler for the file.
-  [self.active removeObjectForKey:item.uid];
+  [self cleanupForItem:item];
 }
 
 
 - (void)item:(ISCacheItem *)item
 didFailWithError:(NSError *)error
 {
-  [self log:@"item:didFailWithError: %@", error];
+  [self log:@"item:%@ didFailWithError: %@", item.uid, error];
   [item _transitionToError:error];
   [self.store save];
+  [self cleanupForItem:item];
+}
+
+
+#pragma mark - NSNotificationCenter
+
+
+- (void)applicationWillResignActive:(NSNotification *)notification
+{
+  [self beginBackgroundTask];
 }
 
 

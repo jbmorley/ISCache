@@ -23,8 +23,9 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheItem.h"
 #import "ISCacheFilter.h"
+#import "ISCacheCompoundFilter.h"
 
-@interface ISCacheStateFilter : NSObject <ISCacheFilter>
+@interface ISCacheStateFilter : ISCacheCompoundFilter
 
 + (id)filterWithStates:(int)states;
 - (id)initWithStates:(int)states;

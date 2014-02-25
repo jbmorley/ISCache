@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "ISCacheFilter.h"
+#import "ISCacheCompoundFilter.h"
 
-@interface ISCacheUserInfoFilter : NSObject <ISCacheFilter>
+@interface ISCacheUserInfoFilter : ISCacheCompoundFilter
 
 - (id)initWithUserInfo:(NSDictionary *)userInfo;
 

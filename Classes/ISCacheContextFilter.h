@@ -22,8 +22,9 @@
 
 #import <UIKit/UIKit.h>
 #import "ISCacheFilter.h"
+#import "ISCacheCompoundFilter.h"
 
-@interface ISCacheContextFilter : NSObject <ISCacheFilter>
+@interface ISCacheContextFilter : ISCacheCompoundFilter
 
 + (id)filterWithContext:(NSString *)context;
 - (id)initWithContext:(NSString *)context;

@@ -41,5 +41,6 @@
                             preferences:(NSDictionary *)preferences;
 - (void)log:(NSString *)message, ...;
 - (void)itemDidUpdate:(ISCacheItem *)item;
+- (void)_notifyNewItem:(ISCacheItem *)item;
 
 @end

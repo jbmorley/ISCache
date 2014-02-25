@@ -377,6 +377,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   _created = [NSDate new];
   _modified = _created;
   [self _notifyObservers];
+  [self _notifyCacheObservers];
 }
 
 
@@ -386,6 +387,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   _lastError = nil;
   _state = ISCacheItemStateFound;
   [self _notifyObservers];
+  [self _notifyCacheObservers];
 }
 
 
@@ -393,6 +395,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   [self _resetState];
   [self _notifyObservers];
+  [self _notifyCacheObservers];
 }
 
 
@@ -401,6 +404,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   [self _resetState];
   _lastError = error;
   [self _notifyObservers];
+  [self _notifyCacheObservers];
 }
 
 
@@ -417,6 +421,13 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (void)_notifyExternalUpdate
 {
   [self.cache itemDidUpdate:self];
+}
+
+
+- (void)_notifyCacheObservers
+{
+  // TODO Rename this.
+  [self.cache _notifyNewItem:self];
 }
 
 

@@ -199,7 +199,7 @@ static ISCache *sCache;
   [self.store addItem:cacheItem];
   
   // Notify the observers of the new item.
-  [self notifyNewItem:cacheItem];
+  [self _notifyNewItem:cacheItem];
   
   // If there isn't an active cache entry and something exists
   // on the file system, it represents a partial download and
@@ -415,7 +415,7 @@ static ISCache *sCache;
 }
 
 
-- (void)notifyNewItem:(ISCacheItem *)item
+- (void)_notifyNewItem:(ISCacheItem *)item
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.notifier notify:@selector(cacheDidUpdate:)

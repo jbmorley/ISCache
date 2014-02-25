@@ -68,8 +68,9 @@
 {
   [[UIApplication sharedApplication] beginNetworkActivity];
   self.requestCount++;
+  NSURL *URL = [NSURL URLWithString:self.info.identifier];
   NSMutableURLRequest *request =
-  [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self.info.identifier]];
+  [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadRevalidatingCacheData timeoutInterval:60.0];
   
   if (self.info.totalBytesExpectedToRead > 0 &&
       self.supportsResume) {

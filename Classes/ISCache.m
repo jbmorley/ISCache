@@ -545,6 +545,9 @@ didFailWithError:(NSError *)error
 
 - (void)applicationWillResignActive:(NSNotification *)notification
 {
+  // TODO Is this called by the completion handler or do we
+  // need to defer the completion through an observer?
+  NSLog(@"applicationWillResignActive:");
   [self beginBackgroundTask];
 }
 

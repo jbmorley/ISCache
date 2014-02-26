@@ -326,15 +326,28 @@ static NSString *const kKeyUserInfo = @"userInfo";
 #pragma mark - Utilities
 
 
-- (void)_resetState
+- (BOOL)_resetState
 {
   [self _removeFiles];
+  
+  // Check to see if any changes will be made.
+  if (_state == ISCacheItemStateNotFound &&
+      _totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown &&
+      _totalBytesRead == 0 &&
+      _lastError == nil &&
+      _created == nil &&
+      _modified == nil) {
+    return NO;
+  }
+  
   _state = ISCacheItemStateNotFound;
   _totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
   _totalBytesRead = 0;
   _lastError = nil;
   _created = nil;
   _modified = nil;
+  
+  return YES;
 }
 
 
@@ -384,6 +397,12 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (void)_transitionToFound
 {
   [self _closeFiles];
+  
+  if (_state == ISCacheItemStateFound &&
+      _lastError == nil) {
+    return;
+  }
+  
   _lastError = nil;
   _state = ISCacheItemStateFound;
   [self _notifyObservers];
@@ -393,7 +412,11 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)_transitionToNotFound
 {
-  [self _resetState];
+  BOOL itemChanged = [self _resetState];
+  if (!itemChanged) {
+    return;
+  }
+  
   [self _notifyObservers];
   [self _notifyCacheObservers];
 }

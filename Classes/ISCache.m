@@ -39,6 +39,9 @@ NSString *const ISCacheImageContext = @"Image";
 // Errors.
 NSString *const ISCacheErrorDomain = @"ISCacheErrorDomain";
 
+// Retries.
+const NSInteger ISCacheUnlimitedRetries = -1;
+
 
 @implementation ISCache
 

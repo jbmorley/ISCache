@@ -24,15 +24,12 @@
 #import <UIKit/UIKit.h>
 #import "ISCacheItem.h"
 
-extern const NSInteger ISCacheUnlimitedRetries;
-
 typedef void (^ISCacheCompletionBlock)(NSError *error);
 
 @interface ISCacheImageView : UIImageView
 <ISCacheItemObserver>
 
 @property (nonatomic) BOOL automaticallyCancelsFetches;
-@property (nonatomic) NSInteger retries;
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context

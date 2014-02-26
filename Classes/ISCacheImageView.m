@@ -32,28 +32,12 @@
 @property (nonatomic, strong) ISCacheItem *cacheItem;
 @property (nonatomic) NSInteger callbackCount;
 @property (nonatomic, copy) ISCacheCompletionBlock block;
-@property (nonatomic) BOOL initialized;
 @property (nonatomic) NSInteger fetchCount;
 @property (nonatomic) BOOL observing;
 
 @end
 
-const NSInteger ISCacheUnlimitedRetries = -1;
-
-
 @implementation ISCacheImageView
-
-
-@synthesize retries = _retries;
-
-
-- (void)initialize
-{
-  if (_initialized) {
-    _retries = 3;
-  }
-  _initialized = YES;
-}
 
 
 - (void)cancelSetImage
@@ -155,10 +139,10 @@ const NSInteger ISCacheUnlimitedRetries = -1;
   if (self.cacheItem.state == ISCacheItemStateFound) {
     [self loadImageAsynchronously:self.callbackCount];
   } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
-    if (self.retries == ISCacheUnlimitedRetries ||
-        self.fetchCount < self.retries + 1) {
+    if (self.fetchCount < 1) {
       self.cacheItem.userInfo = @{ISCacheItemDescription: @"Cached image"};
       [self.cacheItem fetch];
+      self.fetchCount++;
     } else {
       if (self.block) {
         ISCache *defaultCache = [ISCache defaultCache];
@@ -169,20 +153,6 @@ const NSInteger ISCacheUnlimitedRetries = -1;
       }
     }
   }
-}
-
-
-- (NSInteger)retries
-{
-  [self initialize];
-  return _retries;
-}
-
-
-- (void)setRetries:(NSInteger)retries
-{
-  [self initialize];
-  _retries = retries;
 }
 
 

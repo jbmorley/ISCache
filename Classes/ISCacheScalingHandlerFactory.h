@@ -27,11 +27,6 @@ extern const NSString *ISCacheImageWidth;
 extern const NSString *ISCacheImageHeight;
 extern const NSString *ISCacheImageScaleMode;
 
-typedef enum {
-  ISCacheImageScaleAspectFit,
-  ISCacheImageScaleAspectFill,
-} ISCacheImageScale;
-
 @interface ISCacheScalingHandlerFactory : NSObject
 <ISCacheHandlerFactory>
 

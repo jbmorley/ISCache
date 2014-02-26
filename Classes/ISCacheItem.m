@@ -26,6 +26,7 @@
 #import "ISCache.h"
 #import "ISCachePrivate.h"
 #import "ISCacheItemPrivate.h"
+#import "NSObject+Serialize.h"
 
 @implementation ISCacheItem
 
@@ -157,6 +158,15 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _userInfo = userInfo;
+  
+  // Check that we can serialize the user info.
+  if (_userInfo) {
+    if (![_userInfo canWriteToFile]) {
+      @throw [NSException exceptionWithName:ISCacheExceptionInvalidUserInfo
+                                     reason:ISCacheExceptionInvalidUserInfoReason userInfo:nil];
+    }
+  }
+  
   [self _notifyObservers];
   [self _notifyExternalUpdate];
 }

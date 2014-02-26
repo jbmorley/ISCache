@@ -24,7 +24,6 @@
 #import "ISCache.h"
 #import "ISCachePrivate.h"
 #import "ISCleanup.h"
-#import "UIImage+Utilities.h"
 #import <objc/runtime.h>
 
 @interface ISCacheImageView ()

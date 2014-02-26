@@ -21,6 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "UIImage+Utilities.h"
 
 typedef enum {
   ISCacheFileStateClosed,

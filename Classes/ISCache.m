@@ -231,6 +231,7 @@ static ISCache *sCache;
                            context:(NSString *)context
                        preferences:(NSDictionary *)preferences;
 {
+  assert([NSThread isMainThread]);
   assert(identifier != nil);
   assert(context != nil);
   return [self cacheItem:identifier
@@ -249,6 +250,7 @@ static ISCache *sCache;
                                 context:(NSString *)context
                             preferences:(NSDictionary *)preferences
 {
+  assert([NSThread isMainThread]);
   [self log:@"fetch: %@, context: %@", identifier, context];
   
   // Get the relevant details for the item.
@@ -391,6 +393,7 @@ static ISCache *sCache;
 // Return a subset of the items matching the filter.
 - (NSArray *)items:(id<ISCacheFilter>)filter
 {
+  assert([NSThread isMainThread]);
   NSArray *items = [self.store items:filter];
   NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
   for (ISCacheItem *item in items) {

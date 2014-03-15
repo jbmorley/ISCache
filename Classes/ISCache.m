@@ -444,13 +444,17 @@ static ISCache *sCache;
 
 - (void)_fetchDidStart
 {
-  [[UIApplication sharedApplication] disableIdleTimer];
+  if (self.disablesIdleTimer) {
+    [[UIApplication sharedApplication] disableIdleTimer];
+  }
 }
 
 
 - (void)_fetchDidFinish
 {
-  [[UIApplication sharedApplication] enableIdleTimer];
+  if (self.disablesIdleTimer) {
+    [[UIApplication sharedApplication] enableIdleTimer];
+  }
 }
 
 

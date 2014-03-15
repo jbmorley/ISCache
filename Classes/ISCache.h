@@ -58,6 +58,7 @@ extern const NSInteger ISCacheUnlimitedRetries;
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
 @property (nonatomic) BOOL debug;
+@property (nonatomic) BOOL disablesIdleTimer;
 
 + (id)defaultCache;
 - (id)initWithPath:(NSString *)path;

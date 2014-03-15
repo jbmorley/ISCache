@@ -131,4 +131,11 @@
 }
 
 
+- (NSFileHandle *)handle
+{
+  [self open];
+  return self.fileHandle;
+}
+
+
 @end

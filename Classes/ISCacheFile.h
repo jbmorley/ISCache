@@ -41,5 +41,6 @@ typedef enum {
 - (NSData *)data;
 - (void)remove;
 - (BOOL)exists;
+- (NSFileHandle *)handle;
 
 @end

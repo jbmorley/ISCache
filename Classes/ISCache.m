@@ -21,6 +21,7 @@
 //
 
 #import "ISCache.h"
+#import <ISUtilities/ISUtilities.h>
 #import "ISNotifier.h"
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
@@ -295,7 +296,7 @@ static ISCache *sCache;
 
     [self.active setObject:handler
                     forKey:cacheItem.uid];
-    [self _updateIdleTimer];
+    [self _fetchDidStart];
     
     // Notify the delegates and begin the fetch operation
     // asynchronously. This ensures that any calling code can
@@ -380,6 +381,8 @@ static ISCache *sCache;
     [item _transitionToError:error];
     [self.store save];
     
+    [self cleanupForItem:item];
+    
   } else {
     
     [self log:
@@ -434,16 +437,20 @@ static ISCache *sCache;
 - (void)cleanupForItem:(ISCacheItem *)item
 {
   [self.active removeObjectForKey:item.uid];
-  [self _updateIdleTimer];
+  [self _fetchDidFinish];
   [self endBackgroundTask];
 }
 
 
-- (void)_updateIdleTimer
+- (void)_fetchDidStart
 {
-  BOOL disabled = (self.active.count > 0);
-  NSLog(@"Idle Timer Disabled: %d", disabled);
-  [UIApplication sharedApplication].idleTimerDisabled = disabled;
+  [[UIApplication sharedApplication] disableIdleTimer];
+}
+
+
+- (void)_fetchDidFinish
+{
+  [[UIApplication sharedApplication] enableIdleTimer];
 }
 
 

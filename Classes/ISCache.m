@@ -295,6 +295,7 @@ static ISCache *sCache;
 
     [self.active setObject:handler
                     forKey:cacheItem.uid];
+    [self _updateIdleTimer];
     
     // Notify the delegates and begin the fetch operation
     // asynchronously. This ensures that any calling code can
@@ -433,7 +434,16 @@ static ISCache *sCache;
 - (void)cleanupForItem:(ISCacheItem *)item
 {
   [self.active removeObjectForKey:item.uid];
+  [self _updateIdleTimer];
   [self endBackgroundTask];
+}
+
+
+- (void)_updateIdleTimer
+{
+  BOOL active = (self.active.count > 0);
+  NSLog(@"Idle Timer: %d", active);
+  [UIApplication sharedApplication].idleTimerDisabled = active;
 }
 
 

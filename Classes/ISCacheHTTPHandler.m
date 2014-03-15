@@ -103,7 +103,7 @@ didReceiveResponse:(NSURLResponse *)response
   
   // Check for error responses.
   // TODO What other errors do I need to check for.
-  self.statusCode = [((NSHTTPURLResponse *)response) statusCode];
+  self.statusCode = (int)[((NSHTTPURLResponse *)response) statusCode];
   if (self.statusCode == 404)
   {
     [connection cancel];

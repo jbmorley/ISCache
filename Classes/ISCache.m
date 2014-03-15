@@ -172,6 +172,12 @@ static ISCache *sCache;
 }
 
 
+- (void)unregisterFactoryForContext:(NSString *)context
+{
+  [self.factories removeObjectForKey:context];
+}
+
+
 // Creates a new item if one doesn't exist.
 - (ISCacheItem *)cacheItem:(NSString *)item
                    context:(NSString *)context

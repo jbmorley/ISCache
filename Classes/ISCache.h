@@ -65,6 +65,7 @@ extern const NSInteger ISCacheUnlimitedRetries;
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
+- (void)unregisterFactoryForContext:(NSString *)context;
 
 - (ISCacheItem *)itemForIdentifier:(NSString *)identifier
                            context:(NSString *)context

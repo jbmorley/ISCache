@@ -441,9 +441,9 @@ static ISCache *sCache;
 
 - (void)_updateIdleTimer
 {
-  BOOL active = (self.active.count > 0);
-  NSLog(@"Idle Timer: %d", active);
-  [UIApplication sharedApplication].idleTimerDisabled = active;
+  BOOL disabled = (self.active.count > 0);
+  NSLog(@"Idle Timer Disabled: %d", disabled);
+  [UIApplication sharedApplication].idleTimerDisabled = disabled;
 }
 
 

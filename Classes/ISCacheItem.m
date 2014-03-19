@@ -185,12 +185,18 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (float)progress
 {
   @synchronized(self) {
-    float totalBytesExpectedToRead = self.totalBytesExpectedToRead;
-    float totalBytesRead = self.totalBytesRead;
-    if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown) {
-      return 0.0f;
+    if (self.state == ISCacheItemStateFound) {
+      return 1.0;
+    } else if (self.state == ISCacheItemStateInProgress) {
+      float totalBytesExpectedToRead = self.totalBytesExpectedToRead;
+      float totalBytesRead = self.totalBytesRead;
+      if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown) {
+        return 0.0f;
+      } else {
+        return totalBytesRead / totalBytesExpectedToRead;
+      }
     } else {
-      return totalBytesRead / totalBytesExpectedToRead;
+      return 0.0f;
     }
   }
 }

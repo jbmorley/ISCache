@@ -28,9 +28,11 @@
 
 @interface ISCacheStore : NSObject
 
-+ (id)storeWithPath:(NSString *)path
++ (id)storeWithRoot:(NSString *)root
+               path:(NSString *)path
               cache:(ISCache *)cache;
-- (id)initWithPath:(NSString *)path
+- (id)initWithRoot:(NSString *)root
+              path:(NSString *)path
              cache:(ISCache *)cache;
 - (void)save;
 
@@ -38,6 +40,7 @@
 - (NSArray *)items:(id <ISCacheFilter>)filter;
 - (void)addItem:(ISCacheItem *)item;
 - (void)removeItem:(ISCacheItem *)item;
+- (void)removeItems:(NSArray *)items;
 
 
 @end

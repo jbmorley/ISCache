@@ -54,6 +54,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
                   context:(NSString *)context
               preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
+                     root:(NSString *)root
                      path:(NSString *)path
                     cache:(ISCache *)cache
 {
@@ -61,16 +62,19 @@ static NSString *const kKeyUserInfo = @"userInfo";
                                    context:context
                                preferences:preferences
                                        uid:uid
+                                      root:root
                                       path:path
                                      cache:cache];
 }
 
 
-+ (id)_itemInfoWithDictionary:(NSDictionary *)dictionary
-                        cache:(ISCache *)cache
++ (id)_itemInfoWithRoot:(NSString *)root
+             dictionary:(NSDictionary *)dictionary
+                  cache:(ISCache *)cache
 {
-  return [[self alloc] _initWithDictionary:dictionary
-                                     cache:cache];
+  return [[self alloc] _initWithRoot:root
+                          dictionary:dictionary
+                               cache:cache];
 }
 
 
@@ -89,6 +93,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
                   context:(NSString *)context
               preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
+                     root:(NSString *)root
                      path:(NSString *)path
                     cache:(ISCache *)cache
 {
@@ -99,6 +104,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
     _context = context;
     _preferences = preferences;
     _uid = uid;
+    _root = root;
     _path = path;
     _cache = cache;
     _fileDict = [NSMutableDictionary dictionaryWithCapacity:3];
@@ -110,8 +116,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 // Serialization to and from a dictionary.
 // A future implementation should probably take advatnage of
 // NSCoding.
-- (id)_initWithDictionary:(NSDictionary *)dictionary
-                    cache:(ISCache *)cache
+- (id)_initWithRoot:(NSString *)root
+         dictionary:(NSDictionary *)dictionary
+              cache:(ISCache *)cache
 {
   self = [self init];
   if (self) {
@@ -125,6 +132,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
                                      reason:ISCacheExceptionUnsupportedCacheStoreItemVersionReason userInfo:nil];
     }
     
+    _root = root;
     _identifier = dictionary[kKeyIdentifier];
     _context = dictionary[kKeyContext];
     _preferences = dictionary[kKeyPreferences];
@@ -133,8 +141,10 @@ static NSString *const kKeyUserInfo = @"userInfo";
     NSDictionary *files = dictionary[kKeyFiles];
     if (files) {
       for (NSString *filename in files) {
+        NSString *fileDirectory =
+        [NSString pathWithComponents:@[self.root, self.path]];
         ISCacheFile *file =
-        [[ISCacheFile alloc] initWithDirectory:_path
+        [[ISCacheFile alloc] initWithDirectory:fileDirectory
                                       filename:filename];
         [_fileDict setObject:file
                       forKey:filename];
@@ -242,7 +252,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   ISCacheFile *file = [self.fileDict objectForKey:name];
   if (file == nil) {
-    file = [[ISCacheFile alloc] initWithDirectory:self.path
+    NSString *fileDirectory =
+    [NSString pathWithComponents:@[self.root, self.path]];
+    file = [[ISCacheFile alloc] initWithDirectory:fileDirectory
                                          filename:name];
     [self.fileDict setObject:file
                       forKey:name];
@@ -393,6 +405,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
    ^(NSString *key, ISCacheFile *file, BOOL *stop) {
      [file remove];
    }];
+  [self.fileDict removeAllObjects];
 }
 
 

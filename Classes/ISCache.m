@@ -63,6 +63,8 @@ static ISCache *sCache;
         [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&error];
       }
       
+      NSLog(@"Cache Path: %@", directoryPath);
+      
       NSString *path = [directoryPath stringByAppendingPathComponent:@"uk.co.inseven.cache.store.plist"];
       
       // Do not backup.
@@ -92,22 +94,6 @@ static ISCache *sCache;
       }
     }
     
-    // Load the store.
-    self.store = [ISCacheStore storeWithPath:self.path
-                                       cache:self];
-    
-    // Clean up any partially downloaded files.
-    BOOL needsSave = NO;
-    for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress | ISCacheItemStateNotFound]]) {
-      needsSave = YES;
-      [item _transitionToNotFound];
-      [self.store removeItem:item];
-    }
-    if (needsSave) {
-      [self.store save];
-    }
-    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
-
     // Generate a unique path for the cache items.
     self.documentsPath
     = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
@@ -126,6 +112,34 @@ static ISCache *sCache;
         
       }
     }
+    
+    // Load the store.
+    self.store = [ISCacheStore storeWithRoot:self.documentsPath
+                                        path:self.path
+                                       cache:self];
+    
+    // Check the cache integrity.
+    NSMutableArray *removals =
+    [NSMutableArray arrayWithCapacity:3];
+    for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
+      if (item.state == ISCacheItemStateInProgress ||
+          item.state == ISCacheItemStateNotFound) {
+        [item _transitionToNotFound];
+        [removals addObject:item];
+      } else if (item.state == ISCacheItemStateFound &&
+                 ![item _filesExist]) {
+        NSLog(@"WARNING: Cache item files missing.");
+        [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+        [item _transitionToNotFound];
+        [removals addObject:item];
+      }
+    }
+    if (removals.count > 0) {
+      [self.store removeItems:removals];
+      [self.store save];
+    }
+    
+    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
     
     // Create and register the default factories.
     
@@ -246,7 +260,8 @@ static ISCache *sCache;
                                        context:context
                                    preferences:preferences
                                            uid:identifier
-                                          path:path
+                                          root:self.documentsPath
+                                          path:identifier
                                          cache:self];
   [self.store addItem:cacheItem];
   
@@ -288,20 +303,6 @@ static ISCache *sCache;
   ISCacheItem *cacheItem = [self cacheItem:identifier
                                    context:context
                                preferences:preferences];
-  
-  // Before proceeding we check to see if, in the case of an
-  // item which is present in the cache, the file has been removed
-  // unexpectedly. This can happen if we are relying on Apple's
-  // mechanisms for cached files.
-  if (cacheItem.state == ISCacheItemStateFound) {
-    
-    // Check that there is a file on disk matching the cache item.
-    if (![cacheItem _filesExist]) {
-      [cacheItem _transitionToNotFound];
-      [self.store save];
-    }
-    
-  }
   
   // Once we know the item is in a valid state, we process it
   // and report the results to the callee.

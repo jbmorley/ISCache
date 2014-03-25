@@ -27,6 +27,7 @@
 
 @interface ISCacheStore ()
 
+@property (nonatomic, strong) NSString *root;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) NSMutableDictionary *items;
 @property (nonatomic, strong) ISCache *cache;
@@ -42,19 +43,23 @@ static NSString *kKeyCacheStoreItems = @"items";
 static NSInteger kCacheStoreVersion = 1;
 
 
-+ (id)storeWithPath:(NSString *)path
++ (id)storeWithRoot:(NSString *)root
+               path:(NSString *)path
               cache:(ISCache *)cache
 {
-  return [[self alloc] initWithPath:path
+  return [[self alloc] initWithRoot:root
+                                path:path
                               cache:cache];
 }
 
 
-- (id)initWithPath:(NSString *)path
+- (id)initWithRoot:(NSString *)root
+              path:(NSString *)path
              cache:(ISCache *)cache
 {
   self = [super init];
   if (self) {
+    self.root = root;
     self.path = path;
     self.cache = cache;
     self.items = [NSMutableDictionary dictionaryWithCapacity:3];
@@ -77,8 +82,9 @@ static NSInteger kCacheStoreVersion = 1;
       // Load the items.
       for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
         ISCacheItem *item =
-        [ISCacheItem _itemInfoWithDictionary:dictionary
-                                       cache:self.cache];
+        [ISCacheItem _itemInfoWithRoot:self.root
+                            dictionary:dictionary
+                                 cache:self.cache];
         [self.items setObject:item
                        forKey:item.uid];
       }
@@ -121,6 +127,14 @@ static NSInteger kCacheStoreVersion = 1;
 - (void)removeItem:(ISCacheItem *)item
 {
   [self.items removeObjectForKey:item.uid];
+}
+
+
+- (void)removeItems:(NSArray *)items
+{
+  for (ISCacheItem *item in items) {
+    [self removeItem:item];
+  }
 }
 
 

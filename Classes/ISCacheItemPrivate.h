@@ -27,6 +27,7 @@
 
 @property (weak) ISCache *cache;
 @property (nonatomic, strong) NSMutableDictionary *fileDict;
+@property (nonatomic, strong) NSString *root;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISNotifier *notifier;
 
@@ -34,19 +35,23 @@
                   context:(NSString *)context
               preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
+                     root:(NSString *)root
                      path:(NSString *)path
                     cache:(ISCache *)cache;
-+ (id)_itemInfoWithDictionary:(NSDictionary *)dictionary
-                        cache:(ISCache *)cache;
++ (id)_itemInfoWithRoot:(NSString *)root
+             dictionary:(NSDictionary *)dictionary
+                  cache:(ISCache *)cache;
 
 - (id)_initWithIdentifier:(NSString *)identifier
                   context:(NSString *)context
               preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
+                     root:(NSString *)root
                      path:(NSString *)path
                     cache:(ISCache *)cache;
-- (id)_initWithDictionary:(NSDictionary *)dictionary
-                    cache:(ISCache *)cache;
+- (id)_initWithRoot:(NSString *)root
+         dictionary:(NSDictionary *)dictionary
+              cache:(ISCache *)cache;
 
 - (void)_transitionToInProgress;
 - (void)_transitionToFound;

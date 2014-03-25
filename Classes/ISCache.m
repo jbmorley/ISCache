@@ -54,11 +54,18 @@ static ISCache *sCache;
   @synchronized (self) {
     if (sCache == nil) {
       
-      NSString *documentsPath
-      = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                             NSUserDomainMask,
-                                             YES) objectAtIndex:0];
-      NSString *path = [documentsPath stringByAppendingPathComponent:@"uk.co.inseven.cache.store.plist"];
+      NSString *directoryPath
+      = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+      BOOL isDirectory = NO;
+      NSFileManager *fileManager = [NSFileManager defaultManager];
+      if (![fileManager fileExistsAtPath:directoryPath isDirectory:&isDirectory]) {
+        NSError *error;
+        [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&error];
+      }
+      
+      NSString *path = [directoryPath stringByAppendingPathComponent:@"uk.co.inseven.cache.store.plist"];
+      
+      // Do not backup.
       
       sCache = [[self alloc] initWithPath:path];
     }
@@ -78,6 +85,13 @@ static ISCache *sCache;
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     self.fileManager = [NSFileManager defaultManager];
     
+    {
+      BOOL isDirectory = NO;
+      if (![self.fileManager fileExistsAtPath:self.path isDirectory:&isDirectory]) {
+        [[[UIAlertView alloc] initWithTitle:@"Creating Cache" message:@"" completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+      }
+    }
+    
     // Load the store.
     self.store = [ISCacheStore storeWithPath:self.path
                                        cache:self];
@@ -92,16 +106,13 @@ static ISCache *sCache;
     if (needsSave) {
       [self.store save];
     }
+    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
 
     // Generate a unique path for the cache items.
     self.documentsPath
-    = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                           NSUserDomainMask,
-                                           YES) objectAtIndex:0];
+    = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     self.documentsPath =
-    [NSString pathWithComponents:@[self.documentsPath,
-                                   @"Cache",
-                                   [self.path md5]]];
+    [NSString pathWithComponents:@[self.documentsPath, @"Cache", [self.path md5]]];
     BOOL isDirectory = NO;
     if (![self.fileManager fileExistsAtPath:self.documentsPath
                                 isDirectory:&isDirectory]) {
@@ -110,6 +121,7 @@ static ISCache *sCache;
                   withIntermediateDirectories:YES
                                    attributes:nil
                                         error:&error];
+      [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.documentsPath]];
       if (error) {
         
       }
@@ -142,6 +154,18 @@ static ISCache *sCache;
 {
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter removeObserver:self];
+}
+
+
+- (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL
+{
+  assert([self.fileManager fileExistsAtPath:[URL path]]);
+  NSError *error = nil;
+  BOOL success = [URL setResourceValue:[NSNumber numberWithBool: YES] forKey:NSURLIsExcludedFromBackupKey error:&error];
+  if(!success){
+    [self log:@"Error excluding %@ from backup %@", [URL lastPathComponent], error];
+  }
+  return success;
 }
 
 
@@ -200,6 +224,24 @@ static ISCache *sCache;
   
   // Create a new info for the file.
   NSString *path = [self.documentsPath stringByAppendingPathComponent:identifier];
+
+  // If there isn't an active cache entry and something exists
+  // on the file system, it represents a partial download and
+  // should be cleaned up.
+  BOOL isDirectory = NO;
+  if ([self.fileManager fileExistsAtPath:path
+                             isDirectory:&isDirectory]) {
+    NSError *error;
+    [self.fileManager removeItemAtPath:path
+                                 error:&error];
+    if (error != nil) {
+      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
+                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
+                                   userInfo:nil];
+    }
+  }
+  
+  // Create the cache item.
   cacheItem = [ISCacheItem _itemWithIdentifier:item
                                        context:context
                                    preferences:preferences
@@ -210,24 +252,6 @@ static ISCache *sCache;
   
   // Notify the observers of the new item.
   [self _notifyNewItem:cacheItem];
-  
-  // If there isn't an active cache entry and something exists
-  // on the file system, it represents a partial download and
-  // should be cleaned up.
-  // TODO This clean up code needs to be restored for a given
-  // cache item.
-//  BOOL isDirectory = NO;
-//  if ([self.fileManager fileExistsAtPath:cacheItem.file.path
-//                             isDirectory:&isDirectory]) {
-//    NSError *error;
-//    [self.fileManager removeItemAtPath:cacheItem.file.path
-//                                 error:&error];
-//    if (error != nil) {
-//      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
-//                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
-//                                   userInfo:nil];
-//    }
-//  }
   
   return cacheItem;
   
@@ -304,21 +328,9 @@ static ISCache *sCache;
                     forKey:cacheItem.uid];
     [self _fetchDidStart];
     
-    // Notify the delegates and begin the fetch operation
-    // asynchronously. This ensures that any calling code can
-    // set up filters, etc based on the returned ISCacheItem before
-    // the operation begins ensuring they do not miss a callback.
-    // Assuming ISCache is only accessed from the main thread, we
-    // calling code is guaranteed never to miss any updates which
-    // occur any time after calling fetchItem.
-    dispatch_queue_t mainQueue = dispatch_get_main_queue();
-    dispatch_async(mainQueue, ^{
-      
-      // Begin the fetch.
-      [handler fetchItem:cacheItem
-                delegate:self];
-      
-    });
+    // Notify the delegates and begin the fetch operation.
+    [handler fetchItem:cacheItem
+              delegate:self];
     
   }
   
@@ -433,10 +445,8 @@ static ISCache *sCache;
 
 - (void)_notifyNewItem:(ISCacheItem *)item
 {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.notifier notify:@selector(cacheDidUpdate:)
-               withObject:self];
-  });
+  [self.notifier notify:@selector(cacheDidUpdate:)
+             withObject:self];
 }
 
 
@@ -577,7 +587,7 @@ didFailWithError:(NSError *)error
 {
   // TODO Is this called by the completion handler or do we
   // need to defer the completion through an observer?
-  NSLog(@"applicationWillResignActive:");
+  [self log:@"applicationWillResignActive:"];
   [self beginBackgroundTask];
 }
 

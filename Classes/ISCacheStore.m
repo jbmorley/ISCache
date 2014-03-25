@@ -82,6 +82,9 @@ static NSInteger kCacheStoreVersion = 1;
         [self.items setObject:item
                        forKey:item.uid];
       }
+    } else {
+      self.dirty = YES;
+      [self saveBlocking];
     }
   }
   return self;
@@ -121,6 +124,46 @@ static NSInteger kCacheStoreVersion = 1;
 }
 
 
+- (void)saveBlocking
+{
+  NSArray *items = nil;
+  @synchronized (self) {
+    if (self.dirty) {
+      items = [[self.items allValues] copy];
+      self.dirty = NO;
+    } else {
+      return;
+    }
+  }
+  
+  // Create the dictionaries.
+  NSMutableArray *dictionaries =
+  [NSMutableArray arrayWithCapacity:items.count];
+  for (ISCacheItem *item in items) {
+    [dictionaries addObject:[item _dictionary]];
+  }
+  
+  // Create a dictionary to write to file.
+  NSMutableDictionary *store =
+  [NSMutableDictionary dictionaryWithObjectsAndKeys:
+   @(kCacheStoreVersion),
+   kKeyCacheStoreVersion,
+   dictionaries,
+   kKeyCacheStoreItems,
+   nil];
+  
+  // Write the dictionary to disk.
+  BOOL success = [store writeToFile:self.path
+                         atomically:YES];
+  if (!success) {
+    @throw [NSException exceptionWithName:ISCacheExceptionUnableToSaveStore
+                                   reason:ISCacheExceptionUnableToSaveStoreReason
+                                 userInfo:nil];
+    
+  }
+}
+
+
 - (void)save
 {
   @synchronized (self) {
@@ -128,43 +171,7 @@ static NSInteger kCacheStoreVersion = 1;
   }
   
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-    
-    NSArray *items = nil;
-    @synchronized (self) {
-      if (self.dirty) {
-        items = [[self.items allValues] copy];
-        self.dirty = NO;
-      } else {
-        return;
-      }
-    }
-    
-    // Create the dictionaries.
-    NSMutableArray *dictionaries =
-    [NSMutableArray arrayWithCapacity:items.count];
-    for (ISCacheItem *item in items) {
-      [dictionaries addObject:[item _dictionary]];
-    }
-    
-    // Create a dictionary to write to file.
-    NSMutableDictionary *store =
-    [NSMutableDictionary dictionaryWithObjectsAndKeys:
-     @(kCacheStoreVersion),
-     kKeyCacheStoreVersion,
-     dictionaries,
-     kKeyCacheStoreItems,
-     nil];
-    
-    // Write the dictionary to disk.
-    BOOL success = [store writeToFile:self.path
-                           atomically:YES];
-    if (!success) {
-      @throw [NSException exceptionWithName:ISCacheExceptionUnableToSaveStore
-                                     reason:ISCacheExceptionUnableToSaveStoreReason
-                                   userInfo:nil];
-
-    }
-
+    [self saveBlocking];
   });
 }
 

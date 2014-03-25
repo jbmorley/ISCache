@@ -143,10 +143,7 @@
       self.fetchCount++;
     } else {
       if (self.block) {
-        ISCache *defaultCache = [ISCache defaultCache];
-        [defaultCache log:
-         @"Start: %@",
-         self.cacheItem.uid];
+        assert([NSThread isMainThread]);
         self.block(self.cacheItem.lastError);
       }
     }

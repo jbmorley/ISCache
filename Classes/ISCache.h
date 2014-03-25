@@ -61,7 +61,7 @@ extern const NSInteger ISCacheUnlimitedRetries;
 @property (nonatomic) BOOL disablesIdleTimer;
 
 + (id)defaultCache;
-- (id)initWithPath:(NSString *)path;
+- (id)initWithIdentifier:(NSString *)identifier;
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;

@@ -141,8 +141,10 @@ static NSString *const kKeyUserInfo = @"userInfo";
     NSDictionary *files = dictionary[kKeyFiles];
     if (files) {
       for (NSString *filename in files) {
+        NSLog(@"Path: %@", self.path);
         NSString *fileDirectory =
         [NSString pathWithComponents:@[self.root, self.path]];
+        NSLog(@"Diretory: %@", fileDirectory);
         ISCacheFile *file =
         [[ISCacheFile alloc] initWithDirectory:fileDirectory
                                       filename:filename];

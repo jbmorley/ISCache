@@ -53,74 +53,49 @@ static ISCache *sCache;
 {
   @synchronized (self) {
     if (sCache == nil) {
-      
-      NSString *directoryPath
-      = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-      BOOL isDirectory = NO;
-      NSFileManager *fileManager = [NSFileManager defaultManager];
-      if (![fileManager fileExistsAtPath:directoryPath isDirectory:&isDirectory]) {
-        NSError *error;
-        [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&error];
-      }
-      
-      NSLog(@"Cache Path: %@", directoryPath);
-      
-      NSString *path = [directoryPath stringByAppendingPathComponent:@"uk.co.inseven.cache.store.plist"];
-      
-      // Do not backup.
-      
-      sCache = [[self alloc] initWithPath:path];
+      sCache = [[self alloc] initWithIdentifier:@"uk.co.inseven.cache.store"];
     }
     return sCache;
   }
 }
 
 
-- (id)initWithPath:(NSString *)path
+- (id)initWithIdentifier:(NSString *)identifier
 {
   self = [super init];
   if (self) {
     self.debug = NO;
-    self.path = path;
+    self.identifier = identifier;
     self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     self.fileManager = [NSFileManager defaultManager];
     
-    {
-      BOOL isDirectory = NO;
-      if (![self.fileManager fileExistsAtPath:self.path isDirectory:&isDirectory]) {
-        [[[UIAlertView alloc] initWithTitle:@"Creating Cache" message:@"" completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-      }
-    }
+    // Create the application support directory for the cache.
+    NSString *applicationSupport = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    applicationSupport = [applicationSupport stringByAppendingPathComponent:@"Cache"];
+    [self createDirectoryAtPath:applicationSupport];
     
-    // Generate a unique path for the cache items.
-    self.documentsPath
-    = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    self.documentsPath =
-    [NSString pathWithComponents:@[self.documentsPath, @"Cache", [self.path md5]]];
-    BOOL isDirectory = NO;
-    if (![self.fileManager fileExistsAtPath:self.documentsPath
-                                isDirectory:&isDirectory]) {
-      NSError *error;
-      [self.fileManager createDirectoryAtPath:self.documentsPath
-                  withIntermediateDirectories:YES
-                                   attributes:nil
-                                        error:&error];
-      [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.documentsPath]];
-      if (error) {
-        
-      }
-    }
+    // Generate our unique paths.
+    self.documentsPath = [applicationSupport stringByAppendingString:self.identifier];
+    self.path = [self.documentsPath stringByAppendingPathExtension:@".plist"];
+    
+    // Create our unique paths if necessary.
+    [self createDirectoryAtPath:self.documentsPath];
     
     // Load the store.
     self.store = [ISCacheStore storeWithRoot:self.documentsPath
                                         path:self.path
                                        cache:self];
     
+    if (![[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
+      [[[UIAlertView alloc] initWithTitle:@"Info" message:@"Creating cache." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+    }
+    
     // Check the cache integrity.
     NSMutableArray *removals =
     [NSMutableArray arrayWithCapacity:3];
+    BOOL missingFiles = NO;
     for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
       if (item.state == ISCacheItemStateInProgress ||
           item.state == ISCacheItemStateNotFound) {
@@ -128,8 +103,7 @@ static ISCache *sCache;
         [removals addObject:item];
       } else if (item.state == ISCacheItemStateFound &&
                  ![item _filesExist]) {
-        NSLog(@"WARNING: Cache item files missing.");
-        [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+        missingFiles = YES;
         [item _transitionToNotFound];
         [removals addObject:item];
       }
@@ -137,6 +111,10 @@ static ISCache *sCache;
     if (removals.count > 0) {
       [self.store removeItems:removals];
       [self.store save];
+    }
+    if (missingFiles) {
+      NSLog(@"WARNING: Cache item files missing.");
+      [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
     }
     
     [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
@@ -161,6 +139,23 @@ static ISCache *sCache;
 
   }
   return self;
+}
+
+
+- (BOOL)createDirectoryAtPath:(NSString *)path
+{
+  BOOL isDirectory = NO;
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  if (![fileManager fileExistsAtPath:path isDirectory:&isDirectory]) {
+    NSError *error;
+    [fileManager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error];
+    if (error) {
+      return NO;
+    }
+    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:path]];
+    return YES;
+  }
+  return YES;
 }
 
 

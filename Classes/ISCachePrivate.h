@@ -31,6 +31,7 @@
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
 @property (nonatomic, strong) NSString *documentsPath;
+@property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISCacheStore *store;
 @property (nonatomic, strong) NSFileManager *fileManager;

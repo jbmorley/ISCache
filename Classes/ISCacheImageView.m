@@ -138,7 +138,6 @@
     [self loadImageAsynchronously:self.callbackCount];
   } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
     if (self.fetchCount < 1) {
-      self.cacheItem.userInfo = @{ISCacheItemDescription: @"Cached image"};
       [self.cacheItem fetch];
       self.fetchCount++;
     } else {

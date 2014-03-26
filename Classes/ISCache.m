@@ -29,10 +29,6 @@
 #import "ISCachePrivate.h"
 #import "ISCacheItemPrivate.h"
 
-// Informal properties.
-NSString *const ISCacheItemDescription = @"description";
-NSString *const ISCacheItemThumbnail = @"thumbnail";
-
 // Contexts.
 NSString *const ISCacheURLContext = @"URL";
 NSString *const ISCacheImageContext = @"Image";

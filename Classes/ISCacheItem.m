@@ -164,6 +164,13 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
+- (NSString *)description
+{
+  // TODO Flesh this out.
+  return [self.userInfo description];
+}
+
+
 - (void)setUserInfo:(NSDictionary *)userInfo
 {
   if (_userInfo == userInfo) {

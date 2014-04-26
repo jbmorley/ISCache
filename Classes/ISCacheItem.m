@@ -322,6 +322,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _totalBytesExpectedToRead = totalBytesExpectedToRead;
+  [self _notifyObserversProgress];
   [self _notifyObservers];
 }
 
@@ -335,7 +336,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _totalBytesRead = totalBytesRead;
-  [self _notifyObservers];
+  [self _notifyObserversProgress];
 }
 
 
@@ -349,6 +350,9 @@ static NSString *const kKeyUserInfo = @"userInfo";
   if ((options & ISCacheItemObserverOptionsInitial) > 0) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [observer cacheItemDidChange:self];
+      if ([observer respondsToSelector:@selector(cacheItemDidProgress:)]) {
+        [observer cacheItemDidProgress:self];
+      }
     });
   }
 }
@@ -497,6 +501,16 @@ static NSString *const kKeyUserInfo = @"userInfo";
   // Notification always happens on the main thread.
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.notifier notify:@selector(cacheItemDidChange:)
+               withObject:self];
+  });
+}
+
+
+- (void)_notifyObserversProgress
+{
+  // Notification always happens on the main thread.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.notifier notify:@selector(cacheItemDidProgress:)
                withObject:self];
   });
 }

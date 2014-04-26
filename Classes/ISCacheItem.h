@@ -48,6 +48,9 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 - (void)cacheItemDidChange:(ISCacheItem *)cacheItem;
 
+@optional
+- (void)cacheItemDidProgress:(ISCacheItem *)cacheItem;
+
 @end
 
 @interface ISCacheItem : NSObject

@@ -238,12 +238,13 @@ static NSString *const kKeyUserInfo = @"userInfo";
       
     } else {
       
-      NSTimeInterval interval = [self.modified timeIntervalSinceNow] * -1;
+      NSTimeInterval interval =
+      [self.modified timeIntervalSinceNow] * -1;
+      CGFloat rate = totalBytesRead / interval;
+      CGFloat remaining = totalBytesExpectedToRead - totalBytesRead;
+      CGFloat timeRemaining = remaining / rate;
 
-      // TODO This calculation is wrong.
-      CGFloat remaining = (CGFloat)(totalBytesExpectedToRead - totalBytesRead) / (CGFloat)totalBytesExpectedToRead;
-      
-      return interval * remaining;
+      return timeRemaining;
       
     }
 

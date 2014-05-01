@@ -73,7 +73,7 @@ static ISCache *sCache;
     [self createDirectoryAtPath:applicationSupport];
     
     // Generate our unique paths.
-    self.documentsPath = [applicationSupport stringByAppendingString:self.identifier];
+    self.documentsPath = [applicationSupport stringByAppendingPathComponent:self.identifier];
     self.path = [self.documentsPath stringByAppendingPathExtension:@".plist"];
     
     // Create our unique paths if necessary.

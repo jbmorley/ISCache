@@ -21,6 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <ISUtilities/ISUtilities.h>
 #import "ISCacheFile.h"
 #import "ISCacheBlock.h"
 #import "ISCacheTask.h"
@@ -51,7 +52,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @class ISCache;
 @class ISCacheItem;
 
-@interface ISCacheItem : NSObject
+@interface ISCacheItem : NSObject <ISCancelable>
 
 // Read-only properties.
 @property (strong, nonatomic, readonly) NSString *identifier;

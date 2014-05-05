@@ -28,32 +28,18 @@
 @interface ISCacheImageView ()
 
 @property (nonatomic, strong) ISCacheItem *cacheItem;
-@property (nonatomic) NSInteger callbackCount;
 @property (nonatomic, copy) ISCacheCompletionBlock block;
-@property (nonatomic) NSInteger fetchCount;
 @property (nonatomic) BOOL observing;
+@property (nonatomic, strong) ISCancelToken *cancelToken;
 
 @end
 
 @implementation ISCacheImageView
 
 
-- (void)cancelSetImage
-{
-  self.block = NULL;
-  [self.cacheItem removeCacheItemObserver:self];
-  if (self.automaticallyCancelsFetches) {
-    [self.cacheItem cancel];
-  }
-  self.cacheItem = nil;
-  self.callbackCount = 0;
-}
-
-
 - (void)dealloc
 {
-  [self.cacheItem removeCacheItemObserver:self];
-  [self cancelSetImage];
+  [self.cancelToken cancel];
 }
 
 
@@ -78,7 +64,7 @@
                                           preferences:preferences];
   
   // Cancel the previous fetch.
-  [self cancelSetImage];
+  [self.cancelToken cancel];
   
   // We always set the placeholder image as image loading is
   // performed asynchronously so may take some time to complete.
@@ -88,14 +74,44 @@
     self.image = nil;
   }
   
-  // Initialize the state.
-  self.fetchCount = 0;
-  
   // Store the cache item and observe it.
   self.block = block;
   self.cacheItem = item;
-  [self.cacheItem addCacheItemObserver:self
-                               options:ISCacheItemObserverOptionsInitial];
+  self.cancelToken = [ISCancelToken new];
+  [self.cacheItem
+   then:^(NSError *error, ISCancelToken *cancelToken) {
+     
+     // Give up on errors.
+     if (error) {
+       return;
+     }
+    
+    ISCacheImageView *__weak weakSelf = self;
+    ISCacheItem *cacheItem = self.cacheItem;
+    [UIImage loadImage:cacheItem.file.path
+            completion:
+     ^(NSUInteger identifier, UIImage *image) {
+       ISCacheImageView *strongSelf = weakSelf;
+       
+       // Guard against expired requests.
+       if (strongSelf == nil ||
+           cancelToken.isCancelled) {
+         return;
+       }
+       
+       // Set the image.
+       strongSelf.image = image;
+       
+       // Notify the client of the success.
+       if (self.block) {
+         self.block(nil);
+       }
+       
+     }];
+    
+  }
+   cancelToken:self.cancelToken];
+  
   
   // We do not explicitly fetch the item here; this is done
   // as a result of the initial property value observeration.
@@ -104,49 +120,9 @@
 }
 
 
-- (void)loadImageAsynchronously:(NSInteger)callback
+- (void)cancelSetImage
 {
-  ISCacheImageView *__weak weakSelf = self;
-  ISCacheItem *cacheItem = self.cacheItem;
-  self.callbackCount =
-  [UIImage loadImage:cacheItem.file.path
-          completion:
-   ^(NSUInteger identifier, UIImage *image) {
-     ISCacheImageView *strongSelf = weakSelf;
-     
-     // Guard against expired requests.
-     if (strongSelf == nil ||
-         identifier != self.callbackCount) {
-       return;
-     }
-     
-     // Set the image.
-     strongSelf.image = image;
-     
-     // Notify the client of the success.
-     if (self.block) {
-       self.block(nil);
-     }
-     
-   }];
-}
-
-
-- (void)cacheItemDidChange:(ISCacheItem *)cacheItem
-{
-  if (self.cacheItem.state == ISCacheItemStateFound) {
-    [self loadImageAsynchronously:self.callbackCount];
-  } else if (self.cacheItem.state == ISCacheItemStateNotFound) {
-    if (self.fetchCount < 1) {
-      [self.cacheItem fetch];
-      self.fetchCount++;
-    } else {
-      if (self.block) {
-        assert([NSThread isMainThread]);
-        self.block(self.cacheItem.lastError);
-      }
-    }
-  }
+  [self.cancelToken cancel];
 }
 
 

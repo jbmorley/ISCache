@@ -23,9 +23,13 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheHandler.h"
 
+typedef void (^ISCacheHandlerFactoryCompletionBlock)(id<ISCacheHandler> handler);
+
 @protocol ISCacheHandlerFactory <NSObject>
 
 // Ownership is passed to the callee.
-- (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo;
+- (void)createHandlerForContext:(NSString *)context
+                       userInfo:(NSDictionary *)userInfo
+                completionBlock:(ISCacheHandlerFactoryCompletionBlock)completionBlock;
 
 @end

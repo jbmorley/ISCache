@@ -153,8 +153,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
       }
     }
     _state = [dictionary[kKeyState] intValue];
-    self.totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
-    self.totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
+    _totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
+    _totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
     _created = dictionary[kKeyCreated];
     _modified = dictionary[kKeyModified];
     self.userInfo = dictionary[kKeyUserInfo];
@@ -315,6 +315,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setTotalBytesExpectedToRead:(long long)totalBytesExpectedToRead
 {
+  assert(_state == ISCacheItemStateInProgress);
   [self.cache log:
    @"ISCacheItem setTotalBytesExpectedToRead:%llu",
    totalBytesExpectedToRead];
@@ -330,6 +331,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setTotalBytesRead:(long long)totalBytesRead
 {
+  assert(_state == ISCacheItemStateInProgress);
   [self.cache log:
    @"ISCacheItem setTotalBytesRead:%llu",
    totalBytesRead];
@@ -449,6 +451,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)_transitionToFound
 {
+  assert(_state == ISCacheItemStateInProgress);
   [self _closeFiles];
   
   if (_state == ISCacheItemStateFound &&

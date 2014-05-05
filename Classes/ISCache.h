@@ -48,9 +48,6 @@ extern NSString *const ISCacheImageContext;
 // Errors.
 extern NSString *const ISCacheErrorDomain;
 
-// Retries.
-extern const NSInteger ISCacheUnlimitedRetries;
-
 @interface ISCache : NSObject <ISCacheHandlerDelegate>
 
 @property (nonatomic) BOOL debug;

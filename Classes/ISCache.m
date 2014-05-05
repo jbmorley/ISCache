@@ -36,10 +36,6 @@ NSString *const ISCacheImageContext = @"Image";
 // Errors.
 NSString *const ISCacheErrorDomain = @"ISCacheErrorDomain";
 
-// Retries.
-const NSInteger ISCacheUnlimitedRetries = -1;
-
-
 @implementation ISCache
 
 static ISCache *sCache;
@@ -312,20 +308,23 @@ static ISCache *sCache;
     
     // Transition the cache item.
     [cacheItem _transitionToWaiting];
-    [cacheItem _transitionToInProgress];
     [self.store save];
     
     // If the item doesn't exist and isn't in progress, fetch it.
-    id<ISCacheHandler> handler = [self handlerForContext:context
-                                             preferences:preferences];
-
-    [self.active setObject:handler
-                    forKey:cacheItem.uid];
-    [self _fetchDidStart];
-    
-    // Notify the delegates and begin the fetch operation.
-    [handler fetchItem:cacheItem
-              delegate:self];
+    [self handlerForContext:context
+                preferences:preferences
+            completionBlock:^(id<ISCacheHandler> handler) {
+              // Ensure the completion is always dispatched back to the main thread.
+              dispatch_async(dispatch_get_main_queue(), ^{
+                [cacheItem _transitionToInProgress];
+                [self.active setObject:handler
+                                forKey:cacheItem.uid];
+                [self _fetchDidStart];
+                // Notify the delegates and begin the fetch operation.
+                [handler fetchItem:cacheItem
+                          delegate:self];
+              });
+            }];
     
   }
   
@@ -427,8 +426,9 @@ static ISCache *sCache;
 
 // Check there is a handler factory registered for the context.
 // Throws an exception if no handler factory can be found.
-- (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                            preferences:(NSDictionary *)preferences
+- (void)handlerForContext:(NSString *)context
+              preferences:(NSDictionary *)preferences
+          completionBlock:(ISCacheHandlerFactoryCompletionBlock)completionBlock
 {
   id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
   if (factory == nil) {
@@ -436,7 +436,9 @@ static ISCache *sCache;
                                    reason:ISCacheExceptionMissingFactoryForContextReason
                                  userInfo:nil];
   }
-  return [factory createHandler:preferences];
+  [factory createHandlerForContext:context
+                          userInfo:preferences
+                   completionBlock:completionBlock];
 }
 
 

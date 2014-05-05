@@ -56,10 +56,11 @@
 }
 
 
-- (id<ISCacheHandler>)createHandler:(NSDictionary *)userInfo
+- (void)createHandlerForContext:(NSString *)context
+                       userInfo:(NSDictionary *)userInfo
+                completionBlock:(ISCacheHandlerFactoryCompletionBlock)completionBlock
 {
-  id<ISCacheHandler> handler = [[self.handlerClass alloc] init];
-  return handler;
+  completionBlock([[self.handlerClass alloc] init]);
 }
 
 @end

@@ -24,12 +24,16 @@
 #import "ISCacheFile.h"
 
 typedef enum {
+  
   // The item is not present in the cache.
   ISCacheItemStateNotFound = 1,
+  // The item has been requested and is waiting to start.
+  ISCacheItemStateWaiting = 2,
   // The item has been requested and is in progress.
-  ISCacheItemStateInProgress = 2,
+  ISCacheItemStateInProgress = 4,
   // The item is present in the cache.
-  ISCacheItemStateFound = 4,
+  ISCacheItemStateFound = 8,
+  
 } ISCacheItemState;
 
 enum {
@@ -37,7 +41,7 @@ enum {
 };
 typedef NSUInteger ISCacheItemObserverOptions;
 
-static const int ISCacheItemStateAll = 7;
+static const int ISCacheItemStateAll = 15;
 
 static const int ISCacheItemTotalBytesUnknown = -1;
 

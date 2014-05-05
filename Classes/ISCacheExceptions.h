@@ -31,6 +31,7 @@ extern NSString *const ISCacheExceptionUnsupportedCacheStoreVersion;
 extern NSString *const ISCacheExceptionUnsupportedCacheStoreItemVersion;
 extern NSString *const ISCacheExceptionInvalidHandler;
 extern NSString *const ISCacheExceptionInvalidUserInfo;
+extern NSString *const ISCacheExceptionUnsupportedState;
 
 // Reason.
 extern NSString *const ISCacheExceptionUnableToCreateItemDirectoryReason;
@@ -41,3 +42,4 @@ extern NSString *const ISCacheExceptionUnsupportedCacheStoreVersionReason;
 extern NSString *const ISCacheExceptionUnsupportedCacheStoreItemVersionReason;
 extern NSString *const ISCacheExceptionInvalidHandlerReason;
 extern NSString *const ISCacheExceptionInvalidUserInfoReason;
+extern NSString *const ISCacheExceptionUnsupportedStateReason;

@@ -92,16 +92,17 @@ static ISCache *sCache;
     NSMutableArray *removals =
     [NSMutableArray arrayWithCapacity:3];
     BOOL missingFiles = NO;
-    for (ISCacheItem *item in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
-      if (item.state == ISCacheItemStateInProgress ||
-          item.state == ISCacheItemStateNotFound) {
-        [item _transitionToNotFound];
-        [removals addObject:item];
-      } else if (item.state == ISCacheItemStateFound &&
-                 ![item _filesExist]) {
+    for (ISCacheItem *cacheItem in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
+      if (cacheItem.state == ISCacheItemStateWaiting ||
+          cacheItem.state == ISCacheItemStateInProgress ||
+          cacheItem.state == ISCacheItemStateNotFound) {
+        [cacheItem _transitionToNotFound];
+        [removals addObject:cacheItem];
+      } else if (cacheItem.state == ISCacheItemStateFound &&
+                 ![cacheItem _filesExist]) {
         missingFiles = YES;
-        [item _transitionToNotFound];
-        [removals addObject:item];
+        [cacheItem _transitionToNotFound];
+        [removals addObject:cacheItem];
       }
     }
     if (removals.count > 0) {
@@ -304,11 +305,13 @@ static ISCache *sCache;
     [cacheItem _updateModified];
     [self.store save];
     
-  } else if (cacheItem.state == ISCacheItemStateInProgress) {
+  } else if (cacheItem.state == ISCacheItemStateWaiting ||
+             cacheItem.state == ISCacheItemStateInProgress) {
     
   } else {
     
     // Transition the cache item.
+    [cacheItem _transitionToWaiting];
     [cacheItem _transitionToInProgress];
     [self.store save];
     
@@ -339,18 +342,19 @@ static ISCache *sCache;
 }
 
 
-- (void)removeItem:(ISCacheItem *)item
+- (void)removeItem:(ISCacheItem *)cacheItem
 {
-  if (item.state == ISCacheItemStateFound) {
+  if (cacheItem.state == ISCacheItemStateFound) {
     
     // Reset the cache item state.
-    [item _transitionToNotFound];
+    [cacheItem _transitionToNotFound];
     [self.store save];
     
-  } else if (item.state == ISCacheItemStateInProgress) {
+  } else if (cacheItem.state == ISCacheItemStateWaiting ||
+             cacheItem.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, then cancel the progress.
-    [self cancelItem:item];
+    [self cancelItem:cacheItem];
     
   } else {
     
@@ -369,17 +373,18 @@ static ISCache *sCache;
 }
 
 
-- (void)cancelItem:(ISCacheItem *)item
+- (void)cancelItem:(ISCacheItem *)cacheItem
 {
   // Only attmept to cancel the item if it is in progress.
-  if (item.state == ISCacheItemStateInProgress ||
-      item.state == ISCacheItemStateNotFound) {
+  if (cacheItem.state == ISCacheItemStateWaiting ||
+      cacheItem.state == ISCacheItemStateInProgress ||
+      cacheItem.state == ISCacheItemStateNotFound) {
     
     [self log:
      @"cancelItem:%@ -> item not found or in progress",
-     item.uid];
+     cacheItem.uid];
     
-    id<ISCacheHandler> handler = [self.active objectForKey:item.uid];
+    id<ISCacheHandler> handler = [self.active objectForKey:cacheItem.uid];
     [handler cancel];
     
     // Transition the cache item.
@@ -388,16 +393,16 @@ static ISCache *sCache;
     [NSError errorWithDomain:ISCacheErrorDomain
                         code:ISCacheErrorCancelled
                     userInfo:nil];
-    [item _transitionToError:error];
+    [cacheItem _transitionToError:error];
     [self.store save];
     
-    [self cleanupForItem:item];
+    [self cleanupForItem:cacheItem];
     
   } else {
     
     [self log:
      @"cancelItem:%@ -> item already complete, ignoring",
-     item.uid];
+     cacheItem.uid];
     
   }
   

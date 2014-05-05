@@ -426,12 +426,22 @@ static NSString *const kKeyUserInfo = @"userInfo";
 #pragma mark - Transitions
 
 
-- (void)_transitionToInProgress
+- (void)_transitionToWaiting
 {
   [self _resetState];
-  _state = ISCacheItemStateInProgress;
+  _state = ISCacheItemStateWaiting;
   _created = [NSDate new];
-  _modified = _created;
+  [self _notifyObservers];
+  [self _notifyCacheObservers];
+}
+
+
+- (void)_transitionToInProgress
+{
+  assert(_state == ISCacheItemStateWaiting);
+  [self _resetState];
+  _state = ISCacheItemStateInProgress;
+  _modified = [NSDate new];
   [self _notifyObservers];
   [self _notifyCacheObservers];
 }

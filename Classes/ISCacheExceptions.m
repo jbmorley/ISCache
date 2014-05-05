@@ -30,7 +30,8 @@ NSString *const ISCacheExceptionMissingFactoryForContext = @"ISCacheExceptionMis
 NSString *const ISCacheExceptionUnsupportedCacheStoreVersion = @"ISCacheExceptionUnsupportedCacheStoreVersion";
 NSString *const ISCacheExceptionUnsupportedCacheStoreItemVersion =  @"ISCacheExceptionUnsupportedCacheStoreItemVersion";
 NSString *const ISCacheExceptionInvalidHandler = @"ISCacheExceptionInvalidHandler";
-NSString *const ISCacheExceptionInvalidUserInfo =  @"ISCacheExceptionInvalidUserInfo";
+NSString *const ISCacheExceptionInvalidUserInfo = @"ISCacheExceptionInvalidUserInfo";
+NSString *const ISCacheExceptionUnsupportedState = @"ISCacheExceptionUnsupportedState";
 
 // Reason.
 NSString *const ISCacheExceptionUnableToCreateItemDirectoryReason = @"It was not possible to create the directory for the cache items.";
@@ -40,4 +41,5 @@ NSString *const ISCacheExceptionMissingFactoryForContextReason = @"No cache hand
 NSString *const ISCacheExceptionUnsupportedCacheStoreVersionReason = @"The cache store is using an unsupported version.";
 NSString *const ISCacheExceptionUnsupportedCacheStoreItemVersionReason =  @"Unable to internalize cache item with unsupported version.";
 NSString *const ISCacheExceptionInvalidHandlerReason = @"Cache handlers must respond to the NSCacheHandler protocol.";
-NSString *const ISCacheExceptionInvalidUserInfoReason =  @"User info must contain data which can be serialized.";
+NSString *const ISCacheExceptionInvalidUserInfoReason = @"User info must contain data which can be serialized.";
+NSString *const ISCacheExceptionUnsupportedStateReason = @"The ISCacheItemState is unsupported.";

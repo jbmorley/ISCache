@@ -53,6 +53,7 @@
          dictionary:(NSDictionary *)dictionary
               cache:(ISCache *)cache;
 
+- (void)_transitionToWaiting;
 - (void)_transitionToInProgress;
 - (void)_transitionToFound;
 - (void)_transitionToNotFound;

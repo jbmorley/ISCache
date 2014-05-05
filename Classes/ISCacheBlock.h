@@ -21,11 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheFilter.h"
-#import "ISCacheCompoundFilter.h"
+#import <ISUtilities/ISUtilities.h>
 
-@interface ISCacheUserInfoFilter : ISCacheCompoundFilter
-
-- (id)initWithUserInfo:(NSDictionary *)userInfo;
-
-@end
+typedef void (^ISCacheBlock)(NSError *error,
+                             ISCancelToken *cancelToken);

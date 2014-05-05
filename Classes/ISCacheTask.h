@@ -21,11 +21,22 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheFilter.h"
-#import "ISCacheCompoundFilter.h"
+#import <ISUtilities/ISUtilities.h>
+#import "ISCacheBlock.h"
+#import "ISCacheItemObserver.h"
 
-@interface ISCacheUserInfoFilter : ISCacheCompoundFilter
+@class ISCacheItem;
 
-- (id)initWithUserInfo:(NSDictionary *)userInfo;
+@interface ISCacheTask : NSObject
+<ISCacheItemObserver
+,ISCancelTokenObserver>
+
+- (id)initWithCacheItem:(ISCacheItem *)cacheItem
+        completionBlock:(ISCacheBlock)completionBlock;
+- (id)initWithCacheItem:(ISCacheItem *)cacheItem
+        completionBlock:(ISCacheBlock)completionBlock
+            cancelToken:(ISCancelToken *)cancelToken;
+
+- (void)cancel;
 
 @end

@@ -367,6 +367,23 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
+- (ISCacheTask *)then:(ISCacheBlock)completionBlock
+{
+  return [[ISCacheTask alloc] initWithCacheItem:self
+                                completionBlock:completionBlock
+                                    cancelToken:[ISCancelToken new]];
+}
+
+
+- (ISCacheTask *)then:(ISCacheBlock)completionBlock
+          cancelToken:(ISCancelToken *)cancelToken
+{
+  return [[ISCacheTask alloc] initWithCacheItem:self
+                                         completionBlock:completionBlock
+                                             cancelToken:cancelToken];
+}
+
+
 #pragma mark - Utilities
 
 

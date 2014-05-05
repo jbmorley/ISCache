@@ -21,11 +21,14 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ISCacheFilter.h"
-#import "ISCacheCompoundFilter.h"
 
-@interface ISCacheUserInfoFilter : ISCacheCompoundFilter
+@class ISCacheItem;
 
-- (id)initWithUserInfo:(NSDictionary *)userInfo;
+@protocol ISCacheItemObserver <NSObject>
+
+- (void)cacheItemDidChange:(ISCacheItem *)cacheItem;
+
+@optional
+- (void)cacheItemDidProgress:(ISCacheItem *)cacheItem;
 
 @end

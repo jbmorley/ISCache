@@ -22,6 +22,9 @@
 
 #import <Foundation/Foundation.h>
 #import "ISCacheFile.h"
+#import "ISCacheBlock.h"
+#import "ISCacheTask.h"
+#import "ISCacheItemObserver.h"
 
 typedef enum {
   
@@ -47,15 +50,6 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 
 @class ISCache;
 @class ISCacheItem;
-
-@protocol ISCacheItemObserver <NSObject>
-
-- (void)cacheItemDidChange:(ISCacheItem *)cacheItem;
-
-@optional
-- (void)cacheItemDidProgress:(ISCacheItem *)cacheItem;
-
-@end
 
 @interface ISCacheItem : NSObject
 
@@ -90,5 +84,9 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
                      options:(ISCacheItemObserverOptions)options;
 - (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer;
+
+- (ISCacheTask *)then:(ISCacheBlock)completionBlock;
+- (ISCacheTask *)then:(ISCacheBlock)completionBlock
+          cancelToken:(ISCancelToken *)cancelToken;
 
 @end

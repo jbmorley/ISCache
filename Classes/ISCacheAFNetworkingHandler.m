@@ -28,6 +28,7 @@
 @property (nonatomic, strong) ISCacheItem *cacheItem;
 @property (nonatomic, strong) AFURLSessionManager *manager;
 @property (nonatomic, strong) NSURLSessionDownloadTask *downloadTask;
+@property (nonatomic, weak) id<ISCacheHandlerUpdater> updater;
 
 @end
 
@@ -35,9 +36,10 @@
 
 
 - (void)fetchItem:(ISCacheItem *)cacheItem
-         delegate:(id<ISCacheHandlerDelegate>)delegate
+          updater:(id<ISCacheHandlerUpdater>)updater
 {
   self.cacheItem = cacheItem;
+  self.updater = updater;
   
   NSURLSessionConfiguration *configuration =
   [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -50,10 +52,10 @@
     return [NSURL fileURLWithPath:[self.cacheItem file:[response suggestedFilename]].path];
   } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
     if (error) {
-      [delegate item:cacheItem didFailWithError:error];
+      [updater item:cacheItem didFailWithError:error];
       [self.downloadTask resume];
     } else {
-      [delegate itemDidFinish:cacheItem];
+      [updater itemDidFinish:cacheItem];
     }
   }];
   
@@ -78,6 +80,13 @@
 - (void)cancel
 {
   [self.downloadTask cancel];
+  [self.updater itemDidCancel:self.cacheItem];
+}
+
+
+- (void)finalize
+{
+  NSLog(@"Cleanup!");
 }
 
 

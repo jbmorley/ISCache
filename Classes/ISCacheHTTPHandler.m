@@ -26,8 +26,8 @@
 
 @interface ISCacheHTTPHandler ()
 
-@property (nonatomic, weak) id<ISCacheHandlerDelegate> delegate;
-@property (nonatomic, strong) ISCacheItem *info;
+@property (nonatomic, weak) id<ISCacheHandlerUpdater> updater;
+@property (nonatomic, strong) ISCacheItem *cacheItem;
 @property (nonatomic, strong) NSURLConnection *connection;
 @property (nonatomic, strong) NSString *filename;
 @property (nonatomic, copy) ISCachePostProcessBlock completionBlock;
@@ -56,11 +56,25 @@
 
 
 - (void)fetchItem:(ISCacheItem *)info
-         delegate:(id<ISCacheHandlerDelegate>)delegate
+          updater:(id<ISCacheHandlerUpdater>)updater
 {
-  self.delegate = delegate;
-  self.info = info;
+  self.updater = updater;
+  self.cacheItem = info;
   [self start];
+}
+
+
+- (void)cancel
+{
+  [self.connection cancel];
+  [self.updater itemDidCancel:self.cacheItem];
+  [[UIApplication sharedApplication] endNetworkActivity];
+}
+
+
+- (void)finalize
+{
+  NSLog(@"Cleanup!");
 }
 
 
@@ -68,15 +82,15 @@
 {
   [[UIApplication sharedApplication] beginNetworkActivity];
   self.requestCount++;
-  NSURL *URL = [NSURL URLWithString:self.info.identifier];
+  NSURL *URL = [NSURL URLWithString:self.cacheItem.identifier];
   NSMutableURLRequest *request =
   [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadRevalidatingCacheData timeoutInterval:60.0];
   
-  if (self.info.totalBytesExpectedToRead > 0 &&
+  if (self.cacheItem.totalBytesExpectedToRead > 0 &&
       self.supportsResume) {
     [request setValue:[NSString stringWithFormat:
                        @"bytes=%llu-",
-                       self.info.totalBytesRead]
+                       self.cacheItem.totalBytesRead]
    forHTTPHeaderField:@"Range"];
   }
   
@@ -84,13 +98,6 @@
   [NSURLConnection connectionWithRequest:request
                                 delegate:self];
   [self.connection start];
-}
-
-
-- (void)cancel
-{
-  [self.connection cancel];
-  [[UIApplication sharedApplication] endNetworkActivity];
 }
 
 
@@ -107,16 +114,16 @@ didReceiveResponse:(NSURLResponse *)response
   if (self.statusCode == 404)
   {
     [connection cancel];
-    [self.delegate item:self.info
+    [self.updater item:self.cacheItem
        didFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
-    [self.delegate log:@"didReceiveResponse statusCode with %i", self.statusCode];
+    [self.updater log:@"didReceiveResponse statusCode with %i", self.statusCode];
     return;
   }
   
   // If the request count is greater than 1 we are attempting a resume
   // meaning that the content length is not guaranteed to be the full size.
   if (self.requestCount == 1) {
-    self.info.totalBytesExpectedToRead = response.expectedContentLength;
+    self.cacheItem.totalBytesExpectedToRead = response.expectedContentLength;
   }
   
   self.filename = response.suggestedFilename;
@@ -124,7 +131,7 @@ didReceiveResponse:(NSURLResponse *)response
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
   if ([response respondsToSelector:@selector(allHeaderFields)]) {
     NSDictionary *dictionary = [httpResponse allHeaderFields];
-    [self.delegate log:@"Headers: %@", dictionary];
+    [self.updater log:@"Headers: %@", dictionary];
     if ([dictionary[@"Accept-Ranges"] isEqualToString:@"bytes"]) {
       self.supportsResume = YES;
     }
@@ -135,22 +142,22 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
     didReceiveData:(NSData *)data
 {
-  [self.delegate log:@"connection:didReceiveData:"];
-  self.info.totalBytesRead += [data length];
-  [[self.info file:self.filename] appendData:data];
+  [self.updater log:@"connection:didReceiveData:"];
+  self.cacheItem.totalBytesRead += [data length];
+  [[self.cacheItem file:self.filename] appendData:data];
 }
 
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
   [[UIApplication sharedApplication] endNetworkActivity];
-  if(self.info.totalBytesRead !=
-     self.info.totalBytesExpectedToRead) {
+  if(self.cacheItem.totalBytesRead !=
+     self.cacheItem.totalBytesExpectedToRead) {
     [self restartOrFailWithError:[NSError errorWithDomain:@"s" code:0 userInfo:nil]];
     return;
   }
   
-  [[self.info file:self.filename] close];
+  [[self.cacheItem file:self.filename] close];
   
   // Schedule the post-processing if neccessary.
   // Otherwise, simply call the final block.
@@ -159,21 +166,21 @@ didReceiveResponse:(NSURLResponse *)response
     dispatch_queue_t queue =
     dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
     dispatch_async(queue, ^{
-      NSError *error = self.completionBlock(self.info);
+      NSError *error = self.completionBlock(self.cacheItem);
       
       // Signal that the resizing is complete.
       dispatch_async(dispatch_get_main_queue(), ^{
         if (error) {
-          [self.delegate item:self.info
+          [self.updater item:self.cacheItem
              didFailWithError:error];
         } else {
-          [self.delegate itemDidFinish:self.info];
+          [self.updater itemDidFinish:self.cacheItem];
         }
       });
       
     });
   } else {
-    [self.delegate itemDidFinish:self.info];
+    [self.updater itemDidFinish:self.cacheItem];
   }
 }
 
@@ -182,17 +189,17 @@ didReceiveResponse:(NSURLResponse *)response
   didFailWithError:(NSError *)error
 {
   [[UIApplication sharedApplication] endNetworkActivity];
-  [self.delegate log:@"connection:didFailWithError:"];
+  [self.updater log:@"connection:didFailWithError:"];
   [self restartOrFailWithError:error];
 }
 
 - (void)restartOrFailWithError:(NSError *)error
 {
-  [self.delegate log:@"Restarting download..."];
+  [self.updater log:@"Restarting download..."];
   if (self.supportsResume) {
     [self start];
   } else {
-    [self.delegate item:self.info
+    [self.updater item:self.cacheItem
        didFailWithError:error];
   }
 }

@@ -24,7 +24,7 @@
 #import "ISCacheHandler.h"
 #import "ISCacheItem.h"
 #import "ISCacheObserver.h"
-#import "ISCacheHandlerDelegate.h"
+#import "ISCacheHandlerUpdater.h"
 #import "ISCacheHTTPHandler.h"
 #import "ISCacheImageView.h"
 #import "ISCacheHandlerFactory.h"
@@ -37,6 +37,7 @@
 #import "ISCacheImageView.h"
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheTask.h"
+#import "ISCacheHandlerDelegate.h"
 
 typedef enum {
   ISCacheErrorCancelled,
@@ -49,7 +50,7 @@ extern NSString *const ISCacheImageContext;
 // Errors.
 extern NSString *const ISCacheErrorDomain;
 
-@interface ISCache : NSObject <ISCacheHandlerDelegate>
+@interface ISCache : NSObject <ISCacheHandlerUpdater>
 
 @property (nonatomic) BOOL debug;
 @property (nonatomic) BOOL disablesIdleTimer;

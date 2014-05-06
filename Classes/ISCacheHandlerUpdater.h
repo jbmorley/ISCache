@@ -21,11 +21,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ISCacheItem.h"
 
-@protocol ISCacheHandlerDelegate <NSObject>
+@protocol ISCacheHandlerUpdater <NSObject>
 
-@required
-
-- (void)handlerDidFinish:(id<ISCacheHandler>)handler;
+- (void)itemDidFinish:(ISCacheItem *)info;
+- (void)itemDidCancel:(ISCacheItem *)info;
+- (void)item:(ISCacheItem *)info
+didFailWithError:(NSError *)error;
+-(void)log:(NSString *)message, ...;
 
 @end

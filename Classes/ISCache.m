@@ -322,7 +322,7 @@ static ISCache *sCache;
                 [self _fetchDidStart];
                 // Notify the delegates and begin the fetch operation.
                 [handler fetchItem:cacheItem
-                          delegate:self];
+                           updater:self];
               });
             }];
     
@@ -386,16 +386,8 @@ static ISCache *sCache;
     id<ISCacheHandler> handler = [self.active objectForKey:cacheItem.uid];
     [handler cancel];
     
-    // Transition the cache item.
-    // This will close and clean up any partial files.
-    NSError *error =
-    [NSError errorWithDomain:ISCacheErrorDomain
-                        code:ISCacheErrorCancelled
-                    userInfo:nil];
-    [cacheItem _transitionToError:error];
-    [self.store save];
-    
-    [self cleanupForItem:cacheItem];
+    // Handlers are responsible for finalizing the
+    // cache item upon cancellation.
     
   } else {
     
@@ -451,6 +443,8 @@ static ISCache *sCache;
 
 - (void)cleanupForItem:(ISCacheItem *)item
 {
+  id<ISCacheHandler> handler = self.active[item.uid];
+  [handler finalize];
   [self.active removeObjectForKey:item.uid];
   [self _fetchDidFinish];
   [self endBackgroundTask];
@@ -564,6 +558,19 @@ static ISCache *sCache;
 {
   [self log:@"itemDidFinish:%@", item.uid];
   [item _transitionToFound];
+  [self.store save];
+  [self cleanupForItem:item];
+}
+
+
+- (void)itemDidCancel:(ISCacheItem *)item
+{
+  [self log:@"itemDidCancel:%@", item.uid];
+  NSError *error =
+  [NSError errorWithDomain:ISCacheErrorDomain
+                      code:ISCacheErrorCancelled
+                  userInfo:nil];
+  [item _transitionToError:error];
   [self.store save];
   [self cleanupForItem:item];
 }

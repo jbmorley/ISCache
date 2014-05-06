@@ -443,8 +443,17 @@ static ISCache *sCache;
 
 - (void)cleanupForItem:(ISCacheItem *)item
 {
+  // Dispatch the finalize to the handler.
+  // We do this asynchronously to make it possible for
+  // clients to maintain a list of handlers and iteratively
+  // perform an operation on those handlers and also act
+  // upon the finalize (e.g. removing from a the list) without
+  // encountering mutation during enumeration issues.
   id<ISCacheHandler> handler = self.active[item.uid];
-  [handler finalize];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [handler finalize];
+  });
+  
   [self.active removeObjectForKey:item.uid];
   [self _fetchDidFinish];
   [self endBackgroundTask];

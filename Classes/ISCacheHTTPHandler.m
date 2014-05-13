@@ -172,7 +172,7 @@ didReceiveResponse:(NSURLResponse *)response
       dispatch_async(dispatch_get_main_queue(), ^{
         if (error) {
           [self.updater item:self.cacheItem
-             didFailWithError:error];
+            didFailWithError:error];
         } else {
           [self.updater itemDidFinish:self.cacheItem];
         }

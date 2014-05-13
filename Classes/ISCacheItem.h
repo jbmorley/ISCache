@@ -60,7 +60,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (strong, nonatomic, readonly) NSDictionary *preferences;
 @property (strong, nonatomic, readonly) NSString *uid;
 @property (nonatomic, readonly) ISCacheItemState state;
-@property (strong, nonatomic, readonly) NSDate *created;
+@property (strong, readonly) NSDate *created;
 @property (strong, nonatomic, readonly) NSDate *modified;
 @property (strong, nonatomic, readonly) NSError *lastError;
 

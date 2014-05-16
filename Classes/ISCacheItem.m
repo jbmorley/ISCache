@@ -389,26 +389,30 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (BOOL)_resetState
 {
-  [self _removeFiles];
-  
-  // Check to see if any changes will be made.
-  if (_state == ISCacheItemStateNotFound &&
-      _totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown &&
-      _totalBytesRead == 0 &&
-      _lastError == nil &&
-      _created == nil &&
-      _modified == nil) {
-    return NO;
+  @synchronized (self) {
+    
+    [self _removeFiles];
+    
+    // Check to see if any changes will be made.
+    if (_state == ISCacheItemStateNotFound &&
+        _totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown &&
+        _totalBytesRead == 0 &&
+        _lastError == nil &&
+        _created == nil &&
+        _modified == nil) {
+      return NO;
+    }
+    
+    _state = ISCacheItemStateNotFound;
+    _totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
+    _totalBytesRead = 0;
+    _lastError = nil;
+    _created = nil;
+    _modified = nil;
+    
+    return YES;
+    
   }
-  
-  _state = ISCacheItemStateNotFound;
-  _totalBytesExpectedToRead = ISCacheItemTotalBytesUnknown;
-  _totalBytesRead = 0;
-  _lastError = nil;
-  _created = nil;
-  _modified = nil;
-  
-  return YES;
 }
 
 
@@ -447,67 +451,79 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)_transitionToWaiting
 {
-  [self _resetState];
-  _state = ISCacheItemStateWaiting;
-  _created = [NSDate new];
-  [self _notifyObservers];
-  [self _notifyCacheObservers];
+  @synchronized (self) {
+    [self _resetState];
+    _state = ISCacheItemStateWaiting;
+    _created = [NSDate new];
+    [self _notifyObservers];
+    [self _notifyCacheObservers];
+  }
 }
 
 
 - (void)_transitionToInProgress
 {
-  assert(_state == ISCacheItemStateWaiting);
-  [self _resetState];
-  _state = ISCacheItemStateInProgress;
-  _modified = [NSDate new];
-  [self _notifyObservers];
-  [self _notifyCacheObservers];
+  @synchronized (self) {
+    assert(_state == ISCacheItemStateWaiting);
+    [self _resetState];
+    _state = ISCacheItemStateInProgress;
+    _modified = [NSDate new];
+    [self _notifyObservers];
+    [self _notifyCacheObservers];
+  }
 }
 
 
 - (void)_transitionToFound
 {
-  assert(_state == ISCacheItemStateInProgress);
-  [self _closeFiles];
-  
-  if (_state == ISCacheItemStateFound &&
-      _lastError == nil) {
-    return;
+  @synchronized (self) {
+    assert(_state == ISCacheItemStateInProgress);
+    [self _closeFiles];
+    
+    if (_state == ISCacheItemStateFound &&
+        _lastError == nil) {
+      return;
+    }
+    
+    _lastError = nil;
+    _state = ISCacheItemStateFound;
+    [self _notifyObservers];
+    [self _notifyCacheObservers];
   }
-  
-  _lastError = nil;
-  _state = ISCacheItemStateFound;
-  [self _notifyObservers];
-  [self _notifyCacheObservers];
 }
 
 
 - (void)_transitionToNotFound
 {
-  BOOL itemChanged = [self _resetState];
-  if (!itemChanged) {
-    return;
+  @synchronized (self) {
+    BOOL itemChanged = [self _resetState];
+    if (!itemChanged) {
+      return;
+    }
+    
+    [self _notifyObservers];
+    [self _notifyCacheObservers];
   }
-  
-  [self _notifyObservers];
-  [self _notifyCacheObservers];
 }
 
 
 - (void)_transitionToError:(NSError *)error
 {
-  [self _resetState];
-  _lastError = error;
-  [self _notifyObservers];
-  [self _notifyCacheObservers];
+  @synchronized (self) {
+    [self _resetState];
+    _lastError = error;
+    [self _notifyObservers];
+    [self _notifyCacheObservers];
+  }
 }
 
 
 - (void)_updateModified
 {
-  _modified = [NSDate new];
-  [self _notifyObservers];
+  @synchronized (self) {
+    _modified = [NSDate new];
+    [self _notifyObservers];
+  }
 }
 
 

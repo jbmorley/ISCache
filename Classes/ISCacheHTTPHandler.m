@@ -34,6 +34,7 @@
 @property (nonatomic) BOOL supportsResume;
 @property (nonatomic) NSInteger requestCount;
 @property (nonatomic) int statusCode;
+@property (nonatomic) BOOL cancelled;
 
 @end
 
@@ -66,6 +67,7 @@
 
 - (void)cancel
 {
+  self.cancelled = YES;
   [self.connection cancel];
   [self.updater itemDidCancel:self.cacheItem];
   [[UIApplication sharedApplication] endNetworkActivity];
@@ -74,7 +76,6 @@
 
 - (void)finalize
 {
-  NSLog(@"Cleanup!");
 }
 
 
@@ -107,6 +108,9 @@
 - (void)connection:(NSURLConnection *)connection
 didReceiveResponse:(NSURLResponse *)response
 {
+  if (self.cancelled) {
+    return;
+  }
   
   // Check for error responses.
   // TODO What other errors do I need to check for.
@@ -142,6 +146,10 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
     didReceiveData:(NSData *)data
 {
+  if (self.cancelled) {
+    return;
+  }
+  
   [self.updater log:@"connection:didReceiveData:"];
   self.cacheItem.totalBytesRead += [data length];
   [[self.cacheItem file:self.filename] appendData:data];
@@ -150,6 +158,10 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+  if (self.cancelled) {
+    return;
+  }
+  
   [[UIApplication sharedApplication] endNetworkActivity];
   if(self.cacheItem.totalBytesRead !=
      self.cacheItem.totalBytesExpectedToRead) {
@@ -170,6 +182,12 @@ didReceiveResponse:(NSURLResponse *)response
       
       // Signal that the resizing is complete.
       dispatch_async(dispatch_get_main_queue(), ^{
+        
+        // Don't attempt to do anything if we've been cancelled.
+        if (self.cancelled) {
+          return;
+        }
+        
         if (error) {
           [self.updater item:self.cacheItem
             didFailWithError:error];
@@ -188,6 +206,10 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
+  if (self.cancelled) {
+    return;
+  }
+  
   [[UIApplication sharedApplication] endNetworkActivity];
   [self.updater log:@"connection:didFailWithError:"];
   [self restartOrFailWithError:error];
@@ -195,6 +217,10 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)restartOrFailWithError:(NSError *)error
 {
+  if (self.cancelled) {
+    return;
+  }
+  
   [self.updater log:@"Restarting download..."];
   if (self.supportsResume) {
     [self start];

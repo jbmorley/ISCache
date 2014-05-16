@@ -55,14 +55,14 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @interface ISCacheItem : NSObject <ISCancelable>
 
 // Read-only properties.
-@property (strong, nonatomic, readonly) NSString *identifier;
-@property (strong, nonatomic, readonly) NSString *context;
-@property (strong, nonatomic, readonly) NSDictionary *preferences;
-@property (strong, nonatomic, readonly) NSString *uid;
-@property (nonatomic, readonly) ISCacheItemState state;
+@property (strong, readonly) NSString *identifier;
+@property (strong, readonly) NSString *context;
+@property (strong, readonly) NSDictionary *preferences;
+@property (strong, readonly) NSString *uid;
+@property (readonly, assign) ISCacheItemState state;
 @property (strong, readonly) NSDate *created;
-@property (strong, nonatomic, readonly) NSDate *modified;
-@property (strong, nonatomic, readonly) NSError *lastError;
+@property (strong, readonly) NSDate *modified;
+@property (strong, readonly) NSError *lastError;
 
 // Read-write properties.
 // TODO These should not be read-write for the normal clients.

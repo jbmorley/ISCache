@@ -1,0 +1,282 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D8D6B7391971BE2D008B7F90 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8D6B7381971BE2D008B7F90 /* XCTest.framework */; };
+		D8D6B73F1971BE2D008B7F90 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D8D6B73D1971BE2D008B7F90 /* InfoPlist.strings */; };
+		D8D6B7411971BE2D008B7F90 /* ISCacheTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D8D6B7401971BE2D008B7F90 /* ISCacheTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D8D6B7351971BE2D008B7F90 /* ISCacheTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ISCacheTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8D6B7381971BE2D008B7F90 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		D8D6B73C1971BE2D008B7F90 /* ISCacheTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ISCacheTests-Info.plist"; sourceTree = "<group>"; };
+		D8D6B73E1971BE2D008B7F90 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D8D6B7401971BE2D008B7F90 /* ISCacheTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ISCacheTests.m; sourceTree = "<group>"; };
+		D8D6B7421971BE2D008B7F90 /* ISCacheTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ISCacheTests-Prefix.pch"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D8D6B7321971BE2D008B7F90 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D8D6B7391971BE2D008B7F90 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D8D6B72A1971BDEE008B7F90 = {
+			isa = PBXGroup;
+			children = (
+				D8D6B73A1971BE2D008B7F90 /* ISCacheTests */,
+				D8D6B7371971BE2D008B7F90 /* Frameworks */,
+				D8D6B7361971BE2D008B7F90 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D8D6B7361971BE2D008B7F90 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D8D6B7351971BE2D008B7F90 /* ISCacheTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D8D6B7371971BE2D008B7F90 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D8D6B7381971BE2D008B7F90 /* XCTest.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D8D6B73A1971BE2D008B7F90 /* ISCacheTests */ = {
+			isa = PBXGroup;
+			children = (
+				D8D6B7401971BE2D008B7F90 /* ISCacheTests.m */,
+				D8D6B73B1971BE2D008B7F90 /* Supporting Files */,
+			);
+			path = ISCacheTests;
+			sourceTree = "<group>";
+		};
+		D8D6B73B1971BE2D008B7F90 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D8D6B73C1971BE2D008B7F90 /* ISCacheTests-Info.plist */,
+				D8D6B73D1971BE2D008B7F90 /* InfoPlist.strings */,
+				D8D6B7421971BE2D008B7F90 /* ISCacheTests-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D8D6B7341971BE2D008B7F90 /* ISCacheTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8D6B7431971BE2D008B7F90 /* Build configuration list for PBXNativeTarget "ISCacheTests" */;
+			buildPhases = (
+				D8D6B7311971BE2D008B7F90 /* Sources */,
+				D8D6B7321971BE2D008B7F90 /* Frameworks */,
+				D8D6B7331971BE2D008B7F90 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ISCacheTests;
+			productName = ISCacheTests;
+			productReference = D8D6B7351971BE2D008B7F90 /* ISCacheTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D8D6B72B1971BDEE008B7F90 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
+			buildConfigurationList = D8D6B72E1971BDEE008B7F90 /* Build configuration list for PBXProject "ISCacheTests" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D8D6B72A1971BDEE008B7F90;
+			productRefGroup = D8D6B7361971BE2D008B7F90 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D8D6B7341971BE2D008B7F90 /* ISCacheTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D8D6B7331971BE2D008B7F90 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D8D6B73F1971BE2D008B7F90 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D8D6B7311971BE2D008B7F90 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D8D6B7411971BE2D008B7F90 /* ISCacheTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		D8D6B73D1971BE2D008B7F90 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D8D6B73E1971BE2D008B7F90 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D8D6B72F1971BDEE008B7F90 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D8D6B7301971BDEE008B7F90 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		D8D6B7441971BE2D008B7F90 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ISCacheTests/ISCacheTests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "ISCacheTests/ISCacheTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		D8D6B7451971BE2D008B7F90 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ISCacheTests/ISCacheTests-Prefix.pch";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "ISCacheTests/ISCacheTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D8D6B72E1971BDEE008B7F90 /* Build configuration list for PBXProject "ISCacheTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D8D6B72F1971BDEE008B7F90 /* Debug */,
+				D8D6B7301971BDEE008B7F90 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D8D6B7431971BE2D008B7F90 /* Build configuration list for PBXNativeTarget "ISCacheTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D8D6B7441971BE2D008B7F90 /* Debug */,
+				D8D6B7451971BE2D008B7F90 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D8D6B72B1971BDEE008B7F90 /* Project object */;
+}

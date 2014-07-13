@@ -15,7 +15,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.platform = :ios, "6.0"
-  s.platform = :osx, "10.8"
 
   s.dependency 'NSString-Hashes', '~> 1.2.1'
   s.dependency 'ISUtilities'

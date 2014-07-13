@@ -38,6 +38,7 @@
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheTask.h"
 #import "ISCacheHandlerDelegate.h"
+#import "ISCacheStateFilter.h"
 
 typedef enum {
   ISCacheErrorCancelled,

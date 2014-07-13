@@ -29,15 +29,18 @@ PODS:
 
 DEPENDENCIES:
   - ISCache (from `../`)
+  - ISUtilities (from `../Dependencies/ISUtilities`)
 
 EXTERNAL SOURCES:
   ISCache:
     :path: ../
+  ISUtilities:
+    :path: ../Dependencies/ISUtilities
 
 SPEC CHECKSUMS:
   AFNetworking: 6d7b76aa5d04c8c37daad3eef4b7e3f2a7620da3
   ISCache: 2988f3f37f66aaa2a78fc6df4c8a66052b07d935
-  ISUtilities: b1d75330a90d7b2f1bd3e4645d9e52ec08937e79
+  ISUtilities: b015eb6f4dd9b8492a3e6bacceb50738f4f53c53
   NSString-Hashes: ddf6e856e93d3c83c5d4ef8fcdea2a96ed77c6bc
 
 COCOAPODS: 0.33.1

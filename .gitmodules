@@ -1,0 +1,3 @@
+[submodule "Dependencies/ISUtilities"]
+	path = Dependencies/ISUtilities
+	url = git@github.com:jbmorley/ISUtilities.git

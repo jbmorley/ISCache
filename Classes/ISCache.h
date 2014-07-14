@@ -23,7 +23,6 @@
 #import <Foundation/Foundation.h>
 #import "ISCacheHandler.h"
 #import "ISCacheItem.h"
-#import "ISCacheObserver.h"
 #import "ISCacheHandlerUpdater.h"
 #import "ISCacheHTTPHandler.h"
 #import "ISCacheImageView.h"
@@ -72,9 +71,5 @@ extern NSString *const ISCacheErrorDomain;
 
 - (void)removeItems:(NSArray *)items;
 - (void)cancelItems:(NSArray *)items;
-
-- (void)addCacheObserver:(id<ISCacheObserver>)observer;
-- (void)removeCacheObserver:(id<ISCacheObserver>)observer;
-
 
 @end

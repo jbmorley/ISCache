@@ -22,7 +22,6 @@
 
 #import "ISCache.h"
 #import <ISUtilities/ISUtilities.h>
-#import "ISNotifier.h"
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"
@@ -58,7 +57,6 @@ static ISCache *sCache;
   if (self) {
     self.debug = NO;
     self.identifier = identifier;
-    self.notifier = [ISNotifier new];
     self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
     self.active = [NSMutableDictionary dictionaryWithCapacity:3];
     self.fileManager = [NSFileManager defaultManager];
@@ -89,8 +87,7 @@ static ISCache *sCache;
     [NSMutableArray arrayWithCapacity:3];
     BOOL missingFiles = NO;
     for (ISCacheItem *cacheItem in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
-      if (cacheItem.state == ISCacheItemStateWaiting ||
-          cacheItem.state == ISCacheItemStateInProgress ||
+      if (cacheItem.state == ISCacheItemStateInProgress ||
           cacheItem.state == ISCacheItemStateNotFound) {
         [cacheItem _transitionToNotFound];
         [removals addObject:cacheItem];
@@ -185,6 +182,7 @@ static ISCache *sCache;
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context
 {
+  assert([NSThread isMainThread]);
   // Check that there isn't an existing handler for that context.
   if ([self.factories objectForKey:context] != nil) {
     @throw [NSException exceptionWithName:ISCacheExceptionExistingFactoryForContext
@@ -200,6 +198,7 @@ static ISCache *sCache;
 
 - (void)unregisterFactoryForContext:(NSString *)context
 {
+  assert([NSThread isMainThread]);
   [self.factories removeObjectForKey:context];
 }
 
@@ -209,6 +208,7 @@ static ISCache *sCache;
                    context:(NSString *)context
                preferences:(NSDictionary *)preferences
 {
+  assert([NSThread isMainThread]);
   // Check to see if we've already created a cache item info for the
   // requested item. If we have, then return that. If not, then look
   // for the file on the file system and create an appropriate item
@@ -253,11 +253,7 @@ static ISCache *sCache;
                                          cache:self];
   [self.store addItem:cacheItem];
   
-  // Notify the observers of the new item.
-  [self _notifyNewItem:cacheItem];
-  
   return cacheItem;
-  
 }
 
 
@@ -301,30 +297,23 @@ static ISCache *sCache;
     [cacheItem _updateModified];
     [self.store save];
     
-  } else if (cacheItem.state == ISCacheItemStateWaiting ||
-             cacheItem.state == ISCacheItemStateInProgress) {
+  } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
   } else {
     
     // Transition the cache item.
-    [cacheItem _transitionToWaiting];
     [self.store save];
     
     // If the item doesn't exist and isn't in progress, fetch it.
-    [self handlerForContext:context
-                preferences:preferences
-            completionBlock:^(id<ISCacheHandler> handler) {
-              // Ensure the completion is always dispatched back to the main thread.
-              dispatch_async(dispatch_get_main_queue(), ^{
-                [cacheItem _transitionToInProgress];
-                [self.active setObject:handler
-                                forKey:cacheItem.uid];
-                [self _fetchDidStart];
-                // Notify the delegates and begin the fetch operation.
-                [handler fetchItem:cacheItem
-                           updater:self];
-              });
-            }];
+    id<ISCacheHandler> handler = [self handlerForContext:context
+                                             preferences:preferences];
+    [cacheItem _transitionToInProgress];
+    [self.active setObject:handler
+                    forKey:cacheItem.uid];
+    // Notify the delegates and begin the fetch operation.
+    [self _fetchDidStart];
+    [handler fetchItem:cacheItem
+               updater:self];
     
   }
   
@@ -335,6 +324,7 @@ static ISCache *sCache;
 
 - (void)removeItems:(NSArray *)items
 {
+  assert([NSThread isMainThread]);
   for (ISCacheItem *item in items) {
     [self removeItem:item];
   }
@@ -349,8 +339,7 @@ static ISCache *sCache;
     [cacheItem _transitionToNotFound];
     [self.store save];
     
-  } else if (cacheItem.state == ISCacheItemStateWaiting ||
-             cacheItem.state == ISCacheItemStateInProgress) {
+  } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
     // If the item is in progress, then cancel the progress.
     [self cancelItem:cacheItem];
@@ -366,6 +355,7 @@ static ISCache *sCache;
 
 - (void)cancelItems:(NSArray *)items
 {
+  assert([NSThread isMainThread]);
   for (ISCacheItem *item in items) {
     [self cancelItem:item];
   }
@@ -375,8 +365,7 @@ static ISCache *sCache;
 - (void)cancelItem:(ISCacheItem *)cacheItem
 {
   // Only attmept to cancel the item if it is in progress.
-  if (cacheItem.state == ISCacheItemStateWaiting ||
-      cacheItem.state == ISCacheItemStateInProgress ||
+  if (cacheItem.state == ISCacheItemStateInProgress ||
       cacheItem.state == ISCacheItemStateNotFound) {
     
     [self log:
@@ -418,9 +407,8 @@ static ISCache *sCache;
 
 // Check there is a handler factory registered for the context.
 // Throws an exception if no handler factory can be found.
-- (void)handlerForContext:(NSString *)context
-              preferences:(NSDictionary *)preferences
-          completionBlock:(ISCacheHandlerFactoryCompletionBlock)completionBlock
+- (id<ISCacheHandler>)handlerForContext:(NSString *)context
+                            preferences:(NSDictionary *)preferences
 {
   id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
   if (factory == nil) {
@@ -428,16 +416,8 @@ static ISCache *sCache;
                                    reason:ISCacheExceptionMissingFactoryForContextReason
                                  userInfo:nil];
   }
-  [factory createHandlerForContext:context
-                          userInfo:preferences
-                   completionBlock:completionBlock];
-}
-
-
-- (void)_notifyNewItem:(ISCacheItem *)item
-{
-  [self.notifier notify:@selector(cacheDidUpdate:)
-             withObject:self];
+  return [factory handlerForContext:context
+                           userInfo:preferences];
 }
 
 
@@ -515,26 +495,6 @@ static ISCache *sCache;
 
 
 #pragma mark - Observer methods
-
-
-- (void)addCacheObserver:(id<ISCacheObserver>)observer
-{
-  [self.notifier addObserver:observer];
-  [self log:@"+ observers (%lu), active: %lu",
-   (unsigned long)self.notifier.count,
-   (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count];
-}
-
-
-- (void)removeCacheObserver:(id<ISCacheObserver>)observer
-{
-  [self.notifier removeObserver:observer];
-  [self log:
-   @"- observers (%lu), active: %lu",
-   (unsigned long)self.notifier.count,
-   (unsigned long)[self items:[ISCacheStateFilter filterWithStates:ISCacheItemStateInProgress]].count];
-}
-
 
 - (NSString *)identifierForItem:(NSString *)item
                         context:(NSString *)context

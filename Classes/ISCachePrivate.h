@@ -23,11 +23,9 @@
 #import <Foundation/Foundation.h>
 #import "ISCache.h"
 #import "ISCacheStore.h"
-#import "ISNotifier.h"
 
 @interface ISCache ()
 
-@property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) NSMutableDictionary *factories;
 @property (nonatomic, strong) NSMutableDictionary *active;
 @property (nonatomic, strong) NSString *documentsPath;
@@ -42,6 +40,5 @@
                             preferences:(NSDictionary *)preferences;
 - (void)log:(NSString *)message, ...;
 - (void)itemDidUpdate:(ISCacheItem *)item;
-- (void)_notifyNewItem:(ISCacheItem *)item;
 
 @end

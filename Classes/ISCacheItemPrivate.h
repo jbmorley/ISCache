@@ -30,6 +30,7 @@
 @property (nonatomic, strong) NSString *root;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISNotifier *notifier;
+@property (nonatomic, retain) dispatch_queue_t queue;
 
 + (id)_itemWithIdentifier:(NSString *)identifier
                   context:(NSString *)context
@@ -53,7 +54,6 @@
          dictionary:(NSDictionary *)dictionary
               cache:(ISCache *)cache;
 
-- (void)_transitionToWaiting;
 - (void)_transitionToInProgress;
 - (void)_transitionToFound;
 - (void)_transitionToNotFound;

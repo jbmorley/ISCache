@@ -107,8 +107,7 @@
       [self.cacheItem fetch];
       self.initialized = YES;
     }
-  } else if (self.cacheItem.state == ISCacheItemStateWaiting ||
-             self.cacheItem.state == ISCacheItemStateInProgress) {
+  } else if (self.cacheItem.state == ISCacheItemStateInProgress) {
     // Ignore progress.
   } else if (cacheItem.state == ISCacheItemStateFound) {
     self.completionBlock(self.cacheItem.lastError,

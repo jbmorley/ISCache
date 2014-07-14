@@ -31,8 +31,6 @@ typedef enum {
   
   // The item is not present in the cache.
   ISCacheItemStateNotFound = 1,
-  // The item has been requested and is waiting to start.
-  ISCacheItemStateWaiting = 2,
   // The item has been requested and is in progress.
   ISCacheItemStateInProgress = 4,
   // The item is present in the cache.

@@ -30,9 +30,8 @@ const NSString *ISCacheImageScaleMode = @"scale";
 
 @implementation ISCacheScalingHandlerFactory
 
-- (void)createHandlerForContext:(NSString *)context
-                       userInfo:(NSDictionary *)userInfo
-                completionBlock:(ISCacheHandlerFactoryCompletionBlock)completionBlock
+- (id<ISCacheHandler>)handlerForContext:(NSString *)context
+                               userInfo:(NSDictionary *)userInfo
 {
   ISCacheHTTPHandler *handler = [[ISCacheHTTPHandler alloc] initWithCompletion:^(ISCacheItem *info) {
     
@@ -57,7 +56,7 @@ const NSString *ISCacheImageScaleMode = @"scale";
     return (NSError *)nil;
     
   }];
-  completionBlock(handler);
+  return handler;
 }
 
 @end

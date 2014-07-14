@@ -82,7 +82,12 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   self = [super init];
   if (self) {
-    self.notifier = [ISNotifier new];
+    _notifier = [ISNotifier new];
+    NSString *queueIdentifier = [NSString stringWithFormat:@"%@%p",
+                                 @"uk.co.inseven.cache.",
+                                 self];
+    _queue = dispatch_queue_create([queueIdentifier UTF8String],
+                                   DISPATCH_QUEUE_SERIAL);
     [self _resetState];
   }
   return self;
@@ -99,7 +104,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 {
   self = [self init];
   if (self) {
-    _notifier = [ISNotifier new];
     _identifier = identifier;
     _context = context;
     _preferences = preferences;
@@ -186,8 +190,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
     }
   }
   
-  [self _notifyObservers];
-  [self _notifyExternalUpdate];
+//  [self _notifyObservers]; // TODO We probably need to notify of this some other way.
+  [self _notifyExternalUpdate]; // TODO This is saving and unpleasant.
 }
 
 
@@ -449,27 +453,14 @@ static NSString *const kKeyUserInfo = @"userInfo";
 #pragma mark - Transitions
 
 
-- (void)_transitionToWaiting
-{
-  @synchronized (self) {
-    [self _resetState];
-    _state = ISCacheItemStateWaiting;
-    _created = [NSDate new];
-    [self _notifyObservers];
-    [self _notifyCacheObservers];
-  }
-}
-
-
 - (void)_transitionToInProgress
 {
   @synchronized (self) {
-    assert(_state == ISCacheItemStateWaiting);
+    assert(_state == ISCacheItemStateNotFound);
     [self _resetState];
     _state = ISCacheItemStateInProgress;
     _modified = [NSDate new];
     [self _notifyObservers];
-    [self _notifyCacheObservers];
   }
 }
 
@@ -488,7 +479,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     _lastError = nil;
     _state = ISCacheItemStateFound;
     [self _notifyObservers];
-    [self _notifyCacheObservers];
   }
 }
 
@@ -502,7 +492,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     }
     
     [self _notifyObservers];
-    [self _notifyCacheObservers];
   }
 }
 
@@ -513,7 +502,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
     [self _resetState];
     _lastError = error;
     [self _notifyObservers];
-    [self _notifyCacheObservers];
   }
 }
 
@@ -533,13 +521,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (void)_notifyExternalUpdate
 {
   [self.cache itemDidUpdate:self];
-}
-
-
-- (void)_notifyCacheObservers
-{
-  // TODO Rename this.
-  [self.cache _notifyNewItem:self];
 }
 
 

@@ -89,8 +89,7 @@ static NSInteger kCacheStoreVersion = 1;
                        forKey:item.uid];
       }
     } else {
-      self.dirty = YES;
-      [self saveBlocking];
+      [self save];
     }
   }
   return self;
@@ -120,7 +119,6 @@ static NSInteger kCacheStoreVersion = 1;
 {
   [self.items setObject:item
                  forKey:item.uid];
-  [self save];
 }
 
 

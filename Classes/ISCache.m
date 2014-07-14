@@ -288,22 +288,9 @@ static ISCache *sCache;
                                    context:context
                                preferences:preferences];
   
-  // Once we know the item is in a valid state, we process it
-  // and report the results to the callee.
-  if (cacheItem.state == ISCacheItemStateFound) {
-    
-    // The item exists, but we update the modified date to
-    // indicate that it has been accessed.
-    [cacheItem _updateModified];
-    [self.store save];
-    
-  } else if (cacheItem.state == ISCacheItemStateInProgress) {
-    
-  } else {
-    
-    // Transition the cache item.
-    [self.store save];
-    
+  // Download the cache item if necessary.
+  if (cacheItem.state == ISCacheItemStateNotFound) {
+        
     // If the item doesn't exist and isn't in progress, fetch it.
     id<ISCacheHandler> handler = [self handlerForContext:context
                                              preferences:preferences];
@@ -519,7 +506,6 @@ static ISCache *sCache;
 // Should not be used internally as a notification mechanism.
 - (void)itemDidUpdate:(ISCacheItem *)item
 {
-  [self.store save];
 }
 
 
@@ -540,7 +526,6 @@ static ISCache *sCache;
                       code:ISCacheErrorCancelled
                   userInfo:nil];
   [item _transitionToError:error];
-  [self.store save];
   [self cleanupForItem:item];
 }
 

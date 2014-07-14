@@ -20,6 +20,7 @@
 // SOFTWARE.
 //
 
+#include <tgmath.h>
 #import <ISUtilities/ISNotifier.h>
 #import "ISCacheItem.h"
 #import "ISCacheExceptions.h"
@@ -83,11 +84,14 @@ static NSString *const kKeyUserInfo = @"userInfo";
   self = [super init];
   if (self) {
     _notifier = [ISNotifier new];
+    _progressNotifier = [ISNotifier new];
     NSString *queueIdentifier = [NSString stringWithFormat:@"%@%p",
                                  @"uk.co.inseven.cache.",
                                  self];
     _queue = dispatch_queue_create([queueIdentifier UTF8String],
                                    DISPATCH_QUEUE_SERIAL);
+    _lastProgress = 0.0f;
+    _lastProgressDate = [NSDate date];
     [self _resetState];
   }
   return self;
@@ -328,7 +332,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
     return;
   }
   _totalBytesExpectedToRead = totalBytesExpectedToRead;
-  [self _notifyObserversProgress];
+  [self _notifyProgressObservers];
   [self _notifyObservers];
 }
 
@@ -342,8 +346,30 @@ static NSString *const kKeyUserInfo = @"userInfo";
   if (_totalBytesRead == totalBytesRead) {
     return;
   }
+  
+  // Update the bytes read.
   _totalBytesRead = totalBytesRead;
-  [self _notifyObserversProgress];
+  
+  // Explicitly limit the update frequency.
+  NSTimeInterval timeSinceUpdate = [self.lastProgressDate timeIntervalSinceNow] * -1.0;
+  if (timeSinceUpdate < 1.0) {
+    return;
+  }
+  
+  // Only notify our observers if the progress has changed
+  // significantly or the last update was sufficiently long ago.
+  // We also ensure we notify when there is no progress or progress
+  // is complete as UIs are likely interested in these events.
+  CGFloat progress = [self progress];
+  CGFloat step = progress > self.lastProgress ? progress - self.lastProgress : self.lastProgress - progress;
+  if (step >= 0.05 ||
+      progress == 1.0 ||
+      progress == 0.0 ||
+      timeSinceUpdate >= 1.0) {
+    self.lastProgress = progress;
+    self.lastProgressDate = [NSDate date];
+    [self _notifyProgressObservers];
+  }
 }
 
 
@@ -357,9 +383,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
   if ((options & ISCacheItemObserverOptionsInitial) > 0) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [observer cacheItemDidChange:self];
-      if ([observer respondsToSelector:@selector(cacheItemDidProgress:)]) {
-        [observer cacheItemDidProgress:self];
-      }
     });
   }
 }
@@ -368,6 +391,18 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer
 {
   [self.notifier removeObserver:observer];
+}
+
+
+- (void)addCacheItemProgressObserver:(id<ISCacheItemProgressObserver>)observer
+{
+  [self.progressNotifier addObserver:observer];
+}
+
+
+- (void)removeCacheItemProgressObserver:(id<ISCacheItemProgressObserver>)observer
+{
+  [self.progressNotifier removeObserver:observer];
 }
 
 
@@ -527,20 +562,26 @@ static NSString *const kKeyUserInfo = @"userInfo";
 - (void)_notifyObservers
 {
   // Notification always happens on the main thread.
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.notifier notify:@selector(cacheItemDidChange:)
-               withObject:self];
-  });
+  if ([self.notifier count] > 0) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self.notifier notify:@selector(cacheItemDidChange:)
+                 withObject:self];
+    });
+  }
 }
 
 
-- (void)_notifyObserversProgress
+- (void)_notifyProgressObservers
 {
   // Notification always happens on the main thread.
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.notifier notify:@selector(cacheItemDidProgress:)
-               withObject:self];
-  });
+  // We only attempt to dispatch the notification if there is at least
+  // one progress notifier.
+  if ([self.progressNotifier count] > 0) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self.progressNotifier notify:@selector(cacheItemDidProgress:)
+                         withObject:self];
+    });
+  }
 }
 
 

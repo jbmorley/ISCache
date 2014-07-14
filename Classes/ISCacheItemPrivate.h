@@ -30,7 +30,12 @@
 @property (nonatomic, strong) NSString *root;
 @property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) ISNotifier *notifier;
-@property (nonatomic, retain) dispatch_queue_t queue;
+@property (nonatomic, strong) ISNotifier *progressNotifier;
+@property (nonatomic, strong) dispatch_queue_t queue;
+
+// Used for tracking progress update granularity.
+@property (nonatomic, assign) CGFloat lastProgress;
+@property (nonatomic, strong) NSDate *lastProgressDate;
 
 + (id)_itemWithIdentifier:(NSString *)identifier
                   context:(NSString *)context

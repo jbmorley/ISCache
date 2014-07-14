@@ -83,6 +83,8 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
                      options:(ISCacheItemObserverOptions)options;
 - (void)removeCacheItemObserver:(id<ISCacheItemObserver>)observer;
+- (void)addCacheItemProgressObserver:(id<ISCacheItemProgressObserver>)observer;
+- (void)removeCacheItemProgressObserver:(id<ISCacheItemProgressObserver>)observer;
 
 - (ISCacheTask *)then:(ISCacheBlock)completionBlock;
 - (ISCacheTask *)then:(ISCacheBlock)completionBlock

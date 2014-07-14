@@ -28,7 +28,10 @@
 
 - (void)cacheItemDidChange:(ISCacheItem *)cacheItem;
 
-@optional
+@end
+
+@protocol ISCacheItemProgressObserver <NSObject>
+
 - (void)cacheItemDidProgress:(ISCacheItem *)cacheItem;
 
 @end

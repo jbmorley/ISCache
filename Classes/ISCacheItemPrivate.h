@@ -32,22 +32,15 @@
 @property (nonatomic, strong) ISNotifier *notifier;
 @property (nonatomic, strong) ISNotifier *progressNotifier;
 @property (nonatomic, strong) dispatch_queue_t queue;
+@property (nonatomic, assign) uint64_t fmdbId;
 
 // Used for tracking progress update granularity.
 @property (nonatomic, assign) CGFloat lastProgress;
 @property (nonatomic, strong) NSDate *lastProgressDate;
 
-+ (id)_itemWithIdentifier:(NSString *)identifier
-                  context:(NSString *)context
-              preferences:(NSDictionary *)preferences
-                      uid:(NSString *)uid
-                     root:(NSString *)root
-                     path:(NSString *)path
-                    cache:(ISCache *)cache;
-+ (id)_itemInfoWithRoot:(NSString *)root
-             dictionary:(NSDictionary *)dictionary
-                  cache:(ISCache *)cache;
-
+- (id)_initWithResultSet:(FMResultSet *)resultSet
+                    root:(NSString *)root
+                   cache:(ISCache *)cache;
 - (id)_initWithIdentifier:(NSString *)identifier
                   context:(NSString *)context
               preferences:(NSDictionary *)preferences
@@ -55,10 +48,6 @@
                      root:(NSString *)root
                      path:(NSString *)path
                     cache:(ISCache *)cache;
-- (id)_initWithRoot:(NSString *)root
-         dictionary:(NSDictionary *)dictionary
-              cache:(ISCache *)cache;
-
 - (void)_transitionToInProgress;
 - (void)_transitionToFound;
 - (void)_transitionToNotFound;
@@ -67,7 +56,5 @@
 - (void)_updateModified;
 
 - (BOOL)_filesExist;
-
-- (NSDictionary *)_dictionary;
 
 @end

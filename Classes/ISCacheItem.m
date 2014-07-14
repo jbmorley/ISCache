@@ -21,7 +21,7 @@
 //
 
 #include <tgmath.h>
-#import <ISUtilities/ISNotifier.h>
+#import <ISUtilities/ISUtilities.h>
 #import "ISCacheItem.h"
 #import "ISCacheExceptions.h"
 #import "ISCache.h"
@@ -36,49 +36,6 @@
 
 static int kCacheItemVersion = 1;
 
-static NSString *const kKeyIdentifier = @"identifier";
-static NSString *const kKeyContext = @"context";
-static NSString *const kKeyPreferences = @"preferences";
-static NSString *const kKeyPath = @"path";
-static NSString *const kKeyFiles = @"files";
-static NSString *const kKeyUid = @"uid";
-static NSString *const kKeyVersion = @"version";
-static NSString *const kKeyState = @"state";
-static NSString *const kKeyTotalBytesRead = @"totalBytesRead";
-static NSString *const kKeyTotalBytesExpectedToRead = @"totakBytesExpectedToRead";
-static NSString *const kKeyCreated = @"created";
-static NSString *const kKeyModified = @"modified";
-static NSString *const kKeyUserInfo = @"userInfo";
-
-
-+ (id)_itemWithIdentifier:(NSString *)identifier
-                  context:(NSString *)context
-              preferences:(NSDictionary *)preferences
-                      uid:(NSString *)uid
-                     root:(NSString *)root
-                     path:(NSString *)path
-                    cache:(ISCache *)cache
-{
-  return [[self alloc] _initWithIdentifier:identifier
-                                   context:context
-                               preferences:preferences
-                                       uid:uid
-                                      root:root
-                                      path:path
-                                     cache:cache];
-}
-
-
-+ (id)_itemInfoWithRoot:(NSString *)root
-             dictionary:(NSDictionary *)dictionary
-                  cache:(ISCache *)cache
-{
-  return [[self alloc] _initWithRoot:root
-                          dictionary:dictionary
-                               cache:cache];
-}
-
-
 - (id)init
 {
   self = [super init];
@@ -92,7 +49,43 @@ static NSString *const kKeyUserInfo = @"userInfo";
                                    DISPATCH_QUEUE_SERIAL);
     _lastProgress = 0.0f;
     _lastProgressDate = [NSDate date];
+    _fileDict = [NSMutableDictionary new];
     [self _resetState];
+  }
+  return self;
+}
+
+
+- (id)_initWithResultSet:(FMResultSet *)resultSet
+                    root:(NSString *)root
+                   cache:(ISCache *)cache
+{
+  self = [self init];
+  if (self) {
+    _root = root;
+    _fmdbId = [resultSet intForColumn:@"id"];
+    _identifier = [resultSet stringForColumn:@"identifier"];
+    _context = [resultSet stringForColumn:@"context"];
+    _path = [resultSet stringForColumn:@"path"];
+    _uid = [resultSet stringForColumn:@"uid"];
+    _state = [resultSet intForColumn:@"state"];
+    _totalBytesRead = [resultSet intForColumn:@"bytesRead"];
+    _totalBytesExpectedToRead = [resultSet intForColumn:@"bytesExpectedToRead"];
+    
+    NSString *filename = [resultSet stringForColumn:@"filename"];
+    if ([filename length]) {
+      NSString *fileDirectory =
+      [NSString pathWithComponents:@[self.root, self.path]];
+      ISCacheFile *file =
+      [[ISCacheFile alloc] initWithDirectory:fileDirectory
+                                    filename:filename];
+      [_fileDict setObject:file
+                    forKey:filename];
+    }
+    
+    _preferences = [NSDictionary dictionaryWithJSON:[resultSet stringForColumn:@"preferences"]];
+    _userInfo = [NSDictionary dictionaryWithJSON:[resultSet stringForColumn:@"userInfo"]];
+    
   }
   return self;
 }
@@ -121,57 +114,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
 }
 
 
-// Serialization to and from a dictionary.
-// A future implementation should probably take advatnage of
-// NSCoding.
-- (id)_initWithRoot:(NSString *)root
-         dictionary:(NSDictionary *)dictionary
-              cache:(ISCache *)cache
-{
-  self = [self init];
-  if (self) {
-    
-    _fileDict = [NSMutableDictionary dictionaryWithCapacity:3];
-    
-    // Check the cache item version.
-    int version = [dictionary[kKeyVersion] intValue];
-    if (version != kCacheItemVersion) {
-      @throw [NSException exceptionWithName:ISCacheExceptionUnsupportedCacheStoreItemVersion
-                                     reason:ISCacheExceptionUnsupportedCacheStoreItemVersionReason userInfo:nil];
-    }
-    
-    _root = root;
-    _identifier = dictionary[kKeyIdentifier];
-    _context = dictionary[kKeyContext];
-    _preferences = dictionary[kKeyPreferences];
-    _uid = dictionary[kKeyUid];
-    _path = dictionary[kKeyPath];
-    NSDictionary *files = dictionary[kKeyFiles];
-    if (files) {
-      for (NSString *filename in files) {
-        NSLog(@"Path: %@", self.path);
-        NSString *fileDirectory =
-        [NSString pathWithComponents:@[self.root, self.path]];
-        NSLog(@"Diretory: %@", fileDirectory);
-        ISCacheFile *file =
-        [[ISCacheFile alloc] initWithDirectory:fileDirectory
-                                      filename:filename];
-        [_fileDict setObject:file
-                      forKey:filename];
-      }
-    }
-    _state = [dictionary[kKeyState] intValue];
-    _totalBytesRead = [dictionary[kKeyTotalBytesRead] longLongValue];
-    _totalBytesExpectedToRead = [dictionary[kKeyTotalBytesExpectedToRead] longLongValue];
-    _created = dictionary[kKeyCreated];
-    _modified = dictionary[kKeyModified];
-    self.userInfo = dictionary[kKeyUserInfo];
-    self.cache = cache;
-  }
-  return self;
-}
-
-
 - (NSString *)description
 {
   // TODO Flesh this out.
@@ -181,7 +123,8 @@ static NSString *const kKeyUserInfo = @"userInfo";
 
 - (void)setUserInfo:(NSDictionary *)userInfo
 {
-  if (_userInfo == userInfo) {
+  if (_userInfo == userInfo ||
+      [_userInfo isEqual:userInfo]) {
     return;
   }
   _userInfo = userInfo;
@@ -196,6 +139,7 @@ static NSString *const kKeyUserInfo = @"userInfo";
   
 //  [self _notifyObservers]; // TODO We probably need to notify of this some other way.
   [self _notifyExternalUpdate]; // TODO This is saving and unpleasant.
+  [self save];
 }
 
 
@@ -256,6 +200,42 @@ static NSString *const kKeyUserInfo = @"userInfo";
       
     }
 
+  }
+}
+
+
+- (void)save
+{
+  assert(self.fmdb);
+  
+  NSString *filename =
+    self.file
+    ? [self.file filename]
+    : @"";
+  NSString *preferences =
+    self.preferences
+    ? [self.preferences JSON]
+    : @"";
+  NSString *userInfo =
+    self.userInfo
+    ? [self.userInfo JSON]
+    : @"";
+  
+  if (self.fmdbId) {
+    
+    NSLog(@"Updating...");
+    if (![self.fmdb executeUpdate:@"UPDATE items SET state = ?, bytesRead = ?, bytesExpectedToRead = ?, filename = ?, preferences = ?, userInfo = ? WHERE id = ?", @(self.state), @(self.totalBytesRead), @(self.totalBytesExpectedToRead), filename, preferences, userInfo, @(self.fmdbId)]) {
+      assert(false);
+    }
+    
+  } else {
+    
+    NSLog(@"Inserting...");
+    if (![self.fmdb executeUpdate:@"INSERT INTO items (identifier, context, path, uid, state, bytesRead, bytesExpectedToRead, filename, preferences, userInfo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", self.identifier, self.context, self.path, self.uid, @(self.state), @(self.totalBytesRead), @(self.totalBytesExpectedToRead), filename, preferences, userInfo]) {
+      assert(false);
+    }
+    self.fmdbId = [self.fmdb lastInsertRowId];
+    
   }
 }
 
@@ -581,58 +561,6 @@ static NSString *const kKeyUserInfo = @"userInfo";
       [self.progressNotifier notify:@selector(cacheItemDidProgress:)
                          withObject:self];
     });
-  }
-}
-
-
-#pragma mark - Serialization
-
-
-- (NSDictionary *)_dictionary
-{
-  @synchronized(self) {
-    
-    NSMutableDictionary *dictionary =
-    [NSMutableDictionary dictionaryWithObjectsAndKeys:
-     @(kCacheItemVersion), kKeyVersion,
-     self.identifier, kKeyIdentifier,
-     self.context, kKeyContext,
-     self.path, kKeyPath,
-     self.uid, kKeyUid,
-     @(self.state), kKeyState,
-     @(self.totalBytesRead), kKeyTotalBytesRead,
-     @(self.totalBytesExpectedToRead), kKeyTotalBytesExpectedToRead,
-     nil];
-    
-    NSMutableArray *files =
-    [NSMutableArray arrayWithCapacity:3];
-    for (NSString *filename in self.fileDict) {
-      ISCacheFile *file = self.fileDict[filename];
-      [files addObject:file.filename];
-    }
-    [dictionary setObject:files
-                   forKey:kKeyFiles];
-    
-    if (self.preferences != nil) {
-      [dictionary setObject:self.preferences
-                     forKey:kKeyPreferences];
-    }
-    
-    if (self.created != nil) {
-      [dictionary setObject:self.created
-                     forKey:kKeyCreated];
-    }
-    if (self.modified != nil) {
-      [dictionary setObject:self.modified
-                     forKey:kKeyModified];
-    }
-    if (self.userInfo != nil) {
-      [dictionary setObject:self.userInfo
-                     forKey:kKeyUserInfo];
-    }
-    
-    return dictionary;
-    
   }
 }
 

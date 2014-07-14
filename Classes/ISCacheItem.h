@@ -22,6 +22,7 @@
 
 #import <Foundation/Foundation.h>
 #import <ISUtilities/ISUtilities.h>
+#import <FMDB/FMDB.h>
 #import "ISCacheFile.h"
 #import "ISCacheBlock.h"
 #import "ISCacheTask.h"
@@ -68,6 +69,8 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @property (nonatomic) long long totalBytesExpectedToRead;
 @property (strong, nonatomic) NSDictionary *userInfo;
 
+@property (nonatomic, strong) FMDatabase *fmdb;
+
 // Calculated properties.
 @property (readonly) float progress;
 @property (readonly) NSTimeInterval timeRemainingEstimate;
@@ -79,6 +82,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 - (void)fetch;
 - (void)remove;
 - (void)cancel;
+- (void)save;
 
 - (void)addCacheItemObserver:(id<ISCacheItemObserver>)observer
                      options:(ISCacheItemObserverOptions)options;

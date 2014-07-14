@@ -27,80 +27,25 @@
 
 @interface ISCacheStore ()
 
-@property (nonatomic, strong) NSString *root;
-@property (nonatomic, strong) NSString *path;
 @property (nonatomic, strong) NSMutableDictionary *items;
-@property (nonatomic, strong) ISCache *cache;
-@property (nonatomic) BOOL dirty;
 
 @end
 
 @implementation ISCacheStore
 
-static NSString *kKeyCacheStoreVersion = @"version";
-static NSString *kKeyCacheStoreItems = @"items";
-
-static NSInteger kCacheStoreVersion = 1;
-
-
-+ (id)storeWithRoot:(NSString *)root
-               path:(NSString *)path
-              cache:(ISCache *)cache
-{
-  return [[self alloc] initWithRoot:root
-                                path:path
-                              cache:cache];
-}
-
-
-- (id)initWithRoot:(NSString *)root
-              path:(NSString *)path
-             cache:(ISCache *)cache
+- (id)init
 {
   self = [super init];
   if (self) {
-    self.root = root;
-    self.path = path;
-    self.cache = cache;
-    self.items = [NSMutableDictionary dictionaryWithCapacity:3];
-    
-    // Load the cache items if present.
-    BOOL isDirectory;
-    if ([[NSFileManager defaultManager] fileExistsAtPath:self.path
-                                             isDirectory:&isDirectory]) {
-      NSDictionary *store = [NSDictionary dictionaryWithContentsOfFile:self.path];
-      
-      // Check the version.
-      NSNumber *version = store[kKeyCacheStoreVersion];
-      if (!version ||
-          [version integerValue] != kCacheStoreVersion) {
-        @throw [NSException exceptionWithName:ISCacheExceptionUnsupportedCacheStoreVersion
-                                       reason:ISCacheExceptionUnsupportedCacheStoreVersionReason
-                                     userInfo:nil];
-      }
-      
-      // Load the items.
-      for (NSDictionary *dictionary in store[kKeyCacheStoreItems]) {
-        ISCacheItem *item =
-        [ISCacheItem _itemInfoWithRoot:self.root
-                            dictionary:dictionary
-                                 cache:self.cache];
-        [self.items setObject:item
-                       forKey:item.uid];
-      }
-    } else {
-      [self save];
-    }
+    self.items = [NSMutableDictionary new];
   }
   return self;
 }
-
 
 - (ISCacheItem *)item:(NSString *)identifier
 {
   return [self.items objectForKey:identifier];
 }
-
 
 - (NSArray *)items:(id <ISCacheFilter>)filter
 {
@@ -114,13 +59,11 @@ static NSInteger kCacheStoreVersion = 1;
   return items;
 }
 
-
 - (void)addItem:(ISCacheItem *)item
 {
   [self.items setObject:item
                  forKey:item.uid];
 }
-
 
 - (void)removeItem:(ISCacheItem *)item
 {
@@ -134,58 +77,5 @@ static NSInteger kCacheStoreVersion = 1;
     [self removeItem:item];
   }
 }
-
-
-- (void)saveBlocking
-{
-  NSArray *items = nil;
-  @synchronized (self) {
-    if (self.dirty) {
-      items = [[self.items allValues] copy];
-      self.dirty = NO;
-    } else {
-      return;
-    }
-  }
-  
-  // Create the dictionaries.
-  NSMutableArray *dictionaries =
-  [NSMutableArray arrayWithCapacity:items.count];
-  for (ISCacheItem *item in items) {
-    [dictionaries addObject:[item _dictionary]];
-  }
-  
-  // Create a dictionary to write to file.
-  NSMutableDictionary *store =
-  [NSMutableDictionary dictionaryWithObjectsAndKeys:
-   @(kCacheStoreVersion),
-   kKeyCacheStoreVersion,
-   dictionaries,
-   kKeyCacheStoreItems,
-   nil];
-  
-  // Write the dictionary to disk.
-  BOOL success = [store writeToFile:self.path
-                         atomically:YES];
-  if (!success) {
-    @throw [NSException exceptionWithName:ISCacheExceptionUnableToSaveStore
-                                   reason:ISCacheExceptionUnableToSaveStoreReason
-                                 userInfo:nil];
-    
-  }
-}
-
-
-- (void)save
-{
-  @synchronized (self) {
-    self.dirty = YES;
-  }
-  
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-    [self saveBlocking];
-  });
-}
-
 
 @end

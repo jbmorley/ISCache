@@ -28,14 +28,6 @@
 
 @interface ISCacheStore : NSObject
 
-+ (id)storeWithRoot:(NSString *)root
-               path:(NSString *)path
-              cache:(ISCache *)cache;
-- (id)initWithRoot:(NSString *)root
-              path:(NSString *)path
-             cache:(ISCache *)cache;
-- (void)save;
-
 - (ISCacheItem *)item:(NSString *)identifier;
 - (NSArray *)items:(id <ISCacheFilter>)filter;
 - (void)addItem:(ISCacheItem *)item;

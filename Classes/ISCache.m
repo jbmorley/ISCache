@@ -73,39 +73,84 @@ static ISCache *sCache;
     // Create our unique paths if necessary.
     [self createDirectoryAtPath:self.documentsPath];
     
-    // Load the store.
-    self.store = [ISCacheStore storeWithRoot:self.documentsPath
-                                        path:self.path
-                                       cache:self];
+    // Create the database.
+    NSString *dbPath = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
+    
+    // TODO Remove me!
+//    [[NSFileManager defaultManager] removeItemAtPath:dbPath error:nil];
+    
+    self.db = [FMDatabase databaseWithPath:dbPath];
+    if (![self.db open]) {
+      NSLog(@"It's all gone to shit!");
+      assert(false);
+    }
+    
+    // TODO The uid shoudl be unique?
+    if (![self.db executeUpdate:
+          @"CREATE TABLE IF NOT EXISTS items ("
+          @"    id                   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+          @"    identifier           TEXT NOT NULL,"
+          @"    context              TEXT NOT NULL,"
+          @"    path                 TEXT NOT NULL,"
+          @"    uid                  TEXT NOT NULL,"
+          @"    state                INTEGER NOT NULL,"
+          @"    bytesRead            INTEGER NOT NULL,"
+          @"    bytesExpectedToRead  INTEGER NOT NULL,"
+          @"    filename             TEXT NOT NULL DEFAULT '',"
+          @"    preferences          TEXT NOT NULL DEFAULT '',"
+          @"    userInfo             TEXT NOT NULL DEFAULT ''"
+          @");"
+          ]) {
+      NSLog(@"Unable to create database :(!");
+      
+      assert(false);
+    }
+    
+    // Load all the items from the cache.
+    self.store = [ISCacheStore new];
+    FMResultSet *s = [self.db executeQuery:@"SELECT * FROM items"];
+    int count = 0;
+    while ([s next]) {
+      ISCacheItem *item =
+      [[ISCacheItem alloc] _initWithResultSet:s
+                                         root:self.documentsPath
+                                        cache:self];
+      item.fmdb = self.db;
+      [self.store addItem:item];
+      count++;
+    }
+    NSLog(@"%d items!", count);
+    
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
       [[[UIAlertView alloc] initWithTitle:@"Info" message:@"Creating cache." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
     }
     
     // Check the cache integrity.
-    NSMutableArray *removals =
-    [NSMutableArray arrayWithCapacity:3];
-    BOOL missingFiles = NO;
-    for (ISCacheItem *cacheItem in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
-      if (cacheItem.state == ISCacheItemStateInProgress ||
-          cacheItem.state == ISCacheItemStateNotFound) {
-        [cacheItem _transitionToNotFound];
-        [removals addObject:cacheItem];
-      } else if (cacheItem.state == ISCacheItemStateFound &&
-                 ![cacheItem _filesExist]) {
-        missingFiles = YES;
-        [cacheItem _transitionToNotFound];
-        [removals addObject:cacheItem];
-      }
-    }
-    if (removals.count > 0) {
-      [self.store removeItems:removals];
-      [self.store save];
-    }
-    if (missingFiles) {
-      NSLog(@"WARNING: Cache item files missing.");
-      [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-    }
+//    NSMutableArray *removals =
+//    [NSMutableArray arrayWithCapacity:3];
+//    BOOL missingFiles = NO;
+//    for (ISCacheItem *cacheItem in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
+//      if (cacheItem.state == ISCacheItemStateInProgress ||
+//          cacheItem.state == ISCacheItemStateNotFound) {
+//        [cacheItem _transitionToNotFound];
+//        [removals addObject:cacheItem];
+//      } else if (cacheItem.state == ISCacheItemStateFound &&
+//                 ![cacheItem _filesExist]) {
+//        missingFiles = YES;
+//        [cacheItem _transitionToNotFound];
+//        [removals addObject:cacheItem];
+//      }
+//    }
+//    if (removals.count > 0) {
+//      // TODO Items should be able to delete themselves?
+//      [self.store removeItems:removals];
+////      [self.store save];
+//    }
+//    if (missingFiles) {
+//      NSLog(@"WARNING: Cache item files missing.");
+//      [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+//    }
     
     [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
     
@@ -219,6 +264,7 @@ static ISCache *sCache;
                                      preferences:preferences];
   
   // Return a pre-existing cache item.
+  // TODO Why isn't it pre-existing?
   ISCacheItem *cacheItem = [self.store item:identifier];
   if (cacheItem) {
     return cacheItem;
@@ -244,14 +290,18 @@ static ISCache *sCache;
   }
   
   // Create the cache item.
-  cacheItem = [ISCacheItem _itemWithIdentifier:item
-                                       context:context
-                                   preferences:preferences
-                                           uid:identifier
-                                          root:self.documentsPath
-                                          path:identifier
-                                         cache:self];
+  cacheItem =
+  [[ISCacheItem alloc] _initWithIdentifier:item
+                                   context:context
+                               preferences:preferences
+                                       uid:identifier
+                                      root:self.documentsPath
+                                      path:identifier
+                                     cache:self];
   [self.store addItem:cacheItem];
+  
+  cacheItem.fmdb = self.db;
+  [cacheItem save];
   
   return cacheItem;
 }
@@ -324,7 +374,7 @@ static ISCache *sCache;
     
     // Reset the cache item state.
     [cacheItem _transitionToNotFound];
-    [self.store save];
+    [cacheItem save];
     
   } else if (cacheItem.state == ISCacheItemStateInProgress) {
     
@@ -513,7 +563,7 @@ static ISCache *sCache;
 {
   [self log:@"itemDidFinish:%@", item.uid];
   [item _transitionToFound];
-  [self.store save];
+  [item save];
   [self cleanupForItem:item];
 }
 
@@ -535,7 +585,7 @@ didFailWithError:(NSError *)error
 {
   [self log:@"item:%@ didFailWithError: %@", item.uid, error];
   [item _transitionToError:error];
-  [self.store save];
+  [item save];
   [self cleanupForItem:item];
 }
 

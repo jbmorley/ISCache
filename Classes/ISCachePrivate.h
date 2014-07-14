@@ -21,6 +21,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <FMDB/FMDB.h>
 #import "ISCache.h"
 #import "ISCacheStore.h"
 
@@ -34,6 +35,7 @@
 @property (nonatomic, strong) ISCacheStore *store;
 @property (nonatomic, strong) NSFileManager *fileManager;
 @property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTask;
+@property (nonatomic, strong) FMDatabase *db;
 
 - (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
                                 context:(NSString *)context

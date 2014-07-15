@@ -59,7 +59,7 @@
     }
     return items;
   } else {
-    return [self.items copy];
+    return [self.items allValues];
   }
 }
 

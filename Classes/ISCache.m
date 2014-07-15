@@ -73,14 +73,13 @@ static ISCache *sCache;
     
     // Generate our unique paths.
     self.documentsPath = [applicationSupport stringByAppendingPathComponent:self.identifier];
-    self.path = [self.documentsPath stringByAppendingPathExtension:@".plist"];
+    self.path = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
     
     // Create our unique paths if necessary.
     [self createDirectoryAtPath:self.documentsPath];
     
     // Create the database.
-    NSString *dbPath = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
-    self.db = [FMDatabase databaseWithPath:dbPath];
+    self.db = [FMDatabase databaseWithPath:self.path];
     if (![self.db open]) {
       NSLog(@"It's all gone to shit!");
       assert(false);
@@ -417,12 +416,7 @@ static ISCache *sCache;
 - (NSArray *)items:(id<ISCacheFilter>)filter
 {
   assert([NSThread isMainThread]);
-  NSArray *items = [self.store items:filter];
-  NSMutableArray *identifiers = [NSMutableArray arrayWithCapacity:3];
-  for (ISCacheItem *item in items) {
-    [identifiers addObject:item];
-  }
-  return identifiers;
+  return [self.store items:filter];
 }
 
 
@@ -430,22 +424,24 @@ static ISCache *sCache;
 {
   // Close the database.
   [self.db close];
+  self.db = nil;
   
   // Delete the files.
   NSError *error;
-  [self.fileManager removeItemAtPath:self.path
-                               error:&error];
+  BOOL result = YES;
+  result &= [self.fileManager removeItemAtPath:self.path
+                                         error:&error];
   if (error) {
     NSLog(@"Failed to delete cache database with error %@", error);
     return NO;
   }
-  [self.fileManager removeItemAtPath:self.documentsPath
-                               error:&error];
+  result &= [self.fileManager removeItemAtPath:self.documentsPath
+                                         error:&error];
   if (error) {
     NSLog(@"Failed to delete cache documents with error %@", error);
     return NO;
   }
-  return YES;
+  return result;
 }
 
 

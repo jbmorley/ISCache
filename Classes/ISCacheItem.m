@@ -116,8 +116,7 @@ static int kCacheItemVersion = 1;
 
 - (NSString *)description
 {
-  // TODO Flesh this out.
-  return [self.userInfo description];
+  return [NSString stringWithFormat:@"%@:%@ - %@ ", self.context, self.identifier, [self.userInfo JSON]];
 }
 
 

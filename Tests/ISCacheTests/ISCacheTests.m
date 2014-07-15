@@ -29,15 +29,17 @@ static NSString *const kCacheIdentifier = @"test-cache";
 
 - (void)tearDown
 {
-  [super tearDown];
   [self purgeCache];
+  [super tearDown];
 }
 
 - (void)purgeCache
 {
   self.cache = nil;
   @autoreleasepool {
-    [[ISCache cacheWithIdentifier:kCacheIdentifier] purge];
+    ISCache *cache = [ISCache cacheWithIdentifier:kCacheIdentifier];
+    BOOL success = [cache purge];
+    XCTAssertTrue(success, @"Checking a successful cache purge.");
   }
 }
 

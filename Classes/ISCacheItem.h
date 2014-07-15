@@ -67,7 +67,7 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 // TODO These should not be read-write for the normal clients.
 @property (nonatomic) long long totalBytesRead;
 @property (nonatomic) long long totalBytesExpectedToRead;
-@property (strong, nonatomic) NSDictionary *userInfo;
+@property (copy, nonatomic) NSDictionary *userInfo;
 
 @property (nonatomic, strong) FMDatabase *fmdb;
 

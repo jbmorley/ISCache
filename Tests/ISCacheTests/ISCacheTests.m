@@ -17,40 +17,126 @@
 @end
 
 static NSString *const kDownloadURL = @"https://upload.wikimedia.org/wikipedia/commons/c/c8/AudreyHepburn_leggings.jpg";
+static NSString *const kCacheIdentifier = @"test-cache";
 
 @implementation ISCacheTests
 
 - (void)setUp
 {
   [super setUp];
-  
-  // TODO Create and persist different caches for tests.
-  self.cache = [ISCache defaultCache];
-  self.filterStateAll = [ISCacheStateFilter filterWithStates:ISCacheItemStateAll];
-  
-  // Get the existing items.
-  NSArray *items = [self.cache items:self.filterStateAll];
-  
-  // Remove them from the cache.
-  [self.cache removeItems:items];
+  [self purgeCache];
 }
 
 - (void)tearDown
 {
   [super tearDown];
+  [self purgeCache];
 }
 
-- (void)testDefaultCache
+- (void)purgeCache
 {
-  ISCache *cache = [ISCache defaultCache];
-  XCTAssertNotNil(cache,
+  self.cache = nil;
+  @autoreleasepool {
+    [[ISCache cacheWithIdentifier:kCacheIdentifier] purge];
+  }
+}
+
+- (void)closeCache
+{
+  self.cache = nil;
+}
+
+- (ISCache *)cache
+{
+  if (_cache == nil) {
+    _cache = [ISCache cacheWithIdentifier:kCacheIdentifier];
+  }
+  return _cache;
+}
+
+// TODO Flesh out the purge API and ensure that caches cannot be left in bad states.
+
+- (void)testCacheCount
+{
+  @autoreleasepool {
+    __attribute__((objc_precise_lifetime))
+    ISCacheItem *item = [self.cache itemForIdentifier:kDownloadURL
+                                              context:ISCacheURLContext
+                                          preferences:@{@"KeyA": @"ValueA",
+                                                        @"KeyB": @"ValueB"}];
+  }
+  XCTAssertEqual([[self.cache allItems] count], 1,
+                 @"Check that there is one item in the cache.");
+}
+
+// Cache items are expected to persist for the lifetime of the application.
+- (void)testCacheItemLifetime
+{
+  __weak ISCacheItem *weakItem;
+  @autoreleasepool {
+    __attribute__((objc_precise_lifetime))
+    ISCacheItem *item = [self.cache itemForIdentifier:kDownloadURL
+                                              context:ISCacheURLContext
+                                          preferences:@{@"KeyA": @"ValueA",
+                                                        @"KeyB": @"ValueB"}];
+    weakItem = item;
+  }
+  
+  [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+  
+  ISCacheItem *item = [self.cache itemForIdentifier:kDownloadURL
+                                            context:ISCacheURLContext
+                                        preferences:@{@"KeyA": @"ValueA",
+                                                      @"KeyB": @"ValueB"}];
+  XCTAssertEqualObjects(item, weakItem,
+                        @"Check that the same item is fetched from the cache during application lifetime.");
+}
+
+// TODO Check that we correctly fail when attempting to set non-serializable data in preferences and
+// userdict.
+
+// TODO Assert that we do not write to the disk unnecessarily.
+
+// Cache items should persist across different instances of the cache.
+- (void)testPersistantStorage
+{
+  NSDictionary *preferences = @{@"KeyA": @"ValueA",
+                                @"KeyB": @"ValueB"};
+  NSDictionary *userInfo = @{@"InfoA": @"InfoB"};
+  NSString *uid;
+  @autoreleasepool {
+    __attribute__((objc_precise_lifetime))
+    ISCacheItem *item = [self.cache itemForIdentifier:kDownloadURL
+                                              context:ISCacheURLContext
+                                          preferences:preferences];
+    item.userInfo = userInfo;
+    uid = item.uid;
+  }
+
+  [self closeCache];
+  ISCacheItem *item = [self.cache itemForUid:uid];
+  
+  XCTAssertEqualObjects(item.identifier, kDownloadURL,
+                        @"Checking that item identifiers persist across cache instances.");
+  XCTAssertEqualObjects(item.context, ISCacheURLContext,
+                        @"Checking that item contexts persist across cache instances.");
+  XCTAssertEqualObjects(item.preferences, preferences,
+                        @"Checking that item preferences persist across cache instances.");
+  XCTAssertEqualObjects(item.userInfo, userInfo,
+                        @"Checking that item userInfo persist across cache instances.");
+}
+
+- (void)testDefaultCacheNotNil
+{
+  XCTAssertNotNil([ISCache defaultCache],
                   @"Check default cache construction.");
 }
 
 - (void)testCacheEmpty
 {
-  XCTAssertEqual([[self.cache items:self.filterStateAll] count], 0,
-                 @"Check that the initial cache is empty.");
+  NSArray *items = [self.cache allItems];
+  XCTAssertEqual([items count], 0,
+                 @"Check that the initial cache is empty (%@).", items);
 }
 
 - (void)testCacheNonEmpty

@@ -55,8 +55,9 @@ extern NSString *const ISCacheErrorDomain;
 @property (nonatomic) BOOL debug;
 @property (nonatomic) BOOL disablesIdleTimer;
 
-+ (id)defaultCache;
-- (id)initWithIdentifier:(NSString *)identifier;
++ (instancetype)defaultCache;
++ (instancetype)cacheWithIdentifier:(NSString *)identifier;
+- (instancetype)initWithIdentifier:(NSString *)identifier;
 
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context;
@@ -67,9 +68,12 @@ extern NSString *const ISCacheErrorDomain;
                        preferences:(NSDictionary *)preferences;
 - (ISCacheItem *)itemForUid:(NSString *)uid;
 
+- (NSArray *)allItems;
 - (NSArray *)items:(id<ISCacheFilter>)filter;
 
 - (void)removeItems:(NSArray *)items;
 - (void)cancelItems:(NSArray *)items;
+
+- (BOOL)purge;
 
 @end

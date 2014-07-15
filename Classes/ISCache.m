@@ -42,16 +42,21 @@ static ISCache *sCache;
 
 + (id)defaultCache
 {
-  @synchronized (self) {
-    if (sCache == nil) {
-      sCache = [[self alloc] initWithIdentifier:@"uk.co.inseven.cache.store"];
-    }
-    return sCache;
-  }
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    sCache = [self cacheWithIdentifier:@"uk.co.inseven.cache.store"];
+  });
+  return sCache;
 }
 
 
-- (id)initWithIdentifier:(NSString *)identifier
++ (instancetype)cacheWithIdentifier:(NSString *)identifier
+{
+  return [[self alloc] initWithIdentifier:identifier];
+}
+
+
+- (instancetype)initWithIdentifier:(NSString *)identifier
 {
   self = [super init];
   if (self) {
@@ -75,10 +80,6 @@ static ISCache *sCache;
     
     // Create the database.
     NSString *dbPath = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
-    
-    // TODO Remove me!
-//    [[NSFileManager defaultManager] removeItemAtPath:dbPath error:nil];
-    
     self.db = [FMDatabase databaseWithPath:dbPath];
     if (![self.db open]) {
       NSLog(@"It's all gone to shit!");
@@ -119,40 +120,11 @@ static ISCache *sCache;
       [self.store addItem:item];
       count++;
     }
-    NSLog(@"%d items!", count);
     
-    
-    if (![[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
-      [[[UIAlertView alloc] initWithTitle:@"Info" message:@"Creating cache." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+    // Create the cache directory if it doesn't exist.
+    if (NO == [[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
+      [self createDirectoryAtPath:self.path];
     }
-    
-    // Check the cache integrity.
-//    NSMutableArray *removals =
-//    [NSMutableArray arrayWithCapacity:3];
-//    BOOL missingFiles = NO;
-//    for (ISCacheItem *cacheItem in [self.store items:[ISCacheStateFilter filterWithStates:ISCacheItemStateAll]]) {
-//      if (cacheItem.state == ISCacheItemStateInProgress ||
-//          cacheItem.state == ISCacheItemStateNotFound) {
-//        [cacheItem _transitionToNotFound];
-//        [removals addObject:cacheItem];
-//      } else if (cacheItem.state == ISCacheItemStateFound &&
-//                 ![cacheItem _filesExist]) {
-//        missingFiles = YES;
-//        [cacheItem _transitionToNotFound];
-//        [removals addObject:cacheItem];
-//      }
-//    }
-//    if (removals.count > 0) {
-//      // TODO Items should be able to delete themselves?
-//      [self.store removeItems:removals];
-////      [self.store save];
-//    }
-//    if (missingFiles) {
-//      NSLog(@"WARNING: Cache item files missing.");
-//      [[[UIAlertView alloc] initWithTitle:@"Error" message:@"Cache item files missing." completionBlock:NULL cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-//    }
-    
-    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:self.path]];
     
     // Create and register the default factories.
     
@@ -183,7 +155,10 @@ static ISCache *sCache;
   NSFileManager *fileManager = [NSFileManager defaultManager];
   if (![fileManager fileExistsAtPath:path isDirectory:&isDirectory]) {
     NSError *error;
-    [fileManager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error];
+    [fileManager createDirectoryAtPath:path
+           withIntermediateDirectories:YES
+                            attributes:nil
+                                 error:&error];
     if (error) {
       return NO;
     }
@@ -198,6 +173,7 @@ static ISCache *sCache;
 {
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter removeObserver:self];
+  [self.db close];
 }
 
 
@@ -205,7 +181,9 @@ static ISCache *sCache;
 {
   assert([self.fileManager fileExistsAtPath:[URL path]]);
   NSError *error = nil;
-  BOOL success = [URL setResourceValue:[NSNumber numberWithBool: YES] forKey:NSURLIsExcludedFromBackupKey error:&error];
+  BOOL success = [URL setResourceValue:[NSNumber numberWithBool:YES]
+                                forKey:NSURLIsExcludedFromBackupKey
+                                 error:&error];
   if(!success){
     [self log:@"Error excluding %@ from backup %@", [URL lastPathComponent], error];
   }
@@ -426,7 +404,16 @@ static ISCache *sCache;
 }
 
 
+- (NSArray *)allItems
+{
+  assert([NSThread isMainThread]);
+  return [self items:nil];
+}
+
+
 // Return a subset of the items matching the filter.
+// TODO Why not return the items themselves?
+// This copy just seems like lots of addiitonal work?
 - (NSArray *)items:(id<ISCacheFilter>)filter
 {
   assert([NSThread isMainThread]);
@@ -436,6 +423,29 @@ static ISCache *sCache;
     [identifiers addObject:item];
   }
   return identifiers;
+}
+
+
+- (BOOL)purge
+{
+  // Close the database.
+  [self.db close];
+  
+  // Delete the files.
+  NSError *error;
+  [self.fileManager removeItemAtPath:self.path
+                               error:&error];
+  if (error) {
+    NSLog(@"Failed to delete cache database with error %@", error);
+    return NO;
+  }
+  [self.fileManager removeItemAtPath:self.documentsPath
+                               error:&error];
+  if (error) {
+    NSLog(@"Failed to delete cache documents with error %@", error);
+    return NO;
+  }
+  return YES;
 }
 
 

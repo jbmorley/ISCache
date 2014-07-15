@@ -127,7 +127,7 @@ static int kCacheItemVersion = 1;
       [_userInfo isEqual:userInfo]) {
     return;
   }
-  _userInfo = userInfo;
+  _userInfo = [userInfo copy];
   
   // Check that we can serialize the user info.
   if (_userInfo) {

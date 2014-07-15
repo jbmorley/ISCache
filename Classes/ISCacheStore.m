@@ -49,14 +49,18 @@
 
 - (NSArray *)items:(id <ISCacheFilter>)filter
 {
-  NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
-  for (NSString *identifier in self.items) {
-    ISCacheItem *item = self.items[identifier];
-    if ([filter matchesFilter:item]) {
-      [items addObject:item];
+  if (filter) {
+    NSMutableArray *items = [NSMutableArray new];
+    for (NSString *identifier in self.items) {
+      ISCacheItem *item = self.items[identifier];
+      if ([filter matchesFilter:item]) {
+        [items addObject:item];
+      }
     }
+    return items;
+  } else {
+    return [self.items copy];
   }
-  return items;
 }
 
 - (void)addItem:(ISCacheItem *)item

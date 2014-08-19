@@ -22,6 +22,7 @@
 
 #import "ISCache.h"
 #import <ISUtilities/ISUtilities.h>
+#import <ISUtilities/UIKit+ISUtilities.h>
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheStore.h"
 #import "NSString+Hashes.h"

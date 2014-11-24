@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'NSString-Hashes', '~> 1.2.1'
   s.dependency 'ISUtilities'
-  s.dependency 'AFNetworking', '~> 2.0'
+  s.dependency 'AFNetworking', '~> 2'
   s.dependency 'FMDB'
 
 end

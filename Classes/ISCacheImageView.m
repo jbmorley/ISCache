@@ -45,7 +45,6 @@
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                            preferences:(NSDictionary *)preferences
                        placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheCompletionBlock)block
 {
@@ -60,8 +59,7 @@
   // Before proceeding, check to see if the requested item matches
   // the one we are already loading.
   ISCacheItem *item = [defaultCache itemForIdentifier:identifier
-                                              context:context
-                                          preferences:preferences];
+                                              context:context];
   
   // Cancel the previous fetch.
   [self.cancelToken cancel];

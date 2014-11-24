@@ -31,12 +31,13 @@ const NSString *ISCacheImageScaleMode = @"scale";
 @implementation ISCacheScalingHandlerFactory
 
 - (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo
 {
   ISCacheHTTPHandler *handler = [[ISCacheHTTPHandler alloc] initWithCompletion:^(ISCacheItem *info) {
     
     // Only attempt to resize the image if user info has been
     // provided with the required dimensions.
+    // TODO Figure out a better way to perform the resizing.
+    NSDictionary *userInfo = nil;
     if (userInfo) {
       
       CGSize targetSize = CGSizeMake([userInfo[ISCacheImageWidth] floatValue],

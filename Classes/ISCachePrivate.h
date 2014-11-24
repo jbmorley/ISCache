@@ -24,23 +24,3 @@
 #import <FMDB/FMDB.h>
 #import "ISCache.h"
 #import "ISCacheStore.h"
-
-@interface ISCache ()
-
-@property (nonatomic, strong) NSMutableDictionary *factories;
-@property (nonatomic, strong) NSMutableDictionary *active;
-@property (nonatomic, strong) NSString *documentsPath;
-@property (nonatomic, strong) NSString *identifier;
-@property (nonatomic, strong) NSString *path;
-@property (nonatomic, strong) ISCacheStore *store;
-@property (nonatomic, strong) NSFileManager *fileManager;
-@property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTask;
-@property (nonatomic, strong) FMDatabase *db;
-
-- (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
-                                context:(NSString *)context
-                            preferences:(NSDictionary *)preferences;
-- (void)log:(NSString *)message, ...;
-- (void)itemDidUpdate:(ISCacheItem *)item;
-
-@end

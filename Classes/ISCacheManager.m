@@ -36,9 +36,9 @@ static ISCacheManager *sCacheManager;
 {
   self = [super init];
   if (self) {
-    self.cacheItems = [[NSMutableSet alloc] init];
-    self.pending = [[NSMutableSet alloc] init];
-    self.active = [[NSMutableSet alloc] init];
+    self.cacheItems = [NSMutableSet set];
+    self.pending = [NSMutableSet set];
+    self.active = [NSMutableSet set];
   }
   return self;
 }

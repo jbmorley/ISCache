@@ -29,12 +29,33 @@
 #import "ISCacheItemPrivate.h"
 #import "NSObject+Serialize.h"
 
+
+NSTimeInterval ISCalculateTimeRemaining(NSDate *startDate,
+                                        long long totalBytesExpectedToRead,
+                                        long long totalBytesRead)
+{
+  // Check to see if we have enough information.
+  if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown || totalBytesExpectedToRead == 0) {
+    return 0;
+  }
+  
+  // Check to see if we've already completed.
+  if (totalBytesRead == totalBytesExpectedToRead) {
+    return 0;
+  }
+  
+  // Calculate the expected time remaining.
+  NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:startDate];
+  CGFloat rate = totalBytesRead / interval;
+  CGFloat remaining = totalBytesExpectedToRead - totalBytesRead;
+  CGFloat timeRemaining = remaining / rate;
+  
+  return timeRemaining;
+}
+
 @implementation ISCacheItem
 
 @synthesize state = _state;
-@synthesize userInfo = _userInfo;
-
-static int kCacheItemVersion = 1;
 
 - (id)init
 {
@@ -50,7 +71,7 @@ static int kCacheItemVersion = 1;
     _lastProgress = 0.0f;
     _lastProgressDate = [NSDate date];
     _fileDict = [NSMutableDictionary new];
-    [self _resetState];
+    [self resetState];
   }
   return self;
 }
@@ -83,9 +104,6 @@ static int kCacheItemVersion = 1;
                     forKey:filename];
     }
     
-    _preferences = [NSDictionary dictionaryWithJSON:[resultSet stringForColumn:@"preferences"]];
-    _userInfo = [NSDictionary dictionaryWithJSON:[resultSet stringForColumn:@"userInfo"]];
-    
   }
   return self;
 }
@@ -93,7 +111,6 @@ static int kCacheItemVersion = 1;
 
 - (id)_initWithIdentifier:(NSString *)identifier
                   context:(NSString *)context
-              preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
                      root:(NSString *)root
                      path:(NSString *)path
@@ -103,7 +120,6 @@ static int kCacheItemVersion = 1;
   if (self) {
     _identifier = identifier;
     _context = context;
-    _preferences = preferences;
     _uid = uid;
     _root = root;
     _path = path;
@@ -116,29 +132,7 @@ static int kCacheItemVersion = 1;
 
 - (NSString *)description
 {
-  return [NSString stringWithFormat:@"%@:%@ - %@ ", self.context, self.identifier, [self.userInfo JSON]];
-}
-
-
-- (void)setUserInfo:(NSDictionary *)userInfo
-{
-  if (_userInfo == userInfo ||
-      [_userInfo isEqual:userInfo]) {
-    return;
-  }
-  _userInfo = [userInfo copy];
-  
-  // Check that we can serialize the user info.
-  if (_userInfo) {
-    if (![_userInfo canWriteToFile]) {
-      @throw [NSException exceptionWithName:ISCacheExceptionInvalidUserInfo
-                                     reason:ISCacheExceptionInvalidUserInfoReason userInfo:nil];
-    }
-  }
-  
-//  [self _notifyObservers]; // TODO We probably need to notify of this some other way.
-  [self _notifyExternalUpdate]; // TODO This is saving and unpleasant.
-  [self save];
+  return [NSString stringWithFormat:@"%@:%@", self.context, self.identifier];
 }
 
 
@@ -175,30 +169,9 @@ static int kCacheItemVersion = 1;
 - (NSTimeInterval)timeRemainingEstimate
 {
   @synchronized(self) {
-    CGFloat totalBytesExpectedToRead = self.totalBytesExpectedToRead;
-    CGFloat totalBytesRead = self.totalBytesRead;
-
-    if (totalBytesExpectedToRead == ISCacheItemTotalBytesUnknown || totalBytesExpectedToRead == 0) {
-      
-      return 0;
-      
-    } else if (totalBytesExpectedToRead ==
-               totalBytesRead) {
-      
-      return 0;
-      
-    } else {
-      
-      NSTimeInterval interval =
-      [self.modified timeIntervalSinceNow] * -1;
-      CGFloat rate = totalBytesRead / interval;
-      CGFloat remaining = totalBytesExpectedToRead - totalBytesRead;
-      CGFloat timeRemaining = remaining / rate;
-
-      return timeRemaining;
-      
-    }
-
+    return ISCalculateTimeRemaining(self.modified,
+                                    self.totalBytesExpectedToRead,
+                                    self.totalBytesRead);
   }
 }
 
@@ -211,14 +184,8 @@ static int kCacheItemVersion = 1;
     self.file
     ? [self.file filename]
     : @"";
-  NSString *preferences =
-    self.preferences
-    ? [self.preferences JSON]
-    : @"";
-  NSString *userInfo =
-    self.userInfo
-    ? [self.userInfo JSON]
-    : @"";
+  NSString *preferences = @"";
+  NSString *userInfo = @"";
   
   if (self.fmdbId) {
     
@@ -230,7 +197,29 @@ static int kCacheItemVersion = 1;
   } else {
     
     NSLog(@"Inserting...");
-    if (![self.fmdb executeUpdate:@"INSERT INTO items (identifier, context, path, uid, state, bytesRead, bytesExpectedToRead, filename, preferences, userInfo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", self.identifier, self.context, self.path, self.uid, @(self.state), @(self.totalBytesRead), @(self.totalBytesExpectedToRead), filename, preferences, userInfo]) {
+    if (![self.fmdb executeUpdate:
+          @"INSERT INTO items ("
+          @"  identifier,"
+          @"  context,"
+          @"  path,"
+          @"  uid,"
+          @"  state,"
+          @"  bytesRead,"
+          @"  bytesExpectedToRead,"
+          @"  filename,"
+          @"  preferences,"
+          @"  userInfo"
+          @") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          self.identifier,
+          self.context,
+          self.path,
+          self.uid,
+          @(self.state),
+          @(self.totalBytesRead),
+          @(self.totalBytesExpectedToRead),
+          filename,
+          preferences,
+          userInfo]) {
       assert(false);
     }
     self.fmdbId = [self.fmdb lastInsertRowId];
@@ -276,27 +265,19 @@ static int kCacheItemVersion = 1;
 
 - (void)fetch
 {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.cache fetchItemForIdentifier:self.identifier
-                               context:self.context
-                           preferences:self.preferences];
-  });
+  [self.cache fetchItem:self];
 }
 
 
 - (void)remove
 {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.cache removeItems:@[self]];
-  });
+  [self.cache removeItem:self];
 }
 
 
 - (void)cancel
 {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.cache cancelItems:@[self]];
-  });
+  [self.cache cancelItem:self];
 }
 
 
@@ -405,11 +386,18 @@ static int kCacheItemVersion = 1;
 #pragma mark - Utilities
 
 
-- (BOOL)_resetState
+- (BOOL)resetState
 {
   @synchronized (self) {
     
-    [self _removeFiles];
+    // TODO This should be done internally to the cache so it doesn't
+    // need to be thread-safe as it can simply be done on the cache queue.
+
+    // Remove any files.
+    [self.fileDict enumerateKeysAndObjectsUsingBlock:^(NSString *key, ISCacheFile *file, BOOL *stop) {
+       [file remove];
+     }];
+    [self.fileDict removeAllObjects];
     
     // Check to see if any changes will be made.
     if (_state == ISCacheItemStateNotFound &&
@@ -434,33 +422,12 @@ static int kCacheItemVersion = 1;
 }
 
 
-- (BOOL)_filesExist
-{
-  BOOL result = YES;
-  for (NSString *name in self.fileDict) {
-    ISCacheFile *file = [self.fileDict objectForKey:name];
-    result &= [file exists];
-  }
-  return result;
-}
-
-
 - (void)_closeFiles
 {
   [self.fileDict enumerateKeysAndObjectsUsingBlock:
    ^(NSString *key, ISCacheFile *file, BOOL *stop) {
      [file close];
    }];
-}
-
-
-- (void)_removeFiles
-{
-  [self.fileDict enumerateKeysAndObjectsUsingBlock:
-   ^(NSString *key, ISCacheFile *file, BOOL *stop) {
-     [file remove];
-   }];
-  [self.fileDict removeAllObjects];
 }
 
 
@@ -471,7 +438,7 @@ static int kCacheItemVersion = 1;
 {
   @synchronized (self) {
     assert(_state == ISCacheItemStateNotFound);
-    [self _resetState];
+    [self resetState];
     _state = ISCacheItemStateInProgress;
     _modified = [NSDate new];
     [self _notifyObservers];
@@ -500,7 +467,7 @@ static int kCacheItemVersion = 1;
 - (void)_transitionToNotFound
 {
   @synchronized (self) {
-    BOOL itemChanged = [self _resetState];
+    BOOL itemChanged = [self resetState];
     if (!itemChanged) {
       return;
     }
@@ -513,7 +480,7 @@ static int kCacheItemVersion = 1;
 - (void)_transitionToError:(NSError *)error
 {
   @synchronized (self) {
-    [self _resetState];
+    [self resetState];
     _lastError = error;
     [self _notifyObservers];
   }
@@ -530,12 +497,6 @@ static int kCacheItemVersion = 1;
 
 
 #pragma mark - Notifications
-
-
-- (void)_notifyExternalUpdate
-{
-  [self.cache itemDidUpdate:self];
-}
 
 
 - (void)_notifyObservers

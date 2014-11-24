@@ -25,7 +25,6 @@
 
 @protocol ISCacheHandlerFactory <NSObject>
 
-- (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo;
+- (id<ISCacheHandler>)handlerForContext:(NSString *)context;
 
 @end

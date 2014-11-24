@@ -32,7 +32,6 @@ typedef void (^ISCacheCompletionBlock)(NSError *error);
 
 - (ISCacheItem *)setImageWithIdentifier:(NSString *)identifier
                                 context:(NSString *)context
-                            preferences:(NSDictionary *)preferences
                        placeholderImage:(UIImage *)placeholderImage
                                   block:(ISCacheCompletionBlock)block;
 - (void)cancelSetImage;

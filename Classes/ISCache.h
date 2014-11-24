@@ -32,7 +32,6 @@
 #import "ISCacheFilter.h"
 #import "ISCacheStateFilter.h"
 #import "ISCacheContextFilter.h"
-#import "ISCacheUserInfoFilter.h"
 #import "ISCacheImageView.h"
 #import "ISCacheSimpleHandlerFactory.h"
 #import "ISCacheTask.h"
@@ -53,7 +52,6 @@ extern NSString *const ISCacheErrorDomain;
 @interface ISCache : NSObject <ISCacheHandlerUpdater>
 
 @property (nonatomic) BOOL debug;
-@property (nonatomic) BOOL disablesIdleTimer;
 
 + (instancetype)defaultCache;
 + (instancetype)cacheWithIdentifier:(NSString *)identifier;
@@ -64,16 +62,16 @@ extern NSString *const ISCacheErrorDomain;
 - (void)unregisterFactoryForContext:(NSString *)context;
 
 - (ISCacheItem *)itemForIdentifier:(NSString *)identifier
-                           context:(NSString *)context
-                       preferences:(NSDictionary *)preferences;
+                           context:(NSString *)context;
 - (ISCacheItem *)itemForUid:(NSString *)uid;
 
-- (NSArray *)allItems;
 - (NSArray *)items:(id<ISCacheFilter>)filter;
 
-- (void)removeItems:(NSArray *)items;
-- (void)cancelItems:(NSArray *)items;
+- (void)fetchItem:(ISCacheItem *)item;
+- (void)removeItem:(ISCacheItem *)item;
+- (void)cancelItem:(ISCacheItem *)item;
 
-- (BOOL)purge;
+
+- (void)purge;
 
 @end

@@ -31,13 +31,10 @@
 
 @implementation ISCacheSimpleHandlerFactory
 
-
-
 + (id)factoryWithClass:(Class)handlerClass
 {
   return [[self alloc] initWithClass:handlerClass];
 }
-
 
 - (id)initWithClass:(Class)handlerClass
 {
@@ -55,9 +52,7 @@
   return self;
 }
 
-
 - (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                               userInfo:(NSDictionary *)userInfo
 {
   return [[self.handlerClass alloc] init];
 }

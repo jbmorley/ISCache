@@ -36,18 +36,53 @@ NSString *const ISCacheImageContext = @"Image";
 // Errors.
 NSString *const ISCacheErrorDomain = @"ISCacheErrorDomain";
 
+@interface ISCache ()
+
+@property (nonatomic, readonly, strong) NSMutableDictionary *factories;
+@property (nonatomic, readonly, strong) NSMutableDictionary *active;
+@property (nonatomic, readonly, strong) NSString *documentsPath;
+@property (nonatomic, readonly, strong) NSString *identifier;
+@property (nonatomic, readonly, strong) NSString *path;
+@property (nonatomic, readonly, strong) ISCacheStore *store;
+@property (nonatomic, readonly, strong) FMDatabase *db;
+@property (nonatomic, readonly, strong) dispatch_queue_t workerQueue;
+
+@property (nonatomic, readwrite, assign) UIBackgroundTaskIdentifier backgroundTask;
+
+@end
+
+void ISCacheAssertUnreached(NSString *message, ...)
+{
+  va_list args;
+  va_start(args, message);
+  NSLogv(message, args);
+  va_end(args);
+  assert(false);
+}
+
+void ISCacheAssert(BOOL assertion, NSString *message, ...)
+{
+  if (!assertion) {
+    va_list args;
+    va_start(args, message);
+    NSLogv(message, args);
+    va_end(args);
+    assert(false);
+  }
+}
+
+#define ASSERT_ON_MAIN_THREAD assert([NSThread isMainThread])
+
 @implementation ISCache
 
-static ISCache *sCache;
-
-
-+ (id)defaultCache
++ (instancetype)defaultCache
 {
   static dispatch_once_t onceToken;
+  static ISCache *sharedCache;
   dispatch_once(&onceToken, ^{
-    sCache = [self cacheWithIdentifier:@"uk.co.inseven.cache.store"];
+    sharedCache = [self cacheWithIdentifier:@"uk.co.inseven.cache.store"];
   });
-  return sCache;
+  return sharedCache;
 }
 
 
@@ -61,33 +96,33 @@ static ISCache *sCache;
 {
   self = [super init];
   if (self) {
-    self.debug = NO;
-    self.identifier = identifier;
-    self.factories = [NSMutableDictionary dictionaryWithCapacity:3];
-    self.active = [NSMutableDictionary dictionaryWithCapacity:3];
-    self.fileManager = [NSFileManager defaultManager];
+    _debug = NO;
+    _identifier = identifier;
+    _factories = [NSMutableDictionary dictionary];
+    _active = [NSMutableDictionary dictionary];
     
     // Create the application support directory for the cache.
-    NSString *applicationSupport = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *applicationSupport = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                                                        NSUserDomainMask,
+                                                                        YES) objectAtIndex:0];
     applicationSupport = [applicationSupport stringByAppendingPathComponent:@"Cache"];
     [self createDirectoryAtPath:applicationSupport];
     
     // Generate our unique paths.
-    self.documentsPath = [applicationSupport stringByAppendingPathComponent:self.identifier];
-    self.path = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
+    _documentsPath = [applicationSupport stringByAppendingPathComponent:self.identifier];
+    _path = [self.documentsPath stringByAppendingPathExtension:@".sqlite"];
     
     // Create our unique paths if necessary.
     [self createDirectoryAtPath:self.documentsPath];
     
     // Create the database.
-    self.db = [FMDatabase databaseWithPath:self.path];
-    if (![self.db open]) {
-      NSLog(@"It's all gone to shit!");
-      assert(false);
+    _db = [FMDatabase databaseWithPath:self.path];
+    if (![_db open]) {
+      ISCacheAssertUnreached(@"Unable to read cache database.");
     }
     
     // TODO The uid shoudl be unique?
-    if (![self.db executeUpdate:
+    if (![_db executeUpdate:
           @"CREATE TABLE IF NOT EXISTS items ("
           @"    id                   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
           @"    identifier           TEXT NOT NULL,"
@@ -102,21 +137,19 @@ static ISCache *sCache;
           @"    userInfo             TEXT NOT NULL DEFAULT ''"
           @");"
           ]) {
-      NSLog(@"Unable to create database :(!");
-      
-      assert(false);
+      ISCacheAssertUnreached(@"Unable to create cache database.");
     }
     
     // Load all the items from the cache.
-    self.store = [ISCacheStore new];
-    FMResultSet *s = [self.db executeQuery:@"SELECT * FROM items"];
+    _store = [ISCacheStore new];
+    FMResultSet *s = [_db executeQuery:@"SELECT * FROM items"];
     int count = 0;
     while ([s next]) {
       ISCacheItem *item =
       [[ISCacheItem alloc] _initWithResultSet:s
                                          root:self.documentsPath
                                         cache:self];
-      item.fmdb = self.db;
+      item.fmdb = _db;
       [self.store addItem:item];
       count++;
     }
@@ -125,6 +158,16 @@ static ISCache *sCache;
     if (NO == [[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
       [self createDirectoryAtPath:self.path];
     }
+    
+    // Register for application notifications.
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter addObserver:self
+                           selector:@selector(applicationWillResignActive:)
+                               name:UIApplicationWillResignActiveNotification object:nil];
+    
+    // Create the worker queue as this is used by the factory registration.
+    NSString *identifier = [NSString stringWithFormat:@"uk.co.inseven.ISCache.worker.%p", self];
+    _workerQueue = dispatch_queue_create([identifier UTF8String], DISPATCH_QUEUE_SERIAL);
     
     // Create and register the default factories.
     
@@ -137,12 +180,6 @@ static ISCache *sCache;
     ISCacheScalingHandlerFactory *scalingHttpfactory = [ISCacheScalingHandlerFactory new];
     [self registerFactory:scalingHttpfactory
                forContext:ISCacheImageContext];
-    
-    // Register for application notifications.
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter addObserver:self
-                           selector:@selector(applicationWillResignActive:)
-                               name:UIApplicationWillResignActiveNotification object:nil];
 
   }
   return self;
@@ -171,15 +208,19 @@ static ISCache *sCache;
 
 - (void)dealloc
 {
+  ASSERT_ON_MAIN_THREAD;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter removeObserver:self];
-  [self.db close];
+  dispatch_sync(self.workerQueue, ^{
+    [self.db close];
+  });
 }
 
 
 - (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL
 {
-  assert([self.fileManager fileExistsAtPath:[URL path]]);
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  assert([fileManager fileExistsAtPath:[URL path]]);
   NSError *error = nil;
   BOOL success = [URL setResourceValue:[NSNumber numberWithBool:YES]
                                 forKey:NSURLIsExcludedFromBackupKey
@@ -205,244 +246,200 @@ static ISCache *sCache;
 - (void)registerFactory:(id<ISCacheHandlerFactory>)factory
              forContext:(NSString *)context
 {
-  assert([NSThread isMainThread]);
-  // Check that there isn't an existing handler for that context.
-  if ([self.factories objectForKey:context] != nil) {
-    @throw [NSException exceptionWithName:ISCacheExceptionExistingFactoryForContext
-                                   reason:ISCacheExceptionFactoryAlreadyRegisteredReason
-                                 userInfo:nil];
-  }
+  dispatch_async(self.workerQueue, ^{
   
-  // Register the handler.
-  [self.factories setObject:factory
-                    forKey:context];
+    // Check that there isn't an existing handler for that context.
+    if ([self.factories objectForKey:context] != nil) {
+      @throw [NSException exceptionWithName:ISCacheExceptionExistingFactoryForContext
+                                     reason:ISCacheExceptionFactoryAlreadyRegisteredReason
+                                   userInfo:nil];
+    }
+    
+    // Register the handler.
+    [self.factories setObject:factory
+                       forKey:context];
+
+  });
 }
 
 
 - (void)unregisterFactoryForContext:(NSString *)context
 {
-  assert([NSThread isMainThread]);
-  [self.factories removeObjectForKey:context];
+  dispatch_async(self.workerQueue, ^{
+
+    [self.factories removeObjectForKey:context];
+    
+  });
 }
-
-
-// Creates a new item if one doesn't exist.
-- (ISCacheItem *)cacheItem:(NSString *)item
-                   context:(NSString *)context
-               preferences:(NSDictionary *)preferences
-{
-  assert([NSThread isMainThread]);
-  // Check to see if we've already created a cache item info for the
-  // requested item. If we have, then return that. If not, then look
-  // for the file on the file system and create an appropriate item
-  // depending on whehter the file has been found or not.
-  
-  NSString *identifier = [self identifierForItem:item
-                                         context:context
-                                     preferences:preferences];
-  
-  // Return a pre-existing cache item.
-  // TODO Why isn't it pre-existing?
-  ISCacheItem *cacheItem = [self.store item:identifier];
-  if (cacheItem) {
-    return cacheItem;
-  }
-  
-  // Create a new info for the file.
-  NSString *path = [self.documentsPath stringByAppendingPathComponent:identifier];
-
-  // If there isn't an active cache entry and something exists
-  // on the file system, it represents a partial download and
-  // should be cleaned up.
-  BOOL isDirectory = NO;
-  if ([self.fileManager fileExistsAtPath:path
-                             isDirectory:&isDirectory]) {
-    NSError *error;
-    [self.fileManager removeItemAtPath:path
-                                 error:&error];
-    if (error != nil) {
-      @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
-                                     reason:ISCacheExceptionUnableToCreateItemDirectoryReason
-                                   userInfo:nil];
-    }
-  }
-  
-  // Create the cache item.
-  cacheItem =
-  [[ISCacheItem alloc] _initWithIdentifier:item
-                                   context:context
-                               preferences:preferences
-                                       uid:identifier
-                                      root:self.documentsPath
-                                      path:identifier
-                                     cache:self];
-  [self.store addItem:cacheItem];
-  
-  cacheItem.fmdb = self.db;
-  [cacheItem save];
-  
-  return cacheItem;
-}
-
 
 - (ISCacheItem *)itemForIdentifier:(NSString *)identifier
                            context:(NSString *)context
-                       preferences:(NSDictionary *)preferences;
 {
-  assert([NSThread isMainThread]);
-  assert(identifier != nil);
-  assert(context != nil);
-  return [self cacheItem:identifier
-                 context:context
-             preferences:preferences];
+  NSParameterAssert(identifier);
+  NSParameterAssert(context);
+
+  __block ISCacheItem *cacheItem = nil;
+  
+  dispatch_sync(self.workerQueue, ^{
+    
+    
+    NSString *uid = [ISCache uidForIdentifier:identifier
+                                      context:context];
+    
+    // Return a pre-existing cache item.
+    cacheItem = [self.store item:uid];
+    if (cacheItem) {
+      return;
+    }
+    
+    // Create a new info for the file.
+    NSString *path = [self.documentsPath stringByAppendingPathComponent:uid];
+    
+    // If there isn't an active cache entry and something exists
+    // on the file system, it represents a partial download and
+    // should be cleaned up.
+    BOOL isDirectory = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:path
+                          isDirectory:&isDirectory]) {
+      NSError *error;
+      [fileManager removeItemAtPath:path
+                              error:&error];
+      if (error != nil) {
+        @throw [NSException exceptionWithName:ISCacheExceptionUnableToCreateItemDirectory
+                                       reason:ISCacheExceptionUnableToCreateItemDirectoryReason
+                                     userInfo:nil];
+      }
+    }
+    
+    // Create the cache item.
+    cacheItem = [[ISCacheItem alloc] _initWithIdentifier:identifier
+                                                 context:context
+                                                     uid:uid
+                                                    root:self.documentsPath
+                                                    path:uid
+                                                   cache:self];
+    [self.store addItem:cacheItem];
+    
+    cacheItem.fmdb = self.db;
+    [cacheItem save];
+
+    
+  });
+  
+  return cacheItem;
 }
 
 
 - (ISCacheItem *)itemForUid:(NSString *)uid
 {
-  return [self.store item:uid];
-}
-
-
-- (ISCacheItem *)fetchItemForIdentifier:(NSString *)identifier
-                                context:(NSString *)context
-                            preferences:(NSDictionary *)preferences
-{
-  assert([NSThread isMainThread]);
-  [self log:@"fetch: %@, context: %@", identifier, context];
-  
-  // Get the relevant details for the item.
-  ISCacheItem *cacheItem = [self cacheItem:identifier
-                                   context:context
-                               preferences:preferences];
-  
-  // Download the cache item if necessary.
-  if (cacheItem.state == ISCacheItemStateNotFound) {
-        
-    // If the item doesn't exist and isn't in progress, fetch it.
-    id<ISCacheHandler> handler = [self handlerForContext:context
-                                             preferences:preferences];
-    [cacheItem _transitionToInProgress];
-    [self.active setObject:handler
-                    forKey:cacheItem.uid];
-    // Notify the delegates and begin the fetch operation.
-    [self _fetchDidStart];
-    [handler fetchItem:cacheItem
-               updater:self];
-    
-  }
-  
+  __block ISCacheItem *cacheItem = nil;
+  dispatch_sync(self.workerQueue, ^{
+    cacheItem = [self.store item:uid];
+  });
   return cacheItem;
-  
 }
 
 
-- (void)removeItems:(NSArray *)items
+- (void)fetchItem:(ISCacheItem *)cacheItem
 {
-  assert([NSThread isMainThread]);
-  for (ISCacheItem *item in items) {
-    [self removeItem:item];
-  }
+  dispatch_async(self.workerQueue, ^{
+    
+    // Download the cache item if necessary.
+    if (cacheItem.state == ISCacheItemStateNotFound) {
+      
+      // If the item doesn't exist and isn't in progress, fetch it.
+      id<ISCacheHandler> handler = [self handlerForContext:cacheItem.context];
+      [cacheItem _transitionToInProgress];
+      [self.active setObject:handler
+                      forKey:cacheItem.uid];
+      // Notify the delegates and begin the fetch operation.
+      [handler fetchItem:cacheItem
+                 updater:self];
+      
+    }
+  });
 }
 
 
 - (void)removeItem:(ISCacheItem *)cacheItem
 {
-  if (cacheItem.state == ISCacheItemStateFound) {
-    
-    // Reset the cache item state.
-    [cacheItem _transitionToNotFound];
-    [cacheItem save];
-    
-  } else if (cacheItem.state == ISCacheItemStateInProgress) {
-    
-    // If the item is in progress, then cancel the progress.
-    [self cancelItem:cacheItem];
-    
-  } else {
-    
-    // If the item doesn't exist and isn't in progress, it is
-    // sufficient to do nothing.
-    
-  }
-}
+  dispatch_async(self.workerQueue, ^{
 
-
-- (void)cancelItems:(NSArray *)items
-{
-  assert([NSThread isMainThread]);
-  for (ISCacheItem *item in items) {
-    [self cancelItem:item];
-  }
+    if (cacheItem.state == ISCacheItemStateFound) {
+      
+      // Reset the cache item state.
+      [cacheItem _transitionToNotFound];
+      [cacheItem save];
+      
+    } else if (cacheItem.state == ISCacheItemStateInProgress) {
+      
+      // If the item is in progress, then cancel the progress.
+      id<ISCacheHandler> handler = [self.active objectForKey:cacheItem.uid];
+      [handler cancel];
+      
+    }
+    
+  });
 }
 
 
 - (void)cancelItem:(ISCacheItem *)cacheItem
 {
-  // Only attmept to cancel the item if it is in progress.
-  if (cacheItem.state == ISCacheItemStateInProgress ||
-      cacheItem.state == ISCacheItemStateNotFound) {
-    
-    [self log:
-     @"cancelItem:%@ -> item not found or in progress",
-     cacheItem.uid];
-    
-    id<ISCacheHandler> handler = [self.active objectForKey:cacheItem.uid];
-    [handler cancel];
-    
-    // Handlers are responsible for finalizing the
-    // cache item upon cancellation.
-    
-  } else {
-    
-    [self log:
-     @"cancelItem:%@ -> item already complete, ignoring",
-     cacheItem.uid];
-    
-  }
-  
-}
+  dispatch_async(self.workerQueue, ^{
 
-
-- (NSArray *)allItems
-{
-  assert([NSThread isMainThread]);
-  return [self items:nil];
+    // Only attmept to cancel the item if it is in progress.
+    if (cacheItem.state == ISCacheItemStateInProgress ||
+        cacheItem.state == ISCacheItemStateNotFound) {
+      
+      // TODO Is it correct to be cancelling tasks which are 'not found'?
+      
+      [self log:@"cancelItem:%@ -> item not found or in progress", cacheItem.uid];
+      
+      // Handlers are responsible for finalizing the cache item upon cancellation.
+      id<ISCacheHandler> handler = [self.active objectForKey:cacheItem.uid];
+      [handler cancel];
+      
+    } else {
+      
+      [self log:@"cancelItem:%@ -> item already complete, ignoring", cacheItem.uid];
+      
+    }
+    
+  });
 }
 
 
 // Return a subset of the items matching the filter.
-// TODO Why not return the items themselves?
-// This copy just seems like lots of addiitonal work?
 - (NSArray *)items:(id<ISCacheFilter>)filter
 {
-  assert([NSThread isMainThread]);
-  return [self.store items:filter];
+  __block NSArray *items = nil;
+  dispatch_sync(self.workerQueue, ^{
+    items = [self.store items:filter];
+  });
+  return items;
 }
 
 
-- (BOOL)purge
+- (void)purge
 {
-  // Close the database.
-  [self.db close];
-  self.db = nil;
-  
-  // Delete the files.
-  NSError *error;
-  BOOL result = YES;
-  result &= [self.fileManager removeItemAtPath:self.path
-                                         error:&error];
-  if (error) {
-    NSLog(@"Failed to delete cache database with error %@", error);
-    return NO;
-  }
-  result &= [self.fileManager removeItemAtPath:self.documentsPath
-                                         error:&error];
-  if (error) {
-    NSLog(@"Failed to delete cache documents with error %@", error);
-    return NO;
-  }
-  return result;
+  dispatch_sync(self.workerQueue, ^{
+    
+    // Close the database.
+    [self.db close];
+    
+    // Delete the files.
+    NSError *error;
+    BOOL result = YES;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    result &= [fileManager removeItemAtPath:self.path
+                                      error:&error];
+    ISCacheAssert(error == nil, @"Failed to delete cache database with error %@", error);
+    result &= [fileManager removeItemAtPath:self.documentsPath
+                                      error:&error];
+    ISCacheAssert(error == nil, @"Failed to delete cache documents with error %@", error);
+
+  });
 }
 
 
@@ -452,21 +449,23 @@ static ISCache *sCache;
 // Check there is a handler factory registered for the context.
 // Throws an exception if no handler factory can be found.
 - (id<ISCacheHandler>)handlerForContext:(NSString *)context
-                            preferences:(NSDictionary *)preferences
 {
+  // TODO Assert this is only ever called internally.
+  
   id<ISCacheHandlerFactory> factory = [self.factories objectForKey:context];
   if (factory == nil) {
     @throw [NSException exceptionWithName:ISCacheExceptionMissingFactoryForContext
                                    reason:ISCacheExceptionMissingFactoryForContextReason
                                  userInfo:nil];
   }
-  return [factory handlerForContext:context
-                           userInfo:preferences];
+  return [factory handlerForContext:context];
 }
 
 
 - (void)cleanupForItem:(ISCacheItem *)item
 {
+  // TODO Assert this is on the correct thread and only called internally.
+  
   // Dispatch the finalize to the handler.
   // We do this asynchronously to make it possible for
   // clients to maintain a list of handlers and iteratively
@@ -479,24 +478,7 @@ static ISCache *sCache;
   });
   
   [self.active removeObjectForKey:item.uid];
-  [self _fetchDidFinish];
   [self endBackgroundTask];
-}
-
-
-- (void)_fetchDidStart
-{
-  if (self.disablesIdleTimer) {
-    [[UIApplication sharedApplication] disableIdleTimer];
-  }
-}
-
-
-- (void)_fetchDidFinish
-{
-  if (self.disablesIdleTimer) {
-    [[UIApplication sharedApplication] enableIdleTimer];
-  }
 }
 
 
@@ -540,29 +522,10 @@ static ISCache *sCache;
 
 #pragma mark - Observer methods
 
-- (NSString *)identifierForItem:(NSString *)item
-                        context:(NSString *)context
-                    preferences:(NSDictionary *)preferences
++ (NSString *)uidForIdentifier:(NSString *)item
+                       context:(NSString *)context
 {
-  if (preferences) {
-    return [[NSString stringWithFormat:
-             @"%@:%@(%@)",
-             context,
-             item,
-             preferences] md5];
-  } else {
-    return [[NSString stringWithFormat:
-             @"%@:%@",
-             context,
-             item] md5];
-  }
-}
-
-
-// Callback handle for the handlers.
-// Should not be used internally as a notification mechanism.
-- (void)itemDidUpdate:(ISCacheItem *)item
-{
+    return [[NSString stringWithFormat:@"%@:%@", context, item] md5];
 }
 
 

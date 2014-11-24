@@ -28,21 +28,30 @@
 #import "ISCacheTask.h"
 #import "ISCacheItemObserver.h"
 
-typedef enum {
-  
-  // The item is not present in the cache.
+typedef NS_ENUM(NSUInteger, ISCacheItemState) {
+
+  /**
+   * The item is not present in the cache.
+   */
   ISCacheItemStateNotFound = 1,
-  // The item has been requested and is in progress.
+  
+  /**
+   * The item has been requested and is in progress.
+   */
   ISCacheItemStateInProgress = 4,
-  // The item is present in the cache.
+  
+  /**
+   * The item is present in the cache.
+   */
   ISCacheItemStateFound = 8,
   
-} ISCacheItemState;
-
-enum {
-  ISCacheItemObserverOptionsInitial = 1,
 };
-typedef NSUInteger ISCacheItemObserverOptions;
+
+typedef NS_OPTIONS(NSUInteger, ISCacheItemObserverOptions) {
+  
+  ISCacheItemObserverOptionsInitial = 1,
+  
+};
 
 static const int ISCacheItemStateAll = 15;
 
@@ -51,12 +60,27 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 @class ISCache;
 @class ISCacheItem;
 
+
+@interface ISCacheItemInfo : NSObject
+
+@property (nonatomic, readonly, assign) ISCacheItemState state;
+@property (nonatomic, readonly, assign) float progress;
+@property (nonatomic, readonly, assign) NSTimeInterval timeRemainingEstimate;
+
+// TODO Are these actually generic or is it better if these are calculated
+// by the downloader? How do we decide whether we should be notifying the
+// client of progress updates? Is it better if progress is computed?
+@property (nonatomic, readonly, assign) long long totalBytesRead;
+@property (nonatomic, readonly, assign) long long totalBytesExpectedToRead;
+
+@end
+
+
 @interface ISCacheItem : NSObject <ISCancelable>
 
 // Read-only properties.
 @property (strong, readonly) NSString *identifier;
 @property (strong, readonly) NSString *context;
-@property (strong, readonly) NSDictionary *preferences;
 @property (strong, readonly) NSString *uid;
 @property (readonly, assign) ISCacheItemState state;
 @property (strong, readonly) NSDate *created;
@@ -67,7 +91,6 @@ static const int ISCacheItemTotalBytesUnknown = -1;
 // TODO These should not be read-write for the normal clients.
 @property (nonatomic) long long totalBytesRead;
 @property (nonatomic) long long totalBytesExpectedToRead;
-@property (copy, nonatomic) NSDictionary *userInfo;
 
 @property (nonatomic, strong) FMDatabase *fmdb;
 

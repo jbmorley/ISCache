@@ -43,7 +43,6 @@
                    cache:(ISCache *)cache;
 - (id)_initWithIdentifier:(NSString *)identifier
                   context:(NSString *)context
-              preferences:(NSDictionary *)preferences
                       uid:(NSString *)uid
                      root:(NSString *)root
                      path:(NSString *)path
@@ -54,7 +53,5 @@
 - (void)_transitionToError:(NSError *)error;
 
 - (void)_updateModified;
-
-- (BOOL)_filesExist;
 
 @end

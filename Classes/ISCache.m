@@ -51,26 +51,6 @@ NSString *const ISCacheErrorDomain = @"ISCacheErrorDomain";
 
 @end
 
-void ISCacheAssertUnreached(NSString *message, ...)
-{
-  va_list args;
-  va_start(args, message);
-  NSLogv(message, args);
-  va_end(args);
-  assert(false);
-}
-
-void ISCacheAssert(BOOL assertion, NSString *message, ...)
-{
-  if (!assertion) {
-    va_list args;
-    va_start(args, message);
-    NSLogv(message, args);
-    va_end(args);
-    assert(false);
-  }
-}
-
 #define ASSERT_ON_MAIN_THREAD assert([NSThread isMainThread])
 
 @implementation ISCache
@@ -118,7 +98,7 @@ void ISCacheAssert(BOOL assertion, NSString *message, ...)
     // Create the database.
     _db = [FMDatabase databaseWithPath:self.path];
     if (![_db open]) {
-      ISCacheAssertUnreached(@"Unable to read cache database.");
+      ISAssertUnreached(@"Unable to read cache database.");
     }
     
     // TODO The uid shoudl be unique?
@@ -137,7 +117,7 @@ void ISCacheAssert(BOOL assertion, NSString *message, ...)
           @"    userInfo             TEXT NOT NULL DEFAULT ''"
           @");"
           ]) {
-      ISCacheAssertUnreached(@"Unable to create cache database.");
+      ISAssertUnreached(@"Unable to create cache database.");
     }
     
     // Load all the items from the cache.
@@ -434,10 +414,10 @@ void ISCacheAssert(BOOL assertion, NSString *message, ...)
     NSFileManager *fileManager = [NSFileManager defaultManager];
     result &= [fileManager removeItemAtPath:self.path
                                       error:&error];
-    ISCacheAssert(error == nil, @"Failed to delete cache database with error %@", error);
+    ISAssert(error == nil, @"Failed to delete cache database with error %@", error);
     result &= [fileManager removeItemAtPath:self.documentsPath
                                       error:&error];
-    ISCacheAssert(error == nil, @"Failed to delete cache documents with error %@", error);
+    ISAssert(error == nil, @"Failed to delete cache documents with error %@", error);
 
   });
 }
